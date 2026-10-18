@@ -1,0 +1,39 @@
+import { CONFIG } from './config';
+// Dati di gioco (carte, equipaggiamenti). Aggiungere contenuti = aggiungere righe qui.
+export interface Link { from: string; dmg?: number; block?: number; draw?: number; energy?: number }
+export interface Effect { dmg?: number; block?: number; heal?: number; draw?: number; hits?: number; link?: Link; dur?: number; flee?: boolean; req?: { hpBelow?: number; minTurn?: number }; energy?: number }
+export interface Move { id: string; name: string; desc: string; cost: number; source: string; price: number; effect: Effect }
+export interface Equipment {
+  kind: string;  // natura dell'oggetto (gear, implant, body, style, arcane): determina il racconto di come lo si ottiene
+  island: string;  // isola da cui il potenziamento compare nello store
+  id: string; name: string; desc: string; price: number;
+  moves: [string, string, string];   // 3 mosse sbloccate
+  advanced: string[];                // mosse acquistabili nello store se installato
+  bonus: { dmg?: number; maxHp?: number };
+}
+const linkText = (l: Link) => [l.dmg && `+${l.dmg} danni`, l.block && `+${l.block} guardia`, l.draw && `pesca +${l.draw}`, l.energy && `+${l.energy} energia`].filter(Boolean).join(', ');
+const power = (e: Effect) => (e.dmg ?? 0) * (e.hits ?? 1) + (e.link?.dmg ?? 0) * 0.5 + (e.link?.block ?? 0) * 0.5 + (e.link?.draw ?? 0) * 1.5 + (e.link?.energy ?? 0) * 2 + (e.block ?? 0) * (e.dur === 0 ? 2.5 : 1 + ((e.dur ?? 1) - 1) * 0.4) + (e.heal ?? 0) * 1.3 + (e.draw ?? 0) * 3 + (e.energy ?? 0) * 4;
+/** Costo di energia derivato dalla forza della carta (formula in CONFIG.cost). */
+export const costOf = (e: Effect) => { const p = power(e); return p <= 0 ? 0 : Math.min(CONFIG.cost.max, Math.max(1, Math.round(p / CONFIG.cost.div))); };
+/** Effetti scritti in forma compatta, una riga ciascuno (mostrati sulla carta). */
+export const effectLines = (e: Effect): string[] => [e.dmg && `⚔️ Danni ${e.dmg}${e.hits ? '×' + e.hits : ''}`, e.link && `🔗 Dopo ${MOVES[e.link.from]?.name ?? e.link.from}: ${linkText(e.link)}`, e.block && `🛡️ Guardia ${e.block}`, e.block && !e.dmg && `⏳ ${e.dur === 0 ? 'Finché abbattuta' : (e.dur ?? 1) + ((e.dur ?? 1) > 1 ? ' turni' : ' turno')}`, e.heal && `✚ Cura ${e.heal}`, e.draw && `✦ Pesca ${e.draw}`, e.energy && `⚡ +${e.energy} energia`, e.flee && '🏃 Fuga: lasci il duello senza conseguenze', e.req && `⚠ Richiede: ${[e.req.hpBelow !== undefined && `PV < ${Math.round(e.req.hpBelow * 100)}%`, e.req.minTurn !== undefined && `dal turno ${e.req.minTurn}`].filter(Boolean).join(', ')}`].filter(Boolean) as string[];
+export const describe = (e: Effect) => effectLines(e).join(' · ');
+import J from '../data/game.json';
+export const MOVES: Record<string, Move> = {};
+export const EQUIPMENT: Record<string, Equipment> = {};
+/** Costruzione di carte ed equipaggiamenti dal JSON. `cost` è facoltativo: se manca si calcola dalla forza della carta. */
+const mv = (id: string, name: string, source: string, price: number, effect: Effect, cost?: number) => { MOVES[id] = { id, name, source, price, effect, desc: describe(effect), cost: cost ?? costOf(effect) }; };
+for (const m of J.baseMoves) mv(m.id, m.name, 'base', 0, m.effect as Effect);
+for (const e of J.equipment) {
+  e.moves.forEach(m => mv(m.id, m.name, e.id, 0, m.effect as Effect, (m as { cost?: number }).cost));
+  e.advanced.forEach(m => mv(m.id, m.name, e.id, m.price, m.effect as Effect, (m as { cost?: number }).cost));
+  EQUIPMENT[e.id] = { id: e.id, name: e.name, desc: e.desc, price: e.price, island: e.island, kind: (e as { kind?: string }).kind ?? 'gear', bonus: e.bonus as Equipment['bonus'], moves: e.moves.map(m => m.id) as [string, string, string], advanced: e.advanced.map(m => m.id) };
+}
+export const BASE_DECK: string[] = J.baseDeck;
+export interface EnemyMove { id: string; name: string; icon: string; dmg?: number; hits?: number; block?: number; heal?: number; dur?: number }
+/** Carte nemiche: valori = moltiplicatori della potenza del nemico (CONFIG.enemy.cardMult). */
+export const ENEMY_MOVES: EnemyMove[] = J.enemyMoves;
+export const moveOf = (uid: string): string => {
+  const [k, a, b] = uid.split(':');
+  return k === 'base' ? BASE_DECK[+a] : k === 'eq' ? EQUIPMENT[a].moves[+b] : a;
+};

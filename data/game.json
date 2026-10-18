@@ -1,0 +1,1177 @@
+{
+  "config": {
+    "startHp": 40,
+    "startGold": 30,
+    "startSlots": 4,
+    "maxSlots": 15,
+    "slotEveryArenas": 3,
+    "maxDeck": 30,
+    "minDeck": 10,
+    "sellRatio": 0.5,
+    "startHand": 5,
+    "drawPerTurn": 2,
+    "maxHand": 10,
+    "energyPerTurn": 3,
+    "maxEnergy": 10,
+    "cost": {
+      "div": 5,
+      "max": 8
+    },
+    "offers": 3,
+    "mystery": 0.6,
+    "rowSize": 6,
+    "combo": {
+      "same": [
+        0,
+        0.2,
+        0.3
+      ],
+      "max": 3
+    },
+    "healBetweenFights": 0.5,
+    "enemy": {
+      "hpBase": 22,
+      "hpGrowth": 1.13,
+      "atkBase": 5,
+      "atkGrowth": 1.095,
+      "cardMult": 0.6,
+      "gearEvery": 3,
+      "playsBase": 2,
+      "playsEvery": 8,
+      "playsMax": 5
+    },
+    "reward": {
+      "base": 15,
+      "perArena": 6
+    },
+    "energyPrice": {
+      "base": 15,
+      "step": 10
+    },
+    "matchesPerIsland": 5,
+    "cardValueBase": 2,
+    "mercy": {
+      "base": 0.5,
+      "lowHpBonus": 0.3,
+      "bossPenalty": 0.25
+    }
+  },
+  "baseDeck": [
+    "jab",
+    "jab",
+    "jab",
+    "jab",
+    "jab",
+    "guard",
+    "guard",
+    "guard",
+    "focus",
+    "focus"
+  ],
+  "baseMoves": [
+    {
+      "id": "jab",
+      "name": "Jab",
+      "effect": {
+        "dmg": 4
+      }
+    },
+    {
+      "id": "guard",
+      "name": "Guardia",
+      "effect": {
+        "block": 4
+      }
+    },
+    {
+      "id": "focus",
+      "name": "Respiro",
+      "effect": {
+        "block": 2,
+        "draw": 1
+      }
+    }
+  ],
+  "equipment": [
+    {
+      "id": "wraps",
+      "name": "Fasce da combattimento",
+      "desc": "Pugilato tecnico: combo di colpi.",
+      "price": 18,
+      "bonus": {},
+      "moves": [
+        {
+          "id": "wraps_0",
+          "name": "Gancio",
+          "effect": {
+            "dmg": 6
+          }
+        },
+        {
+          "id": "wraps_1",
+          "name": "Doppio jab",
+          "effect": {
+            "dmg": 3,
+            "hits": 2
+          }
+        },
+        {
+          "id": "wraps_2",
+          "name": "Uno-due",
+          "effect": {
+            "dmg": 5,
+            "link": {
+              "from": "jab",
+              "dmg": 5
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "wraps_a0",
+          "name": "Overhand",
+          "effect": {
+            "dmg": 14,
+            "link": {
+              "from": "wraps_1",
+              "dmg": 6
+            }
+          },
+          "price": 22
+        }
+      ],
+      "island": "boxing",
+      "kind": "gear"
+    },
+    {
+      "id": "stance",
+      "name": "Guardia a conchiglia",
+      "desc": "Stile difensivo: tanta guardia e contrattacchi.",
+      "price": 20,
+      "island": "boxing",
+      "bonus": {
+        "maxHp": 4
+      },
+      "moves": [
+        {
+          "id": "stance_0",
+          "name": "Parata alta",
+          "effect": {
+            "block": 6,
+            "dur": 2
+          }
+        },
+        {
+          "id": "stance_1",
+          "name": "Schivata",
+          "effect": {
+            "block": 4,
+            "draw": 1
+          }
+        },
+        {
+          "id": "stance_2",
+          "name": "Contrattacco",
+          "effect": {
+            "dmg": 5,
+            "link": {
+              "from": "stance_0",
+              "dmg": 6
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "stance_a0",
+          "name": "Muro di guardia",
+          "effect": {
+            "block": 14,
+            "dur": 3
+          },
+          "price": 26
+        }
+      ],
+      "kind": "style"
+    },
+    {
+      "id": "footwork",
+      "name": "Gioco di gambe",
+      "desc": "Stile mobile: pesca e combinazioni.",
+      "price": 24,
+      "island": "boxing",
+      "bonus": {},
+      "moves": [
+        {
+          "id": "footwork_0",
+          "name": "Passo laterale",
+          "effect": {
+            "block": 3,
+            "draw": 1,
+            "energy": 1
+          }
+        },
+        {
+          "id": "footwork_1",
+          "name": "Colpo di rimessa",
+          "effect": {
+            "dmg": 7,
+            "link": {
+              "from": "jab",
+              "dmg": 4
+            }
+          }
+        },
+        {
+          "id": "footwork_2",
+          "name": "Serie veloce",
+          "effect": {
+            "dmg": 3,
+            "hits": 3
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "footwork_a0",
+          "name": "Combinazione perfetta",
+          "effect": {
+            "dmg": 6,
+            "hits": 2,
+            "link": {
+              "from": "footwork_1",
+              "dmg": 8
+            }
+          },
+          "price": 34
+        },
+        {
+          "id": "footwork_a1",
+          "name": "Ritirata strategica",
+          "price": 18,
+          "effect": {
+            "flee": true,
+            "req": {
+              "hpBelow": 0.5
+            }
+          },
+          "cost": 2
+        }
+      ],
+      "kind": "style"
+    },
+    {
+      "id": "plating",
+      "name": "Placcatura sottocutanea",
+      "desc": "Pelle indurita. +8 PV max.",
+      "price": 28,
+      "bonus": {
+        "maxHp": 8
+      },
+      "moves": [
+        {
+          "id": "plating_0",
+          "name": "Indurisci",
+          "effect": {
+            "block": 8,
+            "dur": 2
+          }
+        },
+        {
+          "id": "plating_1",
+          "name": "Reggi",
+          "effect": {
+            "block": 6,
+            "heal": 2,
+            "dur": 3
+          }
+        },
+        {
+          "id": "plating_2",
+          "name": "Scrollata",
+          "effect": {
+            "block": 5,
+            "draw": 1
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "plating_a0",
+          "name": "Muro di ferro",
+          "effect": {
+            "block": 16,
+            "draw": 1,
+            "dur": 0
+          },
+          "price": 30
+        }
+      ],
+      "island": "battlefield",
+      "kind": "implant"
+    },
+    {
+      "id": "servo",
+      "name": "Braccio servoassistito",
+      "desc": "Cyberware. +2 danni a ogni attacco.",
+      "price": 40,
+      "bonus": {
+        "dmg": 2
+      },
+      "moves": [
+        {
+          "id": "servo_0",
+          "name": "Pistone",
+          "effect": {
+            "dmg": 9
+          }
+        },
+        {
+          "id": "servo_1",
+          "name": "Overclock",
+          "effect": {
+            "dmg": 4,
+            "draw": 1
+          }
+        },
+        {
+          "id": "servo_2",
+          "name": "Idraulico",
+          "effect": {
+            "dmg": 6,
+            "link": {
+              "from": "servo_1",
+              "dmg": 6
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "servo_a0",
+          "name": "Pugno a rotaia",
+          "effect": {
+            "dmg": 18,
+            "energy": 1
+          },
+          "price": 45
+        }
+      ],
+      "island": "battlefield",
+      "kind": "implant"
+    },
+    {
+      "id": "blade",
+      "name": "Lama monomolecolare",
+      "desc": "Arma tagliente.",
+      "price": 45,
+      "bonus": {},
+      "moves": [
+        {
+          "id": "blade_0",
+          "name": "Fendente",
+          "effect": {
+            "dmg": 8
+          }
+        },
+        {
+          "id": "blade_1",
+          "name": "Riposta",
+          "effect": {
+            "dmg": 5,
+            "block": 5
+          }
+        },
+        {
+          "id": "blade_2",
+          "name": "Raffica di tagli",
+          "effect": {
+            "dmg": 4,
+            "hits": 3
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "blade_a0",
+          "name": "Recisione",
+          "effect": {
+            "dmg": 8,
+            "link": {
+              "from": "blade_1",
+              "dmg": 12
+            }
+          },
+          "price": 50
+        }
+      ],
+      "island": "battlefield",
+      "kind": "gear"
+    },
+    {
+      "id": "titan",
+      "name": "Muscoli titanici",
+      "desc": "Forza estrema: colpi che frantumano.",
+      "price": 55,
+      "island": "desert",
+      "bonus": {
+        "dmg": 3
+      },
+      "moves": [
+        {
+          "id": "titan_0",
+          "name": "Pugno devastante",
+          "effect": {
+            "dmg": 14
+          }
+        },
+        {
+          "id": "titan_1",
+          "name": "Onda d'impatto",
+          "effect": {
+            "dmg": 6,
+            "hits": 2
+          }
+        },
+        {
+          "id": "titan_2",
+          "name": "Presa schiacciante",
+          "effect": {
+            "dmg": 9,
+            "link": {
+              "from": "titan_0",
+              "dmg": 10
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "titan_a0",
+          "name": "Terremoto",
+          "effect": {
+            "dmg": 20,
+            "hits": 2
+          },
+          "price": 70
+        }
+      ],
+      "kind": "body"
+    },
+    {
+      "id": "hide",
+      "name": "Pelle di roccia",
+      "desc": "Durezza estrema e contrattacchi.",
+      "price": 52,
+      "island": "desert",
+      "bonus": {
+        "maxHp": 12
+      },
+      "moves": [
+        {
+          "id": "hide_0",
+          "name": "Indurimento",
+          "effect": {
+            "block": 14,
+            "dur": 3
+          }
+        },
+        {
+          "id": "hide_1",
+          "name": "Resistenza",
+          "effect": {
+            "block": 8,
+            "heal": 4,
+            "dur": 2
+          }
+        },
+        {
+          "id": "hide_2",
+          "name": "Contrattacco brutale",
+          "effect": {
+            "dmg": 10,
+            "link": {
+              "from": "hide_0",
+              "dmg": 14
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "hide_a0",
+          "name": "Corazza vivente",
+          "effect": {
+            "block": 24,
+            "dur": 0
+          },
+          "price": 66
+        }
+      ],
+      "kind": "body"
+    },
+    {
+      "id": "reactor",
+      "name": "Reattore interno",
+      "desc": "Energia sovrumana. +4 PV max.",
+      "price": 60,
+      "bonus": {
+        "maxHp": 4
+      },
+      "moves": [
+        {
+          "id": "reactor_0",
+          "name": "Impulso",
+          "effect": {
+            "dmg": 10
+          }
+        },
+        {
+          "id": "reactor_1",
+          "name": "Sovraccarico",
+          "effect": {
+            "block": 4,
+            "draw": 2,
+            "dur": 3
+          }
+        },
+        {
+          "id": "reactor_2",
+          "name": "Esplosione",
+          "effect": {
+            "dmg": 6,
+            "hits": 2,
+            "heal": 3
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "reactor_a0",
+          "name": "Raggio",
+          "effect": {
+            "dmg": 14,
+            "link": {
+              "from": "reactor_1",
+              "dmg": 12
+            }
+          },
+          "price": 70
+        }
+      ],
+      "island": "ocean",
+      "kind": "implant"
+    },
+    {
+      "id": "dash",
+      "name": "Impulso sonico",
+      "desc": "Velocità impressionante e onde d'urto.",
+      "price": 75,
+      "island": "ocean",
+      "bonus": {
+        "dmg": 2
+      },
+      "moves": [
+        {
+          "id": "dash_0",
+          "name": "Scatto sonico",
+          "effect": {
+            "dmg": 8,
+            "draw": 1
+          }
+        },
+        {
+          "id": "dash_1",
+          "name": "Onda d'urto",
+          "effect": {
+            "dmg": 6,
+            "hits": 3
+          }
+        },
+        {
+          "id": "dash_2",
+          "name": "Controllo del campo",
+          "effect": {
+            "block": 12,
+            "energy": 1,
+            "dur": 2
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "dash_a0",
+          "name": "Muro del suono",
+          "effect": {
+            "dmg": 12,
+            "hits": 3,
+            "link": {
+              "from": "dash_1",
+              "dmg": 10
+            }
+          },
+          "price": 90
+        },
+        {
+          "id": "dash_a1",
+          "name": "Scatto di fuga",
+          "price": 40,
+          "effect": {
+            "flee": true,
+            "req": {
+              "minTurn": 3
+            }
+          },
+          "cost": 2
+        }
+      ],
+      "kind": "implant"
+    },
+    {
+      "id": "regen",
+      "name": "Cellule rigeneranti",
+      "desc": "Rigenerazione avanzata e sensi potenziati.",
+      "price": 100,
+      "island": "forest",
+      "bonus": {
+        "maxHp": 16
+      },
+      "moves": [
+        {
+          "id": "regen_0",
+          "name": "Rigenerazione",
+          "effect": {
+            "block": 10,
+            "heal": 10,
+            "dur": 2
+          }
+        },
+        {
+          "id": "regen_1",
+          "name": "Sensi acuti",
+          "effect": {
+            "block": 6,
+            "draw": 2
+          }
+        },
+        {
+          "id": "regen_2",
+          "name": "Morso istintivo",
+          "effect": {
+            "dmg": 12,
+            "heal": 6
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "regen_a0",
+          "name": "Mutazione",
+          "effect": {
+            "dmg": 18,
+            "heal": 12
+          },
+          "price": 120
+        }
+      ],
+      "kind": "body"
+    },
+    {
+      "id": "fruit",
+      "name": "Frutto arcano",
+      "desc": "Potere magico che trasforma il corpo.",
+      "price": 110,
+      "island": "forest",
+      "bonus": {
+        "dmg": 4
+      },
+      "moves": [
+        {
+          "id": "fruit_0",
+          "name": "Braccio elastico",
+          "effect": {
+            "dmg": 10,
+            "hits": 2
+          }
+        },
+        {
+          "id": "fruit_1",
+          "name": "Forma ferina",
+          "effect": {
+            "block": 14,
+            "energy": 1,
+            "dur": 3
+          }
+        },
+        {
+          "id": "fruit_2",
+          "name": "Incantesimo",
+          "effect": {
+            "dmg": 14,
+            "link": {
+              "from": "fruit_0",
+              "dmg": 12
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "fruit_a0",
+          "name": "Risveglio del frutto",
+          "effect": {
+            "dmg": 22,
+            "draw": 1,
+            "energy": 1
+          },
+          "price": 140
+        },
+        {
+          "id": "fruit_a1",
+          "name": "Forma sfuggente",
+          "price": 70,
+          "effect": {
+            "flee": true,
+            "req": {
+              "hpBelow": 0.4
+            }
+          },
+          "cost": 3
+        }
+      ],
+      "kind": "arcane"
+    },
+    {
+      "id": "rift",
+      "name": "Guanto della frattura",
+      "desc": "Potere che rompe le regole: +3 danni.",
+      "price": 90,
+      "bonus": {
+        "dmg": 3
+      },
+      "moves": [
+        {
+          "id": "rift_0",
+          "name": "Frantuma",
+          "effect": {
+            "dmg": 16
+          }
+        },
+        {
+          "id": "rift_1",
+          "name": "Distorsione",
+          "effect": {
+            "block": 10,
+            "draw": 1,
+            "energy": 1,
+            "dur": 2
+          }
+        },
+        {
+          "id": "rift_2",
+          "name": "Squarcio",
+          "effect": {
+            "dmg": 8,
+            "hits": 2,
+            "heal": 5
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "rift_a0",
+          "name": "Nova",
+          "effect": {
+            "dmg": 15,
+            "link": {
+              "from": "rift_1",
+              "dmg": 20
+            }
+          },
+          "price": 110
+        }
+      ],
+      "island": "volcano",
+      "kind": "arcane"
+    },
+    {
+      "id": "aura",
+      "name": "Aura cataclismica",
+      "desc": "Dominio dell'energia e trasformazioni divine.",
+      "price": 160,
+      "island": "volcano",
+      "bonus": {
+        "dmg": 6,
+        "maxHp": 20
+      },
+      "moves": [
+        {
+          "id": "aura_0",
+          "name": "Esplosione di ki",
+          "effect": {
+            "dmg": 20
+          }
+        },
+        {
+          "id": "aura_1",
+          "name": "Aura divina",
+          "effect": {
+            "block": 20,
+            "draw": 1,
+            "dur": 3
+          }
+        },
+        {
+          "id": "aura_2",
+          "name": "Colpo cataclismico",
+          "effect": {
+            "dmg": 12,
+            "hits": 3,
+            "link": {
+              "from": "aura_0",
+              "dmg": 14
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "aura_a0",
+          "name": "Trasformazione divina",
+          "effect": {
+            "dmg": 30,
+            "draw": 2,
+            "energy": 2
+          },
+          "price": 220
+        }
+      ],
+      "kind": "body"
+    }
+  ],
+  "enemyMoves": [
+    {
+      "name": "Diretto",
+      "icon": "👊",
+      "dmg": 1,
+      "id": "direct"
+    },
+    {
+      "name": "Colpo pesante",
+      "icon": "💢",
+      "dmg": 1.7,
+      "id": "heavy"
+    },
+    {
+      "name": "Parata",
+      "icon": "🛡️",
+      "block": 1.4,
+      "dur": 2,
+      "id": "guard"
+    },
+    {
+      "name": "Raffica",
+      "icon": "🌪️",
+      "dmg": 0.6,
+      "hits": 3,
+      "id": "flurry"
+    },
+    {
+      "name": "Assorbimento",
+      "icon": "🩸",
+      "dmg": 0.8,
+      "heal": 0.6,
+      "id": "drain"
+    },
+    {
+      "id": "rocket",
+      "name": "Razzo",
+      "icon": "💢",
+      "dmg": 2
+    },
+    {
+      "id": "shock",
+      "name": "Onda d'urto",
+      "icon": "🌪️",
+      "dmg": 0.8,
+      "hits": 3
+    },
+    {
+      "id": "regen",
+      "name": "Rigenerazione",
+      "icon": "🩸",
+      "heal": 1.8
+    },
+    {
+      "id": "cata",
+      "name": "Colpo cataclismico",
+      "icon": "💢",
+      "dmg": 2.6
+    }
+  ],
+  "regions": [
+    {
+      "id": "boxing",
+      "name": "Boxing Arena",
+      "level": "Umano",
+      "concept": "tecnica, disciplina e corpo a corpo",
+      "story": "Il protagonista impara a combattere davvero. Nessun superpotere: vince grazie a difesa, combinazioni e diversi stili di combattimento.",
+      "theme": "boxing",
+      "color": "#c94a4a",
+      "x": 50,
+      "y": 30,
+      "enemies": [
+        {
+          "name": "Sparring partner",
+          "story": "La palestra di Gorin odora di sudore e linimento. «Prima di sognare, {nome}, impara a restare in piedi», borbotta il vecchio, e ti mette davanti lo sparring partner che ha fatto sputare sangue a tutti i suoi allievi."
+        },
+        {
+          "name": "Pugile di strada",
+          "story": "Dopo il primo round il tuo nome gira nei vicoli. Un pugile di strada, senza guanti né regole, ti aspetta dietro il locale: qui non esiste un gong che ti salvi."
+        },
+        {
+          "name": "Campione regionale",
+          "story": "Le cinture regionali si scoprono avare. Il campione in carica ti guarda dall'alto: per lui sei solo un ragazzino con troppa fame, e vuole farti pentire di essere salito sul ring."
+        },
+        {
+          "name": "Peso massimo",
+          "story": "Ogni vittoria alza la posta. Il peso massimo entra scortato dal brusio del pubblico, mentre Gorin ti stringe le fasce in silenzio: «Non accettare il suo ritmo. Imponi il tuo»."
+        },
+        {
+          "name": "Leggenda del ring",
+          "hpMul": 1.3,
+          "atkMul": 1.15,
+          "lore": "Un campione imbattuto da vent'anni: la sua guardia non ha mai ceduto.",
+          "story": "Il palazzetto è pieno fino al soffitto. La Leggenda non perde da vent'anni, e Gorin lo sa: «Se la superi, {nome}, qualcuno ti noterà». Dalle gradinate, un uomo in nero annota il tuo nome su un taccuino."
+        }
+      ],
+      "enemyMoves": [
+        "direct",
+        "heavy",
+        "guard",
+        "flurry"
+      ],
+      "hero": "Sei un combattente come tanti: pugni, fiato e una gran voglia di dimostrare chi sei. Ogni round è una lezione."
+    },
+    {
+      "id": "battlefield",
+      "name": "Campo di battaglia",
+      "level": "Tecnologico",
+      "concept": "armi, armature e protesi meccaniche",
+      "story": "Un conflitto militare dove il talento fisico non basta più: armi e potenziamenti artificiali.",
+      "theme": "battle",
+      "color": "#7f8c45",
+      "x": 50,
+      "y": 9,
+      "enemies": [
+        {
+          "name": "Recluta cibernetica",
+          "story": "L'uomo in nero ti porta oltre il mare, dove i pugni da soli non bastano. Un campo militare ti accoglie con il rumore dei motori, e la prima prova è una recluta con le braccia ancora fumanti d'officina."
+        },
+        {
+          "name": "Cecchino",
+          "story": "Colpi secchi dalla cresta: il cecchino non si vede mai, ma tu sì. Capisci in fretta che qui sopravvive chi si muove prima del suono."
+        },
+        {
+          "name": "Soldato in esoscheletro",
+          "story": "Gli armaioli ridono dei tuoi pugni nudi, poi smettono. Il soldato in esoscheletro avanza come una porta blindata, e ti costringe a scegliere: nuovi mezzi, o nuove idee."
+        },
+        {
+          "name": "Mech da guerra",
+          "story": "Il terreno trema. Un mech da guerra emerge dalla nebbia, guidato da qualcuno che ha smesso di sentire il dolore. Dal comando, in silenzio, valutano se sei degno dei loro segreti."
+        },
+        {
+          "name": "Generale corazzato",
+          "hpMul": 1.3,
+          "atkMul": 1.15,
+          "lore": "Comanda l'esercito dall'interno di un'armatura meccanica: non conosce la resa.",
+          "story": "Il generale ti aspetta nel cratere dell'ultimo bunker, chiuso in un'armatura che sembra respirare. «Hai imparato a usare gli strumenti, {nome}. Ora scopriamo se ne sei il padrone o lo schiavo»."
+        }
+      ],
+      "enemyMoves": [
+        "direct",
+        "heavy",
+        "guard",
+        "rocket",
+        "flurry"
+      ],
+      "hero": "Il ring ti ha insegnato la disciplina, ma qui il talento non basta: impari a fidarti di armi e protesi."
+    },
+    {
+      "id": "desert",
+      "name": "Deserto",
+      "level": "Sovrumano",
+      "concept": "sopravvivenza, adattamento e potenziamento del corpo",
+      "story": "Le armi convenzionali non bastano: forza estrema, pelle dura, resistenza, impatti e contrattacchi.",
+      "theme": "desert",
+      "color": "#d29a45",
+      "x": 81.4,
+      "y": 23.5,
+      "enemies": [
+        {
+          "name": "Predone",
+          "story": "Il deserto non perdona: acqua per due giorni e nemmeno una mappa. Un predone ti segue da ore, certo che la sete farà il lavoro per lui. Si sbaglia."
+        },
+        {
+          "name": "Scorpione gigante",
+          "story": "Di notte la sabbia si muove. Lo scorpione gigante esce dalle dune e il tuo corpo risponde prima della mente, con una forza che non ricordavi di avere."
+        },
+        {
+          "name": "Mummia guerriera",
+          "story": "Tra le rovine di un tempio sepolto, una guerriera avvolta in bende secolari ti sfida a un duello rituale. Ogni colpo che incassi ti rende più duro, e lei lo sa."
+        },
+        {
+          "name": "Colosso di sabbia",
+          "story": "La tempesta prende la forma di un gigante. Resistere non serve: il colosso crolla e si ricompone, e solo un colpo capace di spezzare la roccia può fermarlo."
+        },
+        {
+          "name": "Faraone solare",
+          "hpMul": 1.3,
+          "atkMul": 1.15,
+          "lore": "Il sole stesso sembra inchinarsi a lui; la sabbia obbedisce a ogni suo gesto.",
+          "story": "All'orizzonte una piramide brilla come un secondo sole. Il Faraone ti attende sul trono: «Hai attraversato il mio regno senza inchinarti. Mostrami di cosa è fatto il tuo corpo»."
+        }
+      ],
+      "enemyMoves": [
+        "heavy",
+        "guard",
+        "rocket",
+        "drain"
+      ],
+      "hero": "Le armi non bastano più. Il sole e la sabbia ti costringono a spingere il corpo oltre ogni limite umano."
+    },
+    {
+      "id": "ocean",
+      "name": "Oceano",
+      "level": "Sovrumano avanzato",
+      "concept": "mobilità estrema, energia e controllo del campo",
+      "story": "Scontri spettacolari: onde d'urto, velocità impressionanti e poteri oltre la tecnologia militare.",
+      "theme": "ocean",
+      "color": "#2a9ab8",
+      "x": 69.4,
+      "y": 47,
+      "enemies": [
+        {
+          "name": "Squalo corazzato",
+          "story": "Il porto è un mosaico di relitti. Corri sulle assi galleggianti mentre uno squalo corazzato taglia la corrente: ormai sai che l'acqua non ti rallenta, ti ascolta."
+        },
+        {
+          "name": "Sirena sonica",
+          "story": "Il suo canto spezza i vetri e ti fa vibrare le ossa. La sirena sonica ti sfida a inseguire un suono più veloce di te, e per la prima volta il tuo corpo ci riesce."
+        },
+        {
+          "name": "Pirata dell'energia",
+          "story": "Sul ponte di una nave volante, un pirata accumula tempesta nei pugni e ride: «Quelli come noi non combattono, scatenano». Capire il campo di battaglia è l'unico modo per stargli dietro."
+        },
+        {
+          "name": "Kraken",
+          "story": "Le onde diventano braccia. Il kraken afferra la nave e, per respirare, devi trovare un varco tra i tentacoli: pensare in tre dimensioni, muoverti senza nessun appoggio."
+        },
+        {
+          "name": "Leviatano",
+          "hpMul": 1.3,
+          "atkMul": 1.15,
+          "lore": "Una creatura antica che solleva maremoti con un solo battito di coda.",
+          "story": "Sotto la superficie qualcosa respira come una montagna. Il Leviatano si solleva e il mare si piega attorno a lui: se lo fermi, la rotta verso la foresta sarà aperta."
+        }
+      ],
+      "enemyMoves": [
+        "flurry",
+        "shock",
+        "heavy",
+        "guard"
+      ],
+      "hero": "I tuoi colpi spezzano l'aria. Correre sulle onde e controllare l'energia è ormai una seconda natura."
+    },
+    {
+      "id": "forest",
+      "name": "Foresta",
+      "level": "Trascendente",
+      "concept": "evoluzione, istinto e poteri",
+      "story": "Creature evolute oltre ogni limite umano: rigenerazione, sensi potenziati, mutazioni e poteri magici.",
+      "theme": "forest",
+      "color": "#3f9a5b",
+      "x": 30.6,
+      "y": 47,
+      "enemies": [
+        {
+          "name": "Lupo mutante",
+          "story": "Oltre la riva la foresta ti osserva. Il lupo mutante esce dagli alberi con occhi troppo intelligenti: non cerca cibo, vuole capire se sei una preda o un simile."
+        },
+        {
+          "name": "Spirito della foresta",
+          "story": "Tra i tronchi sussurra una voce che ti conosce. Lo spirito ti mostra ciò che potresti diventare, e le tue ferite iniziano a chiudersi da sole."
+        },
+        {
+          "name": "Treant antico",
+          "story": "Un albero si alza e cammina. Il treant antico non ha rabbia, solo una pazienza millenaria: ogni tuo colpo lo risveglia un po' di più, ogni tua ferita ti cambia."
+        },
+        {
+          "name": "Cacciatore del frutto",
+          "story": "Qualcuno ti segue da giorni: vuole il potere che porti dentro, nato da un frutto assaggiato per curiosità. Affrontare il cacciatore significa decidere che cosa sei diventato."
+        },
+        {
+          "name": "Albero del mondo",
+          "hpMul": 1.3,
+          "atkMul": 1.15,
+          "lore": "Radici che attraversano l'isola: ogni foglia è un occhio, ogni ramo un colpo.",
+          "story": "Al cuore della foresta, radici grandi come fiumi stringono l'isola. L'Albero del mondo non parla: ti osserva con mille foglie-occhio, e capisci che solo un'evoluzione completa può attraversarlo."
+        }
+      ],
+      "enemyMoves": [
+        "drain",
+        "regen",
+        "flurry",
+        "heavy",
+        "guard"
+      ],
+      "hero": "Il tuo corpo cambia: sensi acuti, ferite che si richiudono e un istinto che non ti appartiene del tutto."
+    },
+    {
+      "id": "volcano",
+      "name": "Vulcano",
+      "level": "Divino",
+      "concept": "dominio dell'energia e potenza cataclismica",
+      "story": "Esseri capaci di devastare l'ambiente: esplosioni energetiche, aura, supermosse e trasformazioni divine.",
+      "theme": "ember",
+      "color": "#d4552d",
+      "x": 18.6,
+      "y": 23.5,
+      "enemies": [
+        {
+          "name": "Salamandra celeste",
+          "story": "Il vulcano non è una montagna ma una bocca. Una salamandra celeste danza nella lava e l'aria si fa così calda che il tuo respiro prende fuoco: la tua aura comincia a rispondere."
+        },
+        {
+          "name": "Golem di lava",
+          "story": "La roccia si stacca dal pendio e cammina. Il golem di lava è stanco del mondo, e ogni suo passo lascia una crepa. Lo affronti sapendo che ormai i tuoi colpi spaccano il suolo."
+        },
+        {
+          "name": "Demone ardente",
+          "story": "Un demone ardente ti riconosce: «Sei quello che sale». Non vuole fermarti, vuole sapere fino a dove puoi spingerti prima di bruciare."
+        },
+        {
+          "name": "Drago cataclismico",
+          "story": "Il cielo si oscura. Il drago cataclismico apre le ali e la cenere cade come pioggia: davanti a un essere così, o diventi qualcosa di più, o ti arrendi."
+        },
+        {
+          "name": "Titano del magma",
+          "hpMul": 1.3,
+          "atkMul": 1.15,
+          "lore": "Un gigante nato dal cuore del vulcano: ogni suo passo fa tremare il mondo.",
+          "story": "In cima al cratere il Titano ti aspetta, nato dal cuore del mondo. Alle tue spalle, il mare e tutti i volti incontrati. «Il tuo viaggio finisce qui, {nome}, o inizia davvero», dice."
+        }
+      ],
+      "enemyMoves": [
+        "heavy",
+        "cata",
+        "shock",
+        "guard",
+        "rocket"
+      ],
+      "hero": "Non sei più solo un lottatore: la tua aura incendia l'aria. Qui si decide se diventerai leggenda."
+    }
+  ],
+  "dataVersion": 1
+}
