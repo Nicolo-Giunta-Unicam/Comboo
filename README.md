@@ -1,4 +1,4 @@
-# Card Roguelike (prototipo)
+# Comboo
 
 RPG di carte roguelike a turni, giocabile da browser (PC e smartphone), single-player, senza server.
 Il protagonista sale di potenza isola dopo isola: da combattente umano a livelli divini.
@@ -9,7 +9,7 @@ npm install
 npm run dev        # http://localhost:5173 (ricompila a ogni modifica)
 npm test           # test delle regole di gioco
 npm run build      # dist/game.js (aprire index.html)
-npm run build:single   # dist/card-roguelike.html: file unico giocabile (itch.io, condivisione)
+npm run build:single   # dist/comboo.html: file unico giocabile (itch.io, condivisione)
 ```
 
 ## Struttura

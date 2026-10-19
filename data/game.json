@@ -28,7 +28,6 @@
       ],
       "max": 3
     },
-    "healBetweenFights": 0.5,
     "enemy": {
       "hpBase": 22,
       "hpGrowth": 1.13,
@@ -54,20 +53,11 @@
       "base": 0.5,
       "lowHpBonus": 0.3,
       "bossPenalty": 0.25
-    }
+    },
+    "woundedBelow": 0.3,
+    "woundedStart": 0.8,
+    "healCost": 15
   },
-  "baseDeck": [
-    "jab",
-    "jab",
-    "jab",
-    "jab",
-    "jab",
-    "guard",
-    "guard",
-    "guard",
-    "focus",
-    "focus"
-  ],
   "baseMoves": [
     {
       "id": "jab",
@@ -89,6 +79,60 @@
       "effect": {
         "block": 2,
         "draw": 1
+      }
+    },
+    {
+      "id": "kick",
+      "name": "Calcio frontale",
+      "effect": {
+        "dmg": 5
+      }
+    },
+    {
+      "id": "roundkick",
+      "name": "Calcio circolare",
+      "effect": {
+        "dmg": 3,
+        "hits": 2,
+        "link": {
+          "from": "kick",
+          "dmg": 2
+        }
+      }
+    },
+    {
+      "id": "dodge",
+      "name": "Schivata",
+      "effect": {
+        "block": 3,
+        "draw": 1
+      }
+    },
+    {
+      "id": "grab",
+      "name": "Presa",
+      "effect": {
+        "dmg": 3,
+        "block": 2
+      }
+    },
+    {
+      "id": "throw",
+      "name": "Proiezione",
+      "effect": {
+        "dmg": 6,
+        "link": {
+          "from": "grab",
+          "dmg": 4
+        }
+      }
+    },
+    {
+      "id": "lock",
+      "name": "Leva articolare",
+      "effect": {
+        "block": 6,
+        "dur": 2
       }
     }
   ],
@@ -1173,5 +1217,61 @@
       "hero": "Non sei più solo un lottatore: la tua aura incendia l'aria. Qui si decide se diventerai leggenda."
     }
   ],
-  "dataVersion": 1
+  "dataVersion": 1,
+  "styles": [
+    {
+      "id": "boxing",
+      "name": "Pugilato",
+      "icon": "🥊",
+      "desc": "Guardia solida e serie di pugni.",
+      "deck": [
+        "jab",
+        "jab",
+        "jab",
+        "jab",
+        "jab",
+        "guard",
+        "guard",
+        "guard",
+        "focus",
+        "focus"
+      ]
+    },
+    {
+      "id": "taekwondo",
+      "name": "Taekwondo",
+      "icon": "🦵",
+      "desc": "Calci veloci e schivate.",
+      "deck": [
+        "kick",
+        "kick",
+        "kick",
+        "kick",
+        "roundkick",
+        "roundkick",
+        "roundkick",
+        "dodge",
+        "dodge",
+        "dodge"
+      ]
+    },
+    {
+      "id": "jujitsu",
+      "name": "Jujitsu",
+      "icon": "🥋",
+      "desc": "Prese, proiezioni e leve.",
+      "deck": [
+        "grab",
+        "grab",
+        "grab",
+        "grab",
+        "throw",
+        "throw",
+        "throw",
+        "lock",
+        "lock",
+        "lock"
+      ]
+    }
+  ]
 }

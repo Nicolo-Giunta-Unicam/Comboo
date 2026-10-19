@@ -29,11 +29,13 @@ for (const e of J.equipment) {
   e.advanced.forEach(m => mv(m.id, m.name, e.id, m.price, m.effect as Effect, (m as { cost?: number }).cost));
   EQUIPMENT[e.id] = { id: e.id, name: e.name, desc: e.desc, price: e.price, island: e.island, kind: (e as { kind?: string }).kind ?? 'gear', bonus: e.bonus as Equipment['bonus'], moves: e.moves.map(m => m.id) as [string, string, string], advanced: e.advanced.map(m => m.id) };
 }
-export const BASE_DECK: string[] = J.baseDeck;
+export interface Style { id: string; name: string; icon: string; desc: string; deck: string[] }
+/** Stili di combattimento iniziali: ognuno ha il proprio mazzo base di 10 carte. */
+export const STYLES: Style[] = J.styles;
 export interface EnemyMove { id: string; name: string; icon: string; dmg?: number; hits?: number; block?: number; heal?: number; dur?: number }
 /** Carte nemiche: valori = moltiplicatori della potenza del nemico (CONFIG.enemy.cardMult). */
 export const ENEMY_MOVES: EnemyMove[] = J.enemyMoves;
 export const moveOf = (uid: string): string => {
   const [k, a, b] = uid.split(':');
-  return k === 'base' ? BASE_DECK[+a] : k === 'eq' ? EQUIPMENT[a].moves[+b] : a;
+  return k === 'base' ? a : k === 'eq' ? EQUIPMENT[a].moves[+b] : a;
 };

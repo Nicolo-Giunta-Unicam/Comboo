@@ -12,4 +12,6 @@ export function burst(kind: 'hit' | 'guard' | 'combo' | 'fw', x: number, y: numb
   const r = document.createElement('div'); r.className = 'fx-ring'; r.style.setProperty('--c', cols[0]); add(r, x, y, 800);
   if (kind === 'guard') { const s = document.createElement('div'); s.className = 'fx-shield'; add(s, x, y, 1000); }
 }
-export function banner(text: string) { const b = document.createElement('div'); b.className = 'combofx'; b.innerHTML = `<b>🔥 COMBO!</b><small>${text}</small>`; document.body.appendChild(b); setTimeout(() => b.remove(), 1500); }
+export function banner(text: string, boo = false) { // boo: terza giocata uguale -> "COMBOO" (oo = infinito), colore diverso
+  const b = document.createElement('div'); b.className = 'combofx'; b.innerHTML = `<b class="${boo ? 'boo' : ''}">${boo ? 'COMB<span class="inf">∞</span>' : '🔥 COMBO!'}</b><small>${text}</small>`; document.body.appendChild(b); setTimeout(() => b.remove(), 1500);
+}

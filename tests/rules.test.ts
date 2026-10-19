@@ -1,12 +1,12 @@
 import { test } from 'node:test'; import assert from 'node:assert/strict';
-import { newRun, askMercy, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
-import { EQUIPMENT, MOVES } from '../src/data'; import { REGIONS } from '../src/regions'; import { CONFIG } from '../src/config'; import { saveRun, loadRun, SAVE_KEY, type KV } from '../src/save';
+import { newRun, maxHp, askMercy, healRun, rollStyle, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
+import { EQUIPMENT, MOVES, STYLES } from '../src/data'; import { REGIONS } from '../src/regions'; import { CONFIG } from '../src/config'; import { saveRun, loadRun, SAVE_KEY, type KV } from '../src/save';
 const kv = (): KV & { m: Map<string, string> } => { const m = new Map<string, string>(); return { m, getItem: k => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v), removeItem: k => void m.delete(k) }; };
 const settle = (r: Run) => { const c = r.combat!; for (let i = 0; i < 10 && c.phase === 'resolve'; i++) enemyStep(r); };
 const rich = (): Run => { const r = newRun(1); r.gold = 9999; return r; };
 test('vittoria: nemico a 0 PV -> store, oro e arena avanzano', () => {
   const r = newRun(1); assert.equal(beginArena(r), null); r.combat!.enemy.hp = 1;
-  const j = 'base:0'; r.combat!.hand.push(j);
+  const j = 'base:jab:0'; r.combat!.hand.push(j);
   if (j) { const g = r.gold; assert.equal(playCard(r, j), null); assert.equal(r.phase, 'combat'); endTurn(r); settle(r); assert.equal(r.phase, 'store'); assert.equal(r.arena, 2); assert.ok(r.gold > g); }
 });
 test('sconfitta: PV a 0 -> fine run', () => {
@@ -46,9 +46,9 @@ test('mano: 5 iniziali, +1 a turno, la mano persiste; il nemico gioca una carta 
   assert.deepEqual(c.played, {}); assert.equal(c.phase, 'player'); assert.equal(c.hand.length, 7); assert.ok(keep.every(u => c.hand.includes(u)));
 });
 test('energia: il costo viene scalato e senza energia la carta non si gioca', () => {
-  const r = newRun(3); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.hand = ['eq:wraps:1', 'eq:wraps:2', 'base:0'];
+  const r = newRun(3); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.hand = ['eq:wraps:1', 'eq:wraps:2', 'base:jab:0'];
   const e0 = c.energy; assert.equal(playCard(r, 'eq:wraps:1'), null); assert.equal(c.energy, e0 - 1); assert.equal(playCard(r, 'eq:wraps:2'), null);
-  assert.equal(c.energy, 0); assert.ok(playCard(r, 'base:0')); assert.equal(c.hand.length, 1);
+  assert.equal(c.energy, 0); assert.ok(playCard(r, 'base:jab:0')); assert.equal(c.hand.length, 1);
 });
 test('estensioni energia: prezzo crescente, limite 10, energia a inizio turno', () => {
   const r = rich(); assert.equal(maxEnergy(r), CONFIG.energyPerTurn); const p0 = energyPrice(r), g = r.gold;
@@ -65,13 +65,13 @@ test('combo base: stessa carta nello stesso round +10%/+20%, massimo 3', () => {
   for (let i = 0; i < 4; i++) assert.equal(playCard(r, 'eq:servo:0'), null); assert.deepEqual(c.field.off.map(p => p.dmg), [9, 11, 12, 12]); assert.equal(c.enemy.hp, 1000);
 });
 test('concatenazione: bonus solo se la carta precedente è quella indicata', () => {
-  const r = newRun(3); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['eq:wraps:2', 'base:0', 'eq:wraps:2'];
+  const r = newRun(3); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['eq:wraps:2', 'base:jab:0', 'eq:wraps:2'];
   for (let i = 0; i < 3; i++) assert.equal(playCard(r, c.hand[0]), null); assert.deepEqual(c.field.off.map(p => p.dmg), [5, 4, 12]);
 });
 test('campo: danni solo a fine turno; pesca immediata al piazzamento', () => {
-  const r = newRun(3); beginArena(r); const c = r.combat!; c.energy = 10; c.enemy.hp = c.enemy.maxHp = 1000; c.hand = ['base:0', 'base:8']; const dr = c.draw.length;
-  assert.equal(playCard(r, 'base:0'), null); assert.equal(c.enemy.hp, 1000); assert.equal(c.field.off.length, 1);
-  assert.equal(playCard(r, 'base:8'), null); assert.equal(c.field.def.length, 1); assert.equal(c.hand.length, 1); assert.equal(c.draw.length, dr - 1);
+  const r = newRun(3); beginArena(r); const c = r.combat!; c.energy = 10; c.enemy.hp = c.enemy.maxHp = 1000; c.hand = ['base:jab:0', 'base:focus:8']; const dr = c.draw.length;
+  assert.equal(playCard(r, 'base:jab:0'), null); assert.equal(c.enemy.hp, 1000); assert.equal(c.field.off.length, 1);
+  assert.equal(playCard(r, 'base:focus:8'), null); assert.equal(c.field.def.length, 1); assert.equal(c.hand.length, 1); assert.equal(c.draw.length, dr - 1);
   endTurn(r); settle(r); assert.equal(c.enemy.hp, 996); assert.equal(c.field.off.length, 0);
 });
 test('difese: durata in turni', () => {
@@ -111,15 +111,15 @@ test('carta misteriosa senza slot liberi: si paga, poi sostituisci o scarta (met
 test('isole: bloccate finché non si vincono 5 partite; progressi, sblocco e nemici per isola', () => {
   const r = newRun(1); assert.deepEqual(unlocked(r), ['boxing']); assert.ok(chooseRegion(r, 'nope')); assert.ok(chooseRegion(r, 'battlefield')); assert.equal(chooseRegion(r, 'boxing'), null);
   assert.equal(enemyFor(1, 'desert').art, 'desert'); assert.notEqual(enemyFor(1, 'desert').name, enemyFor(1, 'volcano').name);
-  const win = () => { beginArena(r); r.combat!.enemy.hp = 1; r.combat!.hand.push('base:0'); playCard(r, 'base:0'); endTurn(r); settle(r); };
+  const win = () => { beginArena(r); r.combat!.enemy.hp = 1; r.combat!.hand.push('base:jab:0'); playCard(r, 'base:jab:0'); endTurn(r); settle(r); };
   beginArena(r); assert.equal(r.combat!.enemy.name, REGIONS.boxing.enemies[0].name); assert.equal(r.combat!.enemy.art, 'boxing'); r.phase = 'store'; r.combat = null;
   win(); assert.equal(r.progress!.boxing, 1); assert.equal(r.needsMap, false); assert.deepEqual(unlocked(r), ['boxing']);
   r.progress = { boxing: 4 }; win(); assert.equal(r.progress.boxing, 5); assert.equal(r.needsMap, true); assert.deepEqual(unlocked(r), ['boxing', 'battlefield']);
   assert.equal(chooseRegion(r, 'battlefield'), null); beginArena(r); assert.equal(r.combat!.enemy.name, REGIONS.battlefield.enemies[0].name);
 });
 test('vendita carte: tutte vendibili, ma nel mazzo restano almeno 10 carte', () => {
-  const r = rich(); assert.ok(sellCard(r, 'base:0')); buyEquipment(r, 'wraps'); const g = r.gold;
-  assert.equal(sellCard(r, 'base:0'), null); assert.equal(r.gold, g + CONFIG.cardValueBase); assert.equal(r.deck.length, 12); assert.ok(!ownedCards(r).some(c => c.uid === 'base:0'));
+  const r = rich(); assert.ok(sellCard(r, 'base:jab:0')); buyEquipment(r, 'wraps'); const g = r.gold;
+  assert.equal(sellCard(r, 'base:jab:0'), null); assert.equal(r.gold, g + CONFIG.cardValueBase); assert.equal(r.deck.length, 12); assert.ok(!ownedCards(r).some(c => c.uid === 'base:jab:0'));
   assert.equal(sellCard(r, 'eq:wraps:0'), null); assert.equal(sellCard(r, 'eq:wraps:1'), null); assert.equal(r.deck.length, 10);
   assert.ok(sellCard(r, 'eq:wraps:2')); assert.ok(sellEquipment(r, 'wraps')); assert.ok(sellCard(r, 'nope'));
 });
@@ -139,4 +139,14 @@ test('pietà: se risparmiato soldi dimezzati e si torna allo store; altrimenti i
     else { s2 = true; assert.equal(r.phase, 'combat'); assert.equal(r.combat!.phase, 'resolve'); assert.equal(r.gold, g); for (let i = 0; i < 30 && r.combat && (r.combat.phase as string) !== 'player'; i++) enemyStep(r); assert.match(askMercy(r).err ?? '', /già/); }
   }
   assert.ok(s1 && s2);
+});
+test('stile iniziale: la slot machine assegna uno stile con il suo mazzo base di 10 carte', () => {
+  const seen = new Set<string>(); for (let s = 1; s < 40; s++) { const r = newRun(s); const id = rollStyle(r); seen.add(id); assert.equal(r.deck.length, 10); const st = STYLES.find(x => x.id === id)!; assert.deepEqual(ownedCards(r).map(c => c.move), st.deck); }
+  assert.equal(seen.size, STYLES.length);
+});
+test('vita: duello a PV pieni (anche con PV massimi aumentati); sotto il 30% parti all\'80% finché non paghi la cura', () => {
+  const r = rich(); buyEquipment(r, 'plating'); beginArena(r); assert.equal(maxHp(r), 48); assert.equal(r.hp, 48);
+  r.hp = 10; r.combat!.enemy.hp = 1; r.combat!.hand.push('base:jab:0'); playCard(r, 'base:jab:0'); endTurn(r); settle(r); assert.equal(r.wounded, true);
+  const r2: Run = JSON.parse(JSON.stringify(r)); beginArena(r2); assert.equal(r2.hp, Math.ceil(48 * 0.8));
+  const g = r.gold; assert.equal(healRun(r), null); assert.equal(r.gold, g - 15); assert.ok(healRun(r)); beginArena(r); assert.equal(r.hp, 48);
 });

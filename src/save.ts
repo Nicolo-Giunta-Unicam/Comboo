@@ -1,7 +1,7 @@
 import { EQUIPMENT, MOVES } from './data';
 import { genOffers, type Run } from './engine';
 export interface KV { getItem(k: string): string | null; setItem(k: string, v: string): void; removeItem(k: string): void }
-export const SAVE_KEY = 'cardrogue.run.v1';
+export const SAVE_KEY = 'cardrogue.run.v2';
 export const saveRun = (r: Run, kv: KV) => { try { kv.setItem(SAVE_KEY, JSON.stringify(r)); } catch { /* storage pieno/non disponibile */ } };
 export const clearRun = (kv: KV) => kv.removeItem(SAVE_KEY);
 export function loadRun(kv: KV): Run | null {

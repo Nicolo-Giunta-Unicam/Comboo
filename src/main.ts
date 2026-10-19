@@ -1,6 +1,6 @@
 import { CONFIG } from './config';
-import { ENEMY_MOVES, EQUIPMENT, MOVES, effectLines, moveOf, type Move } from './data';
-import { beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
+import { ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, effectLines, moveOf, type Move } from './data';
+import { beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, rollStyle, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
 import { ART, eqIcon } from './art';
 import { REGIONS, REGION_LIST, type Region } from './regions';
 import { banner, burst } from './fx';
@@ -22,7 +22,7 @@ function card(uid: string, o: { cls?: string; attr?: string; price?: number; bad
   return `<div class="card ${kind(m)} ${o.cls ?? ''}" ${o.attr ?? ''}><span class="cost">${m.cost}</span>${o.badge ? `<span class="bdg">${o.badge}</span>` : ''}<div class="nm">${m.name}</div><div class="art">${ICON[m.source] ?? (e.dmg ? ART.kind.atk : e.block ? ART.kind.def : ART.kind.utl)}</div><div class="efs">${effectLines(e).map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name}${o.price ? ` · 💰${o.price}` : ''}</div></div>`;
 }
 const bar = (v: number, mx: number, c = '') => `<div class="bar ${c}"><i style="width:${Math.max(0, v / mx * 100)}%"></i><b>${v}/${mx}</b></div>`;
-const head = (r: Run) => `<div class="top"><span>⚔ ${REGIONS[r.region ?? '']?.name ?? 'Arena'} ${r.region ? Math.min(wins(r, r.region), CONFIG.matchesPerIsland) + '/' + CONFIG.matchesPerIsland : r.arena}</span><span>💰 ${r.god ? '∞' : r.gold}</span><span>🎴 ${r.deck.length}/${CONFIG.maxDeck}</span><span>⚡ ${maxEnergy(r)}/${CONFIG.maxEnergy}</span><span>🔧 ${r.equipped.length}/${r.slots}</span><button class="gear" data-a="set">⚙</button></div>`;
+const head = (r: Run) => `<div class="top"><span>⚔ ${REGIONS[r.region ?? '']?.name ?? 'Arena'} ${r.region ? Math.min(wins(r, r.region), CONFIG.matchesPerIsland) + '/' + CONFIG.matchesPerIsland : r.arena}</span><span>💰 ${r.god ? '∞' : r.gold}</span><span>❤ ${r.phase === 'combat' ? r.hp : startHp(r)}/${maxHp(r)}</span><span>🎴 ${r.deck.length}/${CONFIG.maxDeck}</span><span>⚡ ${maxEnergy(r)}/${CONFIG.maxEnergy}</span><span>🔧 ${r.equipped.length}/${r.slots}</span><button class="gear" data-a="set">⚙</button></div>`;
 let mercyArm = 0, finalView: Combat | null = null, finalHp = 0, creating = false, draft = { name: '', av: 'a0' }, sailing = false, mapSel: string | null = null, vs: { tier: string; art?: string; name: string; hp: number; lv: number } | null = null, prevEn = -1, lastCombo = '', lastEv: unknown = null, endAnim: { win: boolean; tier: string; art?: string } | null = null, lastPhase: string | undefined, prevHand: string[] = [], timer = 0, bars: { me: number; foe: number } | null = null;
 // ---- Timer di turno (disattivabile): scaduto il tempo, il turno termina da solo; in pausa con impostazioni/menu ----
 const TLIM = [10, 30, 60];
@@ -106,7 +106,7 @@ function draw() {
   if (run?.phase !== 'combat' && !finalView) { bars = null; prevHand = []; lastCombo = ''; lastEv = null; }
   const r = run, t = note ? `<div class="toast">${note}</div>` : '';
   if (!r || (!started && r.phase !== 'over')) {
-    app.innerHTML = `<div class="logo">CARD<br>ROGUELIKE</div><p style="text-align:center"><small>Prototipo — ambientazione provvisoria. Da lottatore umano a potenza cosmica.</small></p>${r ? `<button class="pri" data-a="cont" style="width:100%">Continua run (arena ${r.arena})</button><br><br>` : ''}<button data-a="new" style="width:100%">Nuova run</button><br><br><button data-a="set" style="width:100%">⚙ Impostazioni</button>`; return;
+    app.innerHTML = `<div class="logo">COMB<span class="inf">∞</span></div><p style="text-align:center"><small>Prototipo — ambientazione provvisoria. Da lottatore umano a potenza cosmica.</small></p>${r ? `<button class="pri" data-a="cont" style="width:100%">Continua run (arena ${r.arena})</button><br><br>` : ''}<button data-a="new" style="width:100%">Nuova run</button><br><br><button data-a="set" style="width:100%">⚙ Impostazioni</button>`; return;
   }
   if (r.phase === 'over' && !finalView) { app.innerHTML = `<div class="logo" style="font-size:36px">SCONFITTA</div><div class="item"><div class="big">💀</div>Arene superate: <b>${r.arena - 1}</b><small>Regola provvisoria: la sconfitta termina la run.</small></div><br><button class="pri" data-a="new" style="width:100%">Nuova run</button><br><br><button data-a="menu" style="width:100%">🏠 Menu principale</button>`; return; }
   if (r.phase === 'combat' || finalView) {
@@ -140,7 +140,7 @@ function draw() {
     if (dealt) sfx('draw'); prevHand = [...c.hand];
     const nw = app.querySelector('.rowf .card.new') as HTMLElement | null; // carta appena schierata: impatto (offesa) o fortificazione (difesa)
     if (nw) { const q = nw.getBoundingClientRect(), off = (nw.parentElement as HTMLElement).classList.contains('off'); burst(off ? 'hit' : 'guard', q.left + q.width / 2, q.top + q.height / 2); sfx(off ? 'place' : 'fort');
-      if (c.combo && c.combo !== lastCombo) { burst('combo', q.left + q.width / 2, q.top + q.height / 2); banner(c.combo); sfx('combo'); } }
+      if (c.combo && c.combo !== lastCombo) { burst(c.tier === 2 ? 'fw' : 'combo', q.left + q.width / 2, q.top + q.height / 2); banner(c.combo, c.tier === 2); sfx('combo'); } }
     lastCombo = c.combo;
     if (ev && ev !== lastEv) { // attivazione a fine turno: impatto sul bersaglio, fortificazione sulla riga difensiva che assorbe
       app.querySelectorAll<HTMLElement>('.evn[data-n]').forEach(countUp); if (ev.dmg > 0) { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 380); }
@@ -161,8 +161,9 @@ function draw() {
   const rg = REGIONS[r.region ?? 'boxing'] ?? REGION_LIST[0], w = wins(r, rg.id), idx = w % CONFIG.matchesPerIsland, nme = rg.enemies[idx], pre = enemyFor(r.arena, rg.id, idx), boss = idx === CONFIG.matchesPerIsland - 1;
   const emv = rg.enemyMoves.map(id => ENEMY_MOVES.find(x => x.id === id)?.name).filter(Boolean).join(', ');
   const tale = (nme.story ?? `${esc(nme.name)} ti aspetta a ${rg.name}.`).replace(/\{nome\}/g, heroName()), chap = islandIndex(rg.id) * CONFIG.matchesPerIsland + idx + 1;
-  const storyHtml = `<div class="story"><div class="sbook"><div class="chap">Capitolo ${chap} · ${rg.name}</div><h3>${boss ? '⚔ ' : ''}${esc(nme.name)}</h3><p class="tale">${tale}</p></div>
+  const storyHtml = `<div class="story"><div class="sbook"><div class="chap">Capitolo ${chap} · ${rg.name} · ${STYLES.find(x => x.id === (r.style ?? 'boxing'))?.name}</div><h3>${boss ? '⚔ ' : ''}${esc(nme.name)}</h3><p class="tale">${tale}</p></div>
     <div class="sbox foe"><div class="sface">${foeArt(rg.id, rg.level)}</div><div><b>${boss ? 'BOSS · ' : ''}${esc(nme.name)}</b><br><small>${rg.level} · partita ${idx + 1}/${CONFIG.matchesPerIsland} · ❤ ${pre.maxHp}</small><br><small>Mosse: ${emv}</small></div></div></div>`;
+  const healRow = r.wounded ? `<div class="energyrow"><b>🩹 Ferite gravi: parti all'${Math.round(CONFIG.woundedStart * 100)}% dei PV</b><button class="ebtn" data-a="heal">Cura <span class="price">💰${CONFIG.healCost}</span></button></div>` : '';
   const back = (k: 'eq' | 'mv', p: number) => `<div class="offer"><div class="card back" data-drag="offer:${k}:2"><div class="bk">?</div></div><div class="ptag mys">🎁 ${p}</div></div>`;
   const en = maxEnergy(r), energy = `<div class="energyrow"><b>⚡ ENERGIA ${en}/${CONFIG.maxEnergy}</b><div class="eticks">${Array.from({ length: CONFIG.maxEnergy }, (_, i) => `<div class="tick ${i < en ? 'fill' : ''}"></div>`).join('')}</div>${en >= CONFIG.maxEnergy ? '<small>✔ MAX</small>' : `<button class="ebtn" data-a="buyEn">+1 <span class="price">💰${energyPrice(r)}</span></button>`}</div>`;
   const store = `<div class="store"><div class="sl"><div class="og6">
@@ -170,7 +171,7 @@ function draw() {
     <div class="og"><small class="lbl">✦ MOSSE</small><div class="offers">${r.offers.mv.map((x, i) => i === 2 && x ? back('mv', r.offers.mvPrice) : slot(x, (id, j) => offer(card('buy:' + id, { attr: `data-drag="offer:mv:${j}"` }), MOVES[id].price), i)).join('')}</div></div></div>
     <div class="eqline"><div class="eqleft"><div class="zone dz" data-zone="eqbar"><div class="eqwrap"><b>Equipaggiamento ${r.equipped.length}/${r.slots}</b><small> · ⬆ trascina qui un potenziamento</small><div class="eqrow">${r.equipped.map(id => eqCard(id, -1)).join('')}${Array.from({ length: Math.max(0, r.slots - r.equipped.length) }, () => '<div class="ph">slot libero</div>').join('')}</div></div></div>
     <div class="zone dz sellz" data-zone="sell"><div><b>💰 Vendita</b> <small>Trascina qui un equipaggiamento (50%)</small></div></div></div>
-    <div class="zone dz deckz" data-zone="deck"><div class="card back"><div class="bk">${r.deck.length}</div></div><b>Mazzo ${r.deck.length}/${CONFIG.maxDeck}</b><small>⬆ trascina qui una mossa</small></div></div>${energy}</div></div>`;
+    <div class="zone dz deckz" data-zone="deck"><div class="card back"><div class="bk">${r.deck.length}</div></div><b>Mazzo ${r.deck.length}/${CONFIG.maxDeck}</b><small>⬆ trascina qui una mossa</small></div></div>${energy}${healRow}</div></div>`;
   if (tab === 'me') {
     const inn = own.filter(c => r.deck.includes(c.uid)), out = own.filter(c => !r.deck.includes(c.uid));
     const cs = (l: typeof own) => l.map(c => card(c.uid, { attr: `data-drag="${c.uid}"` })).join('');
@@ -193,19 +194,26 @@ const LORE_EQ: Record<string, L[]> = {
   arcane: [(n, i) => `Tra le rovine di ${i} trovi ${n}, che pulsa di un potere antico.`, (n, i) => `Una figura incappucciata di ${i} ti offre ${n}: il prezzo, dice, lo scoprirai dopo.`, (n, i) => `Un luogo sacro di ${i} ti concede ${n}, come premio per aver resistito.`],
 };
 const LORE_MV: L[] = [(n, i) => `Osservando i combattenti di ${i} impari una nuova tecnica: «${n}».`, (n, i) => `Un maestro errante di ${i} ti mostra il segreto di «${n}», e tu lo fai tuo.`, (n, i) => `Dopo un duello a ${i}, il tuo corpo ricorda da solo «${n}».`, (n, i) => `Notti intere di pratica a ${i}: finalmente «${n}» ti riesce alla perfezione.`];
-function loreOf(kind: 'eq' | 'mv' | 'mercy', id: string) {
+const STYLE_LORE: Record<string, string> = {
+  boxing: 'Nel retro di una vecchia palestra, il suono dei sacchi ti ha insegnato il ritmo: guardia alta, pugni corti e tanta pazienza.',
+  taekwondo: 'Anni in una scuola di quartiere ti hanno reso leggero: i tuoi calci arrivano prima che l\'avversario finisca di respirare.',
+  jujitsu: 'Un vecchio maestro ti ha insegnato che la forza altrui si può usare: prese, proiezioni e leve sono il tuo linguaggio.',
+};
+function loreOf(kind: 'eq' | 'mv' | 'mercy' | 'style', id: string) {
+  if (kind === 'style') return STYLE_LORE[id] ?? '';
   if (kind === 'mercy') return id === 'ok' ? '«Vattene, finché puoi.» Il tuo avversario abbassa la guardia e ti lascia andare, ma prima ti alleggerisce la borsa: i tuoi soldi si dimezzano. Tornerai alla storia per riprovare il duello.' : '«Non ci sono scorciatoie.» Il tuo avversario scuote la testa e il duello continua: la tua supplica ti è costata il turno.';
   const rg = REGIONS[run?.region ?? 'boxing'] ?? REGION_LIST[0], name = kind === 'eq' ? EQUIPMENT[id].name : MOVES[id].name, k = kind === 'eq' ? LORE_EQ[EQUIPMENT[id].kind] ?? LORE_EQ.gear : LORE_MV;
   return k[(id.length + name.length) % k.length](name, rg.name);
 }
-function slotMachine(kind: 'eq' | 'mv' | 'mercy', id: string) {
-  const pool = kind === 'eq' ? Object.keys(EQUIPMENT) : kind === 'mv' ? Object.values(MOVES).filter(m => m.price > 0).map(m => m.id) : ['ok', 'no'], face = (x: string) => kind === 'eq' ? eqFace(x) : kind === 'mv' ? card('buy:' + x) : `<div class="card mercy ${x}"><div class="nm">${x === 'ok' ? 'Risparmiato' : 'Nessuna pietà'}</div><div class="art">${x === 'ok' ? '🕊️' : '💀'}</div></div>`;
+const styleFace = (id: string) => { const st = STYLES.find(x => x.id === id)!, cnt: Record<string, number> = {}; st.deck.forEach(m => cnt[m] = (cnt[m] ?? 0) + 1); return `<div class="card style"><div class="nm">${st.name}</div><div class="art" style="font-size:clamp(40px,9dvh,84px)">${st.icon}</div><div class="efs"><div class="ef">${st.desc}</div>${Object.entries(cnt).map(([m, n]) => `<div class="ef">${MOVES[m].name} ×${n}</div>`).join('')}</div></div>`; };
+function slotMachine(kind: 'eq' | 'mv' | 'mercy' | 'style', id: string) {
+  const pool = kind === 'eq' ? Object.keys(EQUIPMENT) : kind === 'mv' ? Object.values(MOVES).filter(m => m.price > 0).map(m => m.id) : kind === 'style' ? STYLES.map(x => x.id) : ['ok', 'no'], face = (x: string) => kind === 'eq' ? eqFace(x) : kind === 'mv' ? card('buy:' + x) : kind === 'style' ? styleFace(x) : `<div class="card mercy ${x}"><div class="nm">${x === 'ok' ? 'Risparmiato' : 'Nessuna pietà'}</div><div class="art">${x === 'ok' ? '🕊️' : '💀'}</div></div>`;
   const N = 10, fin = 6, base = Array.from({ length: N }, (_, i) => i === fin ? id : pool[(i * 7 + 3) % pool.length]);
   const ov = document.createElement('div'); ov.className = 'slotov';
-  ov.innerHTML = `<div class="slotbox"><h2>${kind === 'mercy' ? '🙏 Il destino decide…' : '🎰 Carta misteriosa'}</h2><div class="slotrow"><div class="reelwin"><div class="reel">${[0, 1, 2].map(() => base.map(x => `<div class="ritem">${face(x)}</div>`).join('')).join('')}</div><div class="reelframe"></div></div><div class="slotlore"><h3>${kind === 'mercy' ? '📜 L\'esito' : '📜 Come l\'hai ottenuta'}</h3><p></p></div></div><button class="pri" id="slb">⏹ FERMA</button></div>`; document.body.appendChild(ov);
+  ov.innerHTML = `<div class="slotbox"><h2>${kind === 'mercy' ? '🙏 Il destino decide…' : kind === 'style' ? '🎰 Il tuo stile di combattimento' : '🎰 Carta misteriosa'}</h2><div class="slotrow"><div class="reelwin"><div class="reel">${[0, 1, 2].map(() => base.map(x => `<div class="ritem">${face(x)}</div>`).join('')).join('')}</div><div class="reelframe"></div></div><div class="slotlore"><h3>${kind === 'mercy' ? '📜 L\'esito' : kind === 'style' ? '📜 Le tue origini' : '📜 Come l\'hai ottenuta'}</h3><p></p></div></div><button class="pri" id="slb">⏹ FERMA</button></div>`; document.body.appendChild(ov);
   const reel = ov.querySelector('.reel') as HTMLElement, win = ov.querySelector('.reelwin') as HTMLElement, btn = ov.querySelector('#slb') as HTMLButtonElement, title = ov.querySelector('h2') as HTMLElement;
   let y = 0, stopping = false, from = 0, to = 0, t0 = 0, last = performance.now(), lastIdx = -1;
-  const finish = () => { const lore = ov.querySelector('.slotlore') as HTMLElement; (lore.querySelector('p') as HTMLElement).textContent = loreOf(kind, id); lore.classList.add('show'); title.textContent = kind === 'mercy' ? (id === 'ok' ? '🕊️ Sei stato risparmiato!' : '💀 Nessuna pietà!') : `✨ ${kind === 'eq' ? EQUIPMENT[id].name : MOVES[id].name} sbloccata!`; sfx(id === 'no' ? 'lose' : 'win'); const q = win.getBoundingClientRect(); burst('combo', q.left + q.width / 2, q.top + q.height / 2); btn.textContent = 'Continua'; btn.disabled = false; btn.onclick = () => { ov.remove(); afterReveal(kind, id); }; };
+  const finish = () => { const lore = ov.querySelector('.slotlore') as HTMLElement; (lore.querySelector('p') as HTMLElement).textContent = loreOf(kind, id); lore.classList.add('show'); title.textContent = kind === 'style' ? `✨ Stile: ${STYLES.find(x => x.id === id)!.name}!` : kind === 'mercy' ? (id === 'ok' ? '🕊️ Sei stato risparmiato!' : '💀 Nessuna pietà!') : `✨ ${kind === 'eq' ? EQUIPMENT[id].name : MOVES[id].name} sbloccata!`; sfx(id === 'no' ? 'lose' : 'win'); const q = win.getBoundingClientRect(); burst('combo', q.left + q.width / 2, q.top + q.height / 2); btn.textContent = 'Continua'; btn.disabled = false; btn.onclick = () => { ov.remove(); afterReveal(kind, id); }; };
   const frame = (now: number) => {
     const H = win.clientHeight, T = N * H; if (!ov.isConnected) return;
     if (!stopping) y += 1600 * (now - last) / 1000; else { const p = Math.min(1, (now - t0) / 2600); y = from + (to - from) * (1 - (1 - p) ** 3); if (p >= 1) { reel.style.transform = `translateY(${-(to % T)}px)`; finish(); return; } }
@@ -214,8 +222,8 @@ function slotMachine(kind: 'eq' | 'mv' | 'mercy', id: string) {
   btn.onclick = () => { const H = win.clientHeight, T = N * H; stopping = true; from = y; to = y + ((fin * H - (y % T) + T) % T) + 2 * T; t0 = performance.now(); btn.disabled = true; };
   requestAnimationFrame(frame);
 }
-function afterReveal(kind: 'eq' | 'mv' | 'mercy', id: string) {
-  if (kind === 'mercy') { render(); return; } // chiusa la slot machine: se non c'è slot si sceglie, altrimenti la carta vola al suo posto
+function afterReveal(kind: 'eq' | 'mv' | 'mercy' | 'style', id: string) {
+  if (kind === 'mercy' || kind === 'style') { render(); return; } // chiusa la slot machine: se non c'è slot si sceglie, altrimenti la carta vola al suo posto
   if (run?.pending) { choiceModal(); return; }
   flyTo(kind === 'eq' ? eqFace(id) : card('buy:' + id), kind === 'eq' ? '[data-zone="eqbar"]' : '[data-zone="deck"]');
 }
@@ -259,12 +267,12 @@ function act(a: string, id = '') {
   if (UIA.includes(a)) { ui(a, id); return; }
   let err: Err = null; note = '';
   if (a === 'new') { creating = true; draft = { name: run?.hero?.name ?? '', av: run?.hero?.avatar ?? 'a0' }; }
-  else if (a === 'startrun') { run = newRun(); run.hero = { name: draft.name.trim() || 'Protagonista', avatar: draft.av }; started = true; tab = 'sto'; mapSel = null; creating = false; }
+  else if (a === 'startrun') { run = newRun(); run.hero = { name: draft.name.trim() || 'Protagonista', avatar: draft.av }; const sid = rollStyle(run); started = true; tab = 'sto'; mapSel = null; creating = false; slotMachine('style', sid); }
   else if (a === 'avatar') draft.av = id; else if (a === 'cancelnew') creating = false; else if (a === 'cont') started = true;
   else if (run) {
     const mys = a === 'offerEq' && +id === 2 ? run.offers.eq[2] : a === 'offerMv' && +id === 2 ? run.offers.mv[2] : null, g0 = run.gold, e0 = run.combat?.enemy.hp ?? 0, p0 = run.hp;
     if (a === 'tab') tab = id as typeof tab; else if (a === 'next') tab = tab === 'sto' ? 'st' : 'me'; else if (a === 'region') { if (unlocked(run).includes(id)) mapSel = id; else err = '🔒 Isola bloccata: vinci le 5 partite dell\'isola precedente.'; } else if (a === 'openmap') err = openMap(run);
-    else if (a === 'mercy') { if (Date.now() - mercyArm > 3000) { mercyArm = Date.now(); err = 'Tocca di nuovo 🙏 Pietà per confermare: se vieni risparmiato perdi metà dei soldi.'; } else { const res = askMercy(run); err = res.err; if (!err) { mercyArm = 0; slotMachine('mercy', res.spared ? 'ok' : 'no'); } } } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
+    else if (a === 'mercy') { if (Date.now() - mercyArm > 3000) { mercyArm = Date.now(); err = 'Tocca di nuovo 🙏 Pietà per confermare: se vieni risparmiato perdi metà dei soldi.'; } else { const res = askMercy(run); err = res.err; if (!err) { mercyArm = 0; slotMachine('mercy', res.spared ? 'ok' : 'no'); } } } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'heal') err = healRun(run); else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
     else if (a === 'buyM') err = buyMove(run, id); else if (a === 'buyEn') err = buyEnergy(run); else if (a === 'offerEq') err = buyOfferEq(run, +id); else if (a === 'offerMv') err = buyOfferMv(run, +id); else if (a === 'hint') err = id; else if (a === 'sellM') err = sellMove(run, id); else if (a === 'deck') err = toggleDeck(run, id);
     else if (a === 'go') err = beginArena(run); else if (a === 'play') err = playCard(run, id); else if (a === 'end') err = endTurn(run);
     if (!['tab', 'next', 'play', 'end'].includes(a)) run.msg = '';

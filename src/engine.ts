@@ -1,18 +1,18 @@
 import { CONFIG } from './config';
-import { BASE_DECK, ENEMY_MOVES, EQUIPMENT, MOVES, moveOf } from './data';
+import { ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, moveOf } from './data';
 import { REGION_LIST, REGIONS } from './regions';
 import { defeatOutcome, movesRetainedAfterRemoval } from './policies';
 export type Phase = 'store' | 'combat' | 'over';
 export type Err = string | null;
 export interface Enemy { name: string; tier: string; hp: number; maxHp: number; block: number; gear: string[]; art?: string; atk: number }
-export interface Combat { enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
+export interface Combat { enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
 export interface Run {
   /** Carta misteriosa pagata ma non ancora installata (nessuno slot libero): si risolve con resolvePending. */
   pending?: { id: string; paid: number } | null;
   /** Regione dell'arena corrente (tema e nemici); needsMap: prima di ogni arena si sceglie la regione sulla mappa. */
   region?: string | null; needsMap?: boolean; progress?: Record<string, number>;
   /** Carte vendute singolarmente (uid di carte base o di mosse di equipaggiamento): escluse dalla collezione. */
-  god?: boolean; finalEv?: Ev | null; outcome?: string;
+  god?: boolean; finalEv?: Ev | null; outcome?: string; style?: string; wounded?: boolean;
   sold?: string[]; hero?: { name: string; avatar: string };
   v: 1; rng: number; arena: number; gold: number; hp: number; slots: number;
   equipped: string[]; bought: string[]; retained: string[]; energyBonus: number; offers: Offers; paid: Record<string, number>;
@@ -26,9 +26,10 @@ export interface Offers { eq: (string | null)[]; mv: (string | null)[]; eqPrice:
 export interface Card { uid: string; move: string }
 export function rand(r: Run) { r.rng = (r.rng + 0x6D2B79F5) >>> 0; let t = r.rng; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
 function shuffle<T>(r: Run, a: T[]) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rand(r) * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+const styleDeck = (r: Run) => (STYLES.find(x => x.id === (r.style ?? 'boxing')) ?? STYLES[0]).deck;
 export function ownedCards(r: Run): Card[] {
   const m = new Map<string, Card>(); const add = (uid: string) => m.set(uid, { uid, move: moveOf(uid) });
-  BASE_DECK.forEach((_, i) => add(`base:${i}`));
+  styleDeck(r).forEach((m, i) => add(`base:${m}:${i}`));
   r.equipped.forEach(e => EQUIPMENT[e].moves.forEach((_, i) => add(`eq:${e}:${i}`)));
   r.retained.forEach(add); r.bought.forEach(b => add(`buy:${b}`)); (r.sold ?? []).forEach(u => m.delete(u));
   return [...m.values()];
@@ -68,6 +69,14 @@ export function buyOfferEq(r: Run, i: number): Err {
   r.offers.eq[i] = null; const add = shuffle(r, EQUIPMENT[id].advanced.filter(m => !r.bought.includes(m) && !r.offers.mv.includes(m)));
   r.offers.mv = r.offers.mv.map(m => m ?? add.shift() ?? null); return null;
 }
+/** PV a inizio duello: sempre pieni, salvo se l'ultimo duello è finito sotto la soglia (allora parti all'80% finché non paghi la cura). */
+export const startHp = (r: Run) => r.wounded ? Math.ceil(maxHp(r) * CONFIG.woundedStart) : maxHp(r);
+export function healRun(r: Run): Err {
+  if (r.phase !== 'store') return 'Store non disponibile.'; if (!r.wounded) return 'Sei già in piena salute.'; if (r.gold < CONFIG.healCost) return 'Oro insufficiente.';
+  r.gold -= CONFIG.healCost; r.wounded = false; return null;
+}
+/** Slot machine iniziale: assegna lo stile di combattimento e il relativo mazzo base. */
+export function rollStyle(r: Run): string { r.style = STYLES[Math.floor(rand(r) * STYLES.length)].id; r.deck = ownedCards(r).map(c => c.uid); return r.style; }
 export function chooseRegion(r: Run, id: string): Err {
   if (r.phase !== 'store' || !r.needsMap) return 'Non puoi scegliere ora.'; const g = REGIONS[id]; if (!g) return 'Regione sconosciuta.'; if (!unlocked(r).includes(id)) return 'Isola bloccata.';
   r.region = id; r.needsMap = false; r.msg = `Arena: ${g.name}.`; return null;
@@ -147,7 +156,7 @@ export function sellMove(r: Run, id: string): Err {
 export function beginArena(r: Run): Err {
   if (r.phase !== 'store') return 'Non sei nello store.'; if (r.pending) return 'Risolvi prima la carta in sospeso.'; sanitize(r);
   if (r.deck.length < CONFIG.minDeck) return `Servono almeno ${CONFIG.minDeck} carte nel mazzo.`;
-  r.hp = Math.min(r.hp, maxHp(r));
+  r.hp = startHp(r); r.wounded = false;
   r.combat = { enemy: enemyFor(r.arena, r.region ?? undefined, wins(r, r.region ?? '') % CONFIG.matchesPerIsland), block: 0, draw: shuffle(r, r.deck), hand: [], discard: [], energy: 0, turn: 0, field: { off: [], def: [] }, foeField: { off: [], def: [] }, played: {}, prev: null, combo: '', phase: 'player', seq: 0, fresh: 0, ev: null, queue: [], last: null, log: ['Lo scontro ha inizio!'] };
   r.phase = 'combat'; r.msg = ''; startTurn(r); return null;
 }
@@ -174,7 +183,7 @@ export function playCard(r: Run, uid: string): Err {
   c.energy -= m.cost; c.hand.splice(c.hand.indexOf(uid), 1);
   // Combo base (stessa carta nel round) e concatenazione (carta precedente indicata): calcolate in ordine di schieramento.
   const n = (c.played[m.id] ?? 0) + 1, pct = CONFIG.combo.same[Math.min(n, CONFIG.combo.max) - 1] ?? 0, lk = f.link && c.prev === f.link.from ? f.link : null, mul = (x: number) => Math.round(x * (1 + pct));
-  c.played[m.id] = n; c.prev = m.id;
+  c.played[m.id] = n; c.prev = m.id; c.tier = n >= 3 ? 2 : (pct || lk) ? 1 : 0;
   const p: Placed = { uid, name: m.name, icon: '', src: m.source, dmg: off ? mul(f.dmg! + dmgBonus(r) + (lk?.dmg ?? 0)) : 0, hits: f.hits ?? 1, block: 0, ttl: 1, id: ++c.seq, mv: m.id };
   const blk = mul((f.block ?? 0) + (lk?.block ?? 0));
   if (off) c.block += blk; else { p.block = blk; p.ttl = f.dur === 0 ? -1 : f.dur ?? 1; } // guardia di una carta offensiva: temporanea
@@ -235,9 +244,9 @@ export function resolveOutcome(r: Run, res: 'win' | 'lose' | 'flee' | 'spared') 
     const g = CONFIG.reward(r.arena); r.gold += g; r.msg = `Vittoria! +${g} oro.`; r.outcome = 'win';
     if (r.region) { r.progress = { ...r.progress, [r.region]: wins(r, r.region) + 1 }; const nx = REGION_LIST[islandIndex(r.region) + 1]; if (wins(r, r.region) === CONFIG.matchesPerIsland && nx) r.msg += ` Isola completata: si sblocca ${nx.name}!`; }
     r.arena++; r.slots = slotsFor(r.arena);
-    r.hp = Math.min(maxHp(r), r.hp + Math.ceil(maxHp(r) * CONFIG.healBetweenFights)); r.phase = 'store'; genOffers(r); r.needsMap = !r.region || wins(r, r.region) >= CONFIG.matchesPerIsland;
+    r.wounded = r.hp / maxHp(r) < CONFIG.woundedBelow; r.phase = 'store'; genOffers(r); r.needsMap = !r.region || wins(r, r.region) >= CONFIG.matchesPerIsland;
   } else if (res === 'flee' || res === 'spared') { // fuga (nessuna conseguenza) o pietà accettata (soldi dimezzati): si torna alla storia e il duello si ripete
-    r.outcome = res; if (res === 'spared') r.gold = Math.floor(r.gold / 2); r.hp = Math.min(maxHp(r), r.hp + Math.ceil(maxHp(r) * CONFIG.healBetweenFights)); r.phase = 'store'; r.needsMap = false;
+    r.outcome = res; if (res === 'spared') r.gold = Math.floor(r.gold / 2); r.wounded = r.hp / maxHp(r) < CONFIG.woundedBelow; r.phase = 'store'; r.needsMap = false;
     r.msg = res === 'flee' ? 'Sei fuggito dal duello: nessuna conseguenza.' : 'Vieni risparmiato… ma ti portano via metà dei soldi.';
   } else if (defeatOutcome(r) === 'end-run') { r.phase = 'over'; r.msg = 'Sei stato sconfitto.'; }
   r.combat = null;
