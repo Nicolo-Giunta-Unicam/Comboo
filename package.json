@@ -9,7 +9,8 @@
     "build": "npm run assets && esbuild src/main.ts --bundle --minify --target=es2020 --outfile=dist/game.js",
     "build:single": "npm run build && node scripts/inline.mjs",
     "test": "npm run assets && tsx --test tests/*.test.ts",
-    "typecheck": "npm run assets && tsc --noEmit"
+    "typecheck": "npm run assets && tsc --noEmit",
+    "assets:list": "node scripts/list-assets.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.21.5",

@@ -4,8 +4,8 @@ import { REGION_LIST, REGIONS } from './regions';
 import { defeatOutcome, movesRetainedAfterRemoval } from './policies';
 export type Phase = 'store' | 'combat' | 'over';
 export type Err = string | null;
-export interface Enemy { name: string; tier: string; hp: number; maxHp: number; block: number; gear: string[]; art?: string; atk: number }
-export interface Combat { enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
+export interface Enemy { name: string; tier: string; hp: number; maxHp: number; block: number; gear: string[]; art?: string; id?: string; atk: number }
+export interface Combat { enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; run?: number; chain?: number; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
 export interface Run {
   /** Carta misteriosa pagata ma non ancora installata (nessuno slot libero): si risolve con resolvePending. */
   pending?: { id: string; paid: number } | null;
@@ -96,7 +96,7 @@ export function newRun(seed = Date.now()): Run {
   const r: Run = { v: 1, rng: seed >>> 0, arena: 1, gold: CONFIG.startGold, hp: CONFIG.startHp, slots: CONFIG.startSlots, equipped: [], bought: [], retained: [], energyBonus: 0, offers: { eq: [], mv: [], eqPrice: 0, mvPrice: 0 }, paid: {}, deck: [], phase: 'store', combat: null, msg: 'Preparati: compra equipaggiamento prima della prima arena.' };
   r.deck = ownedCards(r).map(c => c.uid); genOffers(r); r.needsMap = true; return r;
 }
-export interface EnemyCard { name: string; icon: string; dmg: number; hits: number; block: number; heal: number; dur: number }
+export interface EnemyCard { id?: string; name: string; icon: string; dmg: number; hits: number; block: number; heal: number; dur: number }
 export const islandIndex = (id: string) => REGION_LIST.findIndex(r => r.id === id);
 export const wins = (r: Run, id: string) => r.progress?.[id] ?? 0;
 /** Isole sbloccate: la prima sempre; ogni altra dopo CONFIG.matchesPerIsland vittorie sull'isola precedente. */
@@ -110,7 +110,7 @@ export const enemyGear = (a: number, region?: string): string[] => {
 export function enemyFor(a: number, region?: string, match = 0): Enemy {
   const E = CONFIG.enemy, rg = REGIONS[region ?? ''], en = rg ? rg.enemies[match % rg.enemies.length] : undefined, gear = enemyGear(a, region);
   const hp = Math.round(E.hpBase * E.hpGrowth ** (a - 1) * (en?.hpMul ?? 1)) + gear.reduce((s, g) => s + (EQUIPMENT[g].bonus.maxHp ?? 0), 0);
-  return { name: en ? en.name : `Avversario ${a}`, ...(rg ? { art: rg.id } : {}), tier: rg ? rg.level : 'Umano', hp, maxHp: hp, block: 0, gear, atk: Math.round(E.atkBase * E.atkGrowth ** (a - 1) * (en?.atkMul ?? 1)) };
+  return { name: en ? en.name : `Avversario ${a}`, ...(rg ? { art: rg.id } : {}), ...(en?.id ? { id: en.id } : {}), tier: rg ? rg.level : 'Umano', hp, maxHp: hp, block: 0, gear, atk: Math.round(E.atkBase * E.atkGrowth ** (a - 1) * (en?.atkMul ?? 1)) };
 }
 // ---- Mazzo ----
 function sanitize(r: Run) { const own = new Set(ownedCards(r).map(c => c.uid)); r.deck = r.deck.filter(u => own.has(u)).slice(0, CONFIG.maxDeck); }
@@ -182,15 +182,16 @@ export function playCard(r: Run, uid: string): Err {
   if (c.energy < m.cost) return 'Energia insufficiente.'; if (row.length >= CONFIG.rowSize) return `Riga ${off ? 'offensiva' : 'difensiva'} piena.`;
   c.energy -= m.cost; c.hand.splice(c.hand.indexOf(uid), 1);
   // Combo base (stessa carta nel round) e concatenazione (carta precedente indicata): calcolate in ordine di schieramento.
-  const n = (c.played[m.id] ?? 0) + 1, pct = CONFIG.combo.same[Math.min(n, CONFIG.combo.max) - 1] ?? 0, lk = f.link && c.prev === f.link.from ? f.link : null, mul = (x: number) => Math.round(x * (1 + pct));
-  c.played[m.id] = n; c.prev = m.id; c.tier = n >= 3 ? 2 : (pct || lk) ? 1 : 0;
+  const same = c.prev === m.id, n = same ? (c.run ?? 1) + 1 : 1, pct = CONFIG.combo.same[Math.min(n, CONFIG.combo.max) - 1] ?? 0, lk = f.link && c.prev === f.link.from ? f.link : null, mul = (x: number) => Math.round(x * (1 + pct));
+  // Combo: valida solo tra carte consecutive (stessa carta o concatenazione). Comboo = catena di almeno 3 mosse.
+  const chain = same || lk ? (c.chain ?? 1) + 1 : 1; c.played[m.id] = (c.played[m.id] ?? 0) + 1; c.run = n; c.chain = chain; c.prev = m.id; c.tier = chain >= 3 ? 2 : chain === 2 ? 1 : 0;
   const p: Placed = { uid, name: m.name, icon: '', src: m.source, dmg: off ? mul(f.dmg! + dmgBonus(r) + (lk?.dmg ?? 0)) : 0, hits: f.hits ?? 1, block: 0, ttl: 1, id: ++c.seq, mv: m.id };
   const blk = mul((f.block ?? 0) + (lk?.block ?? 0));
   if (off) c.block += blk; else { p.block = blk; p.ttl = f.dur === 0 ? -1 : f.dur ?? 1; } // guardia di una carta offensiva: temporanea
   row.push(p); c.fresh = p.id!; c.log.push(`${m.name} schierata.`);
   if (f.heal) r.hp = Math.min(maxHp(r), r.hp + mul(f.heal));
   const dr = (f.draw ?? 0) + (lk?.draw ?? 0); if (dr) drawCards(c, r, dr); const en = (f.energy ?? 0) + (lk?.energy ?? 0); if (en) c.energy += en;
-  const tag = [pct ? `${m.name} ×${n} (+${Math.round(pct * 100)}%)` : '', lk ? `${MOVES[lk.from].name} → ${m.name}` : ''].filter(Boolean).join(' · '); if (tag) c.combo = tag;
+  const tag = [pct ? `${m.name} ×${n} (+${Math.round(pct * 100)}%)` : '', lk ? `${MOVES[lk.from].name} → ${m.name}` : ''].filter(Boolean).join(' · '); c.combo = tag;
   p.fx = [dr && `✦${dr}`, en && `⚡+${en}`, f.heal && `✚${mul(f.heal)}`, off && blk && `🛡️${blk}`].filter(Boolean).join(' '); p.tag = [pct ? `🔥+${Math.round(pct * 100)}%` : '', lk ? '🔗' : ''].filter(Boolean).join(' ');
   return null;
 }
@@ -204,7 +205,7 @@ function prepareEnemy(r: Run, c: Combat) {
   const pool = (REGIONS[r.region ?? '']?.enemyMoves ?? []).map(id => ENEMY_MOVES.find(m => m.id === id)).filter(Boolean) as typeof ENEMY_MOVES; if (!pool.length) pool.push(...ENEMY_MOVES);
   const E = CONFIG.enemy, n = Math.min(E.playsMax, E.playsBase + Math.floor((r.arena - 1) / E.playsEvery)), base = c.enemy.atk * E.cardMult;
   const k = (x?: number) => x ? Math.max(1, Math.round(base * x)) : 0, gb = (c.enemy.gear ?? []).reduce((s, g) => s + (EQUIPMENT[g].bonus.dmg ?? 0), 0);
-  c.queue = Array.from({ length: n }, () => { const m = pool[Math.floor(rand(r) * pool.length)]; return { name: m.name, icon: m.icon, dmg: m.dmg ? k(m.dmg) + gb : 0, hits: m.hits ?? 1, block: k(m.block), heal: k(m.heal), dur: m.dur ?? 1 }; });
+  c.queue = Array.from({ length: n }, () => { const m = pool[Math.floor(rand(r) * pool.length)]; return { id: m.id, name: m.name, icon: m.icon, dmg: m.dmg ? k(m.dmg) + gb : 0, hits: m.hits ?? 1, block: k(m.block), heal: k(m.heal), dur: m.dur ?? 1 }; });
   c.phase = 'enemy'; c.ev = null; c.last = null; c.log.push('Turno avversario!');
 }
 /** Un passo del turno nemico: prima schiera UNA carta per volta, poi risolve un attacco per volta; infine inizia il tuo turno. */
@@ -219,7 +220,7 @@ export function enemyStep(r: Run): Err {
   const x = c.queue.shift();
   if (x) {
     c.last = x; c.enemy.hp = Math.min(c.enemy.maxHp, c.enemy.hp + x.heal);
-    const p: Placed = { id: ++c.seq, fx: x.heal ? `✚${x.heal}` : '', uid: '', name: x.name, icon: x.icon, src: '', dmg: x.dmg, hits: x.hits, block: x.block, ttl: x.dur === 0 ? -1 : x.dur };
+    const p: Placed = { id: ++c.seq, fx: x.heal ? `✚${x.heal}` : '', uid: '', name: x.name, icon: x.icon, src: 'enemy:' + (x.id ?? ''), dmg: x.dmg, hits: x.hits, block: x.block, ttl: x.dur === 0 ? -1 : x.dur };
     if (x.dmg) c.foeField.off.push({ ...p, block: 0, ttl: 1 }); else if (x.block) c.foeField.def.push({ ...p, dmg: 0, hits: 1 });
     c.fresh = p.id!; c.ev = null; c.log.push(`${x.name} schierata dal nemico.`); return null;
   }

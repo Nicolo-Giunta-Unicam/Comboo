@@ -968,26 +968,31 @@
       "enemies": [
         {
           "name": "Sparring partner",
-          "story": "La palestra di Gorin odora di sudore e linimento. «Prima di sognare, {nome}, impara a restare in piedi», borbotta il vecchio, e ti mette davanti lo sparring partner che ha fatto sputare sangue a tutti i suoi allievi."
+          "story": "La palestra di Gorin odora di sudore e linimento. «Prima di sognare, {nome}, impara a restare in piedi», borbotta il vecchio, e ti mette davanti lo sparring partner che ha fatto sputare sangue a tutti i suoi allievi.",
+          "id": "boxing-1"
         },
         {
           "name": "Pugile di strada",
-          "story": "Dopo il primo round il tuo nome gira nei vicoli. Un pugile di strada, senza guanti né regole, ti aspetta dietro il locale: qui non esiste un gong che ti salvi."
+          "story": "Dopo il primo round il tuo nome gira nei vicoli. Un pugile di strada, senza guanti né regole, ti aspetta dietro il locale: qui non esiste un gong che ti salvi.",
+          "id": "boxing-2"
         },
         {
           "name": "Campione regionale",
-          "story": "Le cinture regionali si scoprono avare. Il campione in carica ti guarda dall'alto: per lui sei solo un ragazzino con troppa fame, e vuole farti pentire di essere salito sul ring."
+          "story": "Le cinture regionali si scoprono avare. Il campione in carica ti guarda dall'alto: per lui sei solo un ragazzino con troppa fame, e vuole farti pentire di essere salito sul ring.",
+          "id": "boxing-3"
         },
         {
           "name": "Peso massimo",
-          "story": "Ogni vittoria alza la posta. Il peso massimo entra scortato dal brusio del pubblico, mentre Gorin ti stringe le fasce in silenzio: «Non accettare il suo ritmo. Imponi il tuo»."
+          "story": "Ogni vittoria alza la posta. Il peso massimo entra scortato dal brusio del pubblico, mentre Gorin ti stringe le fasce in silenzio: «Non accettare il suo ritmo. Imponi il tuo».",
+          "id": "boxing-4"
         },
         {
           "name": "Leggenda del ring",
           "hpMul": 1.3,
           "atkMul": 1.15,
           "lore": "Un campione imbattuto da vent'anni: la sua guardia non ha mai ceduto.",
-          "story": "Il palazzetto è pieno fino al soffitto. La Leggenda non perde da vent'anni, e Gorin lo sa: «Se la superi, {nome}, qualcuno ti noterà». Dalle gradinate, un uomo in nero annota il tuo nome su un taccuino."
+          "story": "Il palazzetto è pieno fino al soffitto. La Leggenda non perde da vent'anni, e Gorin lo sa: «Se la superi, {nome}, qualcuno ti noterà». Dalle gradinate, un uomo in nero annota il tuo nome su un taccuino.",
+          "id": "boxing-5"
         }
       ],
       "enemyMoves": [
@@ -1011,26 +1016,31 @@
       "enemies": [
         {
           "name": "Recluta cibernetica",
-          "story": "L'uomo in nero ti porta oltre il mare, dove i pugni da soli non bastano. Un campo militare ti accoglie con il rumore dei motori, e la prima prova è una recluta con le braccia ancora fumanti d'officina."
+          "story": "L'uomo in nero ti porta oltre il mare, dove i pugni da soli non bastano. Un campo militare ti accoglie con il rumore dei motori, e la prima prova è una recluta con le braccia ancora fumanti d'officina.",
+          "id": "battlefield-1"
         },
         {
           "name": "Cecchino",
-          "story": "Colpi secchi dalla cresta: il cecchino non si vede mai, ma tu sì. Capisci in fretta che qui sopravvive chi si muove prima del suono."
+          "story": "Colpi secchi dalla cresta: il cecchino non si vede mai, ma tu sì. Capisci in fretta che qui sopravvive chi si muove prima del suono.",
+          "id": "battlefield-2"
         },
         {
           "name": "Soldato in esoscheletro",
-          "story": "Gli armaioli ridono dei tuoi pugni nudi, poi smettono. Il soldato in esoscheletro avanza come una porta blindata, e ti costringe a scegliere: nuovi mezzi, o nuove idee."
+          "story": "Gli armaioli ridono dei tuoi pugni nudi, poi smettono. Il soldato in esoscheletro avanza come una porta blindata, e ti costringe a scegliere: nuovi mezzi, o nuove idee.",
+          "id": "battlefield-3"
         },
         {
           "name": "Mech da guerra",
-          "story": "Il terreno trema. Un mech da guerra emerge dalla nebbia, guidato da qualcuno che ha smesso di sentire il dolore. Dal comando, in silenzio, valutano se sei degno dei loro segreti."
+          "story": "Il terreno trema. Un mech da guerra emerge dalla nebbia, guidato da qualcuno che ha smesso di sentire il dolore. Dal comando, in silenzio, valutano se sei degno dei loro segreti.",
+          "id": "battlefield-4"
         },
         {
           "name": "Generale corazzato",
           "hpMul": 1.3,
           "atkMul": 1.15,
           "lore": "Comanda l'esercito dall'interno di un'armatura meccanica: non conosce la resa.",
-          "story": "Il generale ti aspetta nel cratere dell'ultimo bunker, chiuso in un'armatura che sembra respirare. «Hai imparato a usare gli strumenti, {nome}. Ora scopriamo se ne sei il padrone o lo schiavo»."
+          "story": "Il generale ti aspetta nel cratere dell'ultimo bunker, chiuso in un'armatura che sembra respirare. «Hai imparato a usare gli strumenti, {nome}. Ora scopriamo se ne sei il padrone o lo schiavo».",
+          "id": "battlefield-5"
         }
       ],
       "enemyMoves": [
@@ -1055,26 +1065,31 @@
       "enemies": [
         {
           "name": "Predone",
-          "story": "Il deserto non perdona: acqua per due giorni e nemmeno una mappa. Un predone ti segue da ore, certo che la sete farà il lavoro per lui. Si sbaglia."
+          "story": "Il deserto non perdona: acqua per due giorni e nemmeno una mappa. Un predone ti segue da ore, certo che la sete farà il lavoro per lui. Si sbaglia.",
+          "id": "desert-1"
         },
         {
           "name": "Scorpione gigante",
-          "story": "Di notte la sabbia si muove. Lo scorpione gigante esce dalle dune e il tuo corpo risponde prima della mente, con una forza che non ricordavi di avere."
+          "story": "Di notte la sabbia si muove. Lo scorpione gigante esce dalle dune e il tuo corpo risponde prima della mente, con una forza che non ricordavi di avere.",
+          "id": "desert-2"
         },
         {
           "name": "Mummia guerriera",
-          "story": "Tra le rovine di un tempio sepolto, una guerriera avvolta in bende secolari ti sfida a un duello rituale. Ogni colpo che incassi ti rende più duro, e lei lo sa."
+          "story": "Tra le rovine di un tempio sepolto, una guerriera avvolta in bende secolari ti sfida a un duello rituale. Ogni colpo che incassi ti rende più duro, e lei lo sa.",
+          "id": "desert-3"
         },
         {
           "name": "Colosso di sabbia",
-          "story": "La tempesta prende la forma di un gigante. Resistere non serve: il colosso crolla e si ricompone, e solo un colpo capace di spezzare la roccia può fermarlo."
+          "story": "La tempesta prende la forma di un gigante. Resistere non serve: il colosso crolla e si ricompone, e solo un colpo capace di spezzare la roccia può fermarlo.",
+          "id": "desert-4"
         },
         {
           "name": "Faraone solare",
           "hpMul": 1.3,
           "atkMul": 1.15,
           "lore": "Il sole stesso sembra inchinarsi a lui; la sabbia obbedisce a ogni suo gesto.",
-          "story": "All'orizzonte una piramide brilla come un secondo sole. Il Faraone ti attende sul trono: «Hai attraversato il mio regno senza inchinarti. Mostrami di cosa è fatto il tuo corpo»."
+          "story": "All'orizzonte una piramide brilla come un secondo sole. Il Faraone ti attende sul trono: «Hai attraversato il mio regno senza inchinarti. Mostrami di cosa è fatto il tuo corpo».",
+          "id": "desert-5"
         }
       ],
       "enemyMoves": [
@@ -1098,26 +1113,31 @@
       "enemies": [
         {
           "name": "Squalo corazzato",
-          "story": "Il porto è un mosaico di relitti. Corri sulle assi galleggianti mentre uno squalo corazzato taglia la corrente: ormai sai che l'acqua non ti rallenta, ti ascolta."
+          "story": "Il porto è un mosaico di relitti. Corri sulle assi galleggianti mentre uno squalo corazzato taglia la corrente: ormai sai che l'acqua non ti rallenta, ti ascolta.",
+          "id": "ocean-1"
         },
         {
           "name": "Sirena sonica",
-          "story": "Il suo canto spezza i vetri e ti fa vibrare le ossa. La sirena sonica ti sfida a inseguire un suono più veloce di te, e per la prima volta il tuo corpo ci riesce."
+          "story": "Il suo canto spezza i vetri e ti fa vibrare le ossa. La sirena sonica ti sfida a inseguire un suono più veloce di te, e per la prima volta il tuo corpo ci riesce.",
+          "id": "ocean-2"
         },
         {
           "name": "Pirata dell'energia",
-          "story": "Sul ponte di una nave volante, un pirata accumula tempesta nei pugni e ride: «Quelli come noi non combattono, scatenano». Capire il campo di battaglia è l'unico modo per stargli dietro."
+          "story": "Sul ponte di una nave volante, un pirata accumula tempesta nei pugni e ride: «Quelli come noi non combattono, scatenano». Capire il campo di battaglia è l'unico modo per stargli dietro.",
+          "id": "ocean-3"
         },
         {
           "name": "Kraken",
-          "story": "Le onde diventano braccia. Il kraken afferra la nave e, per respirare, devi trovare un varco tra i tentacoli: pensare in tre dimensioni, muoverti senza nessun appoggio."
+          "story": "Le onde diventano braccia. Il kraken afferra la nave e, per respirare, devi trovare un varco tra i tentacoli: pensare in tre dimensioni, muoverti senza nessun appoggio.",
+          "id": "ocean-4"
         },
         {
           "name": "Leviatano",
           "hpMul": 1.3,
           "atkMul": 1.15,
           "lore": "Una creatura antica che solleva maremoti con un solo battito di coda.",
-          "story": "Sotto la superficie qualcosa respira come una montagna. Il Leviatano si solleva e il mare si piega attorno a lui: se lo fermi, la rotta verso la foresta sarà aperta."
+          "story": "Sotto la superficie qualcosa respira come una montagna. Il Leviatano si solleva e il mare si piega attorno a lui: se lo fermi, la rotta verso la foresta sarà aperta.",
+          "id": "ocean-5"
         }
       ],
       "enemyMoves": [
@@ -1141,26 +1161,31 @@
       "enemies": [
         {
           "name": "Lupo mutante",
-          "story": "Oltre la riva la foresta ti osserva. Il lupo mutante esce dagli alberi con occhi troppo intelligenti: non cerca cibo, vuole capire se sei una preda o un simile."
+          "story": "Oltre la riva la foresta ti osserva. Il lupo mutante esce dagli alberi con occhi troppo intelligenti: non cerca cibo, vuole capire se sei una preda o un simile.",
+          "id": "forest-1"
         },
         {
           "name": "Spirito della foresta",
-          "story": "Tra i tronchi sussurra una voce che ti conosce. Lo spirito ti mostra ciò che potresti diventare, e le tue ferite iniziano a chiudersi da sole."
+          "story": "Tra i tronchi sussurra una voce che ti conosce. Lo spirito ti mostra ciò che potresti diventare, e le tue ferite iniziano a chiudersi da sole.",
+          "id": "forest-2"
         },
         {
           "name": "Treant antico",
-          "story": "Un albero si alza e cammina. Il treant antico non ha rabbia, solo una pazienza millenaria: ogni tuo colpo lo risveglia un po' di più, ogni tua ferita ti cambia."
+          "story": "Un albero si alza e cammina. Il treant antico non ha rabbia, solo una pazienza millenaria: ogni tuo colpo lo risveglia un po' di più, ogni tua ferita ti cambia.",
+          "id": "forest-3"
         },
         {
           "name": "Cacciatore del frutto",
-          "story": "Qualcuno ti segue da giorni: vuole il potere che porti dentro, nato da un frutto assaggiato per curiosità. Affrontare il cacciatore significa decidere che cosa sei diventato."
+          "story": "Qualcuno ti segue da giorni: vuole il potere che porti dentro, nato da un frutto assaggiato per curiosità. Affrontare il cacciatore significa decidere che cosa sei diventato.",
+          "id": "forest-4"
         },
         {
           "name": "Albero del mondo",
           "hpMul": 1.3,
           "atkMul": 1.15,
           "lore": "Radici che attraversano l'isola: ogni foglia è un occhio, ogni ramo un colpo.",
-          "story": "Al cuore della foresta, radici grandi come fiumi stringono l'isola. L'Albero del mondo non parla: ti osserva con mille foglie-occhio, e capisci che solo un'evoluzione completa può attraversarlo."
+          "story": "Al cuore della foresta, radici grandi come fiumi stringono l'isola. L'Albero del mondo non parla: ti osserva con mille foglie-occhio, e capisci che solo un'evoluzione completa può attraversarlo.",
+          "id": "forest-5"
         }
       ],
       "enemyMoves": [
@@ -1185,26 +1210,31 @@
       "enemies": [
         {
           "name": "Salamandra celeste",
-          "story": "Il vulcano non è una montagna ma una bocca. Una salamandra celeste danza nella lava e l'aria si fa così calda che il tuo respiro prende fuoco: la tua aura comincia a rispondere."
+          "story": "Il vulcano non è una montagna ma una bocca. Una salamandra celeste danza nella lava e l'aria si fa così calda che il tuo respiro prende fuoco: la tua aura comincia a rispondere.",
+          "id": "volcano-1"
         },
         {
           "name": "Golem di lava",
-          "story": "La roccia si stacca dal pendio e cammina. Il golem di lava è stanco del mondo, e ogni suo passo lascia una crepa. Lo affronti sapendo che ormai i tuoi colpi spaccano il suolo."
+          "story": "La roccia si stacca dal pendio e cammina. Il golem di lava è stanco del mondo, e ogni suo passo lascia una crepa. Lo affronti sapendo che ormai i tuoi colpi spaccano il suolo.",
+          "id": "volcano-2"
         },
         {
           "name": "Demone ardente",
-          "story": "Un demone ardente ti riconosce: «Sei quello che sale». Non vuole fermarti, vuole sapere fino a dove puoi spingerti prima di bruciare."
+          "story": "Un demone ardente ti riconosce: «Sei quello che sale». Non vuole fermarti, vuole sapere fino a dove puoi spingerti prima di bruciare.",
+          "id": "volcano-3"
         },
         {
           "name": "Drago cataclismico",
-          "story": "Il cielo si oscura. Il drago cataclismico apre le ali e la cenere cade come pioggia: davanti a un essere così, o diventi qualcosa di più, o ti arrendi."
+          "story": "Il cielo si oscura. Il drago cataclismico apre le ali e la cenere cade come pioggia: davanti a un essere così, o diventi qualcosa di più, o ti arrendi.",
+          "id": "volcano-4"
         },
         {
           "name": "Titano del magma",
           "hpMul": 1.3,
           "atkMul": 1.15,
           "lore": "Un gigante nato dal cuore del vulcano: ogni suo passo fa tremare il mondo.",
-          "story": "In cima al cratere il Titano ti aspetta, nato dal cuore del mondo. Alle tue spalle, il mare e tutti i volti incontrati. «Il tuo viaggio finisce qui, {nome}, o inizia davvero», dice."
+          "story": "In cima al cratere il Titano ti aspetta, nato dal cuore del mondo. Alle tue spalle, il mare e tutti i volti incontrati. «Il tuo viaggio finisce qui, {nome}, o inizia davvero», dice.",
+          "id": "volcano-5"
         }
       ],
       "enemyMoves": [

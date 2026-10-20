@@ -1,14 +1,14 @@
 import { CONFIG } from './config';
 import { ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, effectLines, moveOf, type Move } from './data';
 import { beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, rollStyle, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
-import { ART, eqIcon } from './art';
+import { ART, customImg, eqIcon } from './art';
 import { REGIONS, REGION_LIST, type Region } from './regions';
 import { banner, burst } from './fx';
 import { config as audioCfg, setMode, sfx, unlock } from './audio';
 import { clearRun, loadRun, saveRun } from './save';
 const app = document.getElementById('app')!;
 const ICON = new Proxy({} as Record<string, string>, { get: (_t, k: string) => EQUIPMENT[k] ? eqIcon(k, EQUIPMENT[k].kind) : undefined }); // icona dell'equipaggiamento (non per le carte base)
-const FOE = ART.foe, foeArt = (art: string | undefined, tier: string) => ART.region[art ?? ''] ?? FOE[tier];
+const FOE = ART.foe, foeArt = (art: string | undefined, tier: string, id?: string) => (id ? customImg('enemy-' + id) : undefined) ?? ART.region[art ?? ''] ?? FOE[tier];
 const SET_KEY = 'cardrogue.settings.v1', DELAYS = [1500, 900, 450, 120], LABELS = ['Lenta', 'Normale', 'Veloce', 'Rapida'];
 const THEMES = ['classic', 'boxing', 'battle', 'forest', 'ocean', 'desert', 'ember']; // il tema dipende dalla regione scelta
 const settings = { speed: 1, calm: false, music: true, sfx: true, god: false, mv: 0.8, sv: 0.8, theme: 'classic', timer: true, tmode: 1 }; try { Object.assign(settings, JSON.parse(localStorage.getItem(SET_KEY) ?? '{}')); } catch { /* ignora */ }
@@ -17,13 +17,14 @@ audioCfg(settings.music, settings.sfx, settings.mv, settings.sv); addEventListen
 let settingsOpen = false, sure = false;
 let run = loadRun(localStorage), tab: 'sto' | 'st' | 'me' = 'sto', note = '', started = !!run && run.phase === 'combat', pop = { e: 0, p: 0 };
 const kind = (m: Move) => m.effect.dmg ? 'atk' : m.effect.block ? 'def' : 'utl';
+const cardArt = (m: Move) => customImg('card-' + m.id) ?? ICON[m.source] ?? (m.effect.dmg ? ART.kind.atk : m.effect.block ? ART.kind.def : ART.kind.utl); // immagine della carta: card-<id> > icona equipaggiamento > tipo
 function card(uid: string, o: { cls?: string; attr?: string; price?: number; badge?: string } = {}) {
   const m = MOVES[moveOf(uid)], e = m.effect;
-  return `<div class="card ${kind(m)} ${o.cls ?? ''}" ${o.attr ?? ''}><span class="cost">${m.cost}</span>${o.badge ? `<span class="bdg">${o.badge}</span>` : ''}<div class="nm">${m.name}</div><div class="art">${ICON[m.source] ?? (e.dmg ? ART.kind.atk : e.block ? ART.kind.def : ART.kind.utl)}</div><div class="efs">${effectLines(e).map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name}${o.price ? ` · 💰${o.price}` : ''}</div></div>`;
+  return `<div class="card ${kind(m)} ${o.cls ?? ''}" ${o.attr ?? ''}><span class="cost">${m.cost}</span>${o.badge ? `<span class="bdg">${o.badge}</span>` : ''}<div class="nm">${m.name}</div><div class="art">${cardArt(m)}</div><div class="efs">${effectLines(e).map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name}${o.price ? ` · 💰${o.price}` : ''}</div></div>`;
 }
 const bar = (v: number, mx: number, c = '') => `<div class="bar ${c}"><i style="width:${Math.max(0, v / mx * 100)}%"></i><b>${v}/${mx}</b></div>`;
 const head = (r: Run) => `<div class="top"><span>⚔ ${REGIONS[r.region ?? '']?.name ?? 'Arena'} ${r.region ? Math.min(wins(r, r.region), CONFIG.matchesPerIsland) + '/' + CONFIG.matchesPerIsland : r.arena}</span><span>💰 ${r.god ? '∞' : r.gold}</span><span>❤ ${r.phase === 'combat' ? r.hp : startHp(r)}/${maxHp(r)}</span><span>🎴 ${r.deck.length}/${CONFIG.maxDeck}</span><span>⚡ ${maxEnergy(r)}/${CONFIG.maxEnergy}</span><span>🔧 ${r.equipped.length}/${r.slots}</span><button class="gear" data-a="set">⚙</button></div>`;
-let mercyArm = 0, finalView: Combat | null = null, finalHp = 0, creating = false, draft = { name: '', av: 'a0' }, sailing = false, mapSel: string | null = null, vs: { tier: string; art?: string; name: string; hp: number; lv: number } | null = null, prevEn = -1, lastCombo = '', lastEv: unknown = null, endAnim: { win: boolean; tier: string; art?: string } | null = null, lastPhase: string | undefined, prevHand: string[] = [], timer = 0, bars: { me: number; foe: number } | null = null;
+let mercyArm = 0, finalView: Combat | null = null, finalHp = 0, creating = false, draft = { name: '', av: 'a0' }, sailing = false, mapSel: string | null = null, vs: { tier: string; art?: string; id?: string; name: string; hp: number; lv: number } | null = null, prevEn = -1, lastCombo = '', lastEv: unknown = null, endAnim: { win: boolean; tier: string; art?: string; id?: string } | null = null, lastPhase: string | undefined, prevHand: string[] = [], timer = 0, bars: { me: number; foe: number } | null = null;
 // ---- Timer di turno (disattivabile): scaduto il tempo, il turno termina da solo; in pausa con impostazioni/menu ----
 const TLIM = [10, 30, 60];
 let tLeft = 0, tTurn = -1, tTick = 0;
@@ -41,13 +42,13 @@ function timerSync() {
 }
 function tick() { // turno nemico: una carta alla volta, ripreso anche dopo un reload
   const c = run?.combat; if (timer || run?.phase !== 'combat' || !c || c.phase === 'player' || !started || settingsOpen || document.querySelector('.slotov')) return;
-  timer = window.setTimeout(() => { timer = 0; if (!run || !started || settingsOpen || document.querySelector('.slotov')) return; const hp = run.hp, eh = run.combat?.enemy.hp ?? 0; const tier = run.combat?.enemy.tier ?? 'Strada', art = run.combat?.enemy.art, snap: Combat | null = run.combat ? JSON.parse(JSON.stringify(run.combat)) : null, hp0 = run.hp; enemyStep(run); pop.p = Math.max(0, hp - run.hp); pop.e = Math.max(0, eh - (run.combat?.enemy.hp ?? 0)); const ev = run.combat?.ev; if (pop.p || pop.e) sfx('hit'); else if (ev && ev.absorbed) sfx('shield'); if (run.phase !== 'combat' && snap) { // colpo finale: prima si vede l'attacco, poi i fuochi d'artificio (se vinci), poi la scena finale
+  timer = window.setTimeout(() => { timer = 0; if (!run || !started || settingsOpen || document.querySelector('.slotov')) return; const hp = run.hp, eh = run.combat?.enemy.hp ?? 0; const tier = run.combat?.enemy.tier ?? 'Strada', art = run.combat?.enemy.art, eid = run.combat?.enemy.id, snap: Combat | null = run.combat ? JSON.parse(JSON.stringify(run.combat)) : null, hp0 = run.hp; enemyStep(run); pop.p = Math.max(0, hp - run.hp); pop.e = Math.max(0, eh - (run.combat?.enemy.hp ?? 0)); const ev = run.combat?.ev; if (pop.p || pop.e) sfx('hit'); else if (ev && ev.absorbed) sfx('shield'); if (run.phase !== 'combat' && snap) { // colpo finale: prima si vede l'attacco, poi i fuochi d'artificio (se vinci), poi la scena finale
       const win = run.phase === 'store'; if (win) snap.enemy.hp = 0; snap.ev = run.finalEv ?? null; (snap.phase === 'resolve' ? snap.field.off : snap.foeField.off).shift(); finalView = snap; finalHp = win ? hp0 : 0;
-      const showEnd = () => { finalView = null; endAnim = { win, tier, art }; render(); setTimeout(() => { endAnim = null; render(); }, 2800); };
+      const showEnd = () => { finalView = null; endAnim = { win, tier, art, id: eid }; render(); setTimeout(() => { endAnim = null; render(); }, 2800); };
       if (win) { setTimeout(fireworks, 1000); setTimeout(showEnd, 2900); } else setTimeout(showEnd, 1400);
     } saveRun(run, localStorage); render(); }, DELAYS[settings.speed] ?? 900);
 }
-const badge = (c: Combat, u: string) => { const m = MOVES[moveOf(u)], p = CONFIG.combo.same[Math.min((c.played[m.id] ?? 0) + 1, CONFIG.combo.max) - 1]; return [p ? `🔥+${Math.round(p * 100)}%` : '', m.effect.link && c.prev === m.effect.link.from ? '🔗' : ''].filter(Boolean).join(' '); };
+const badge = (c: Combat, u: string) => { const m = MOVES[moveOf(u)], p = CONFIG.combo.same[Math.min((c.prev === m.id ? (c.run ?? 1) + 1 : 1), CONFIG.combo.max) - 1]; return [p ? `🔥+${Math.round(p * 100)}%` : '', m.effect.link && c.prev === m.effect.link.from ? '🔗' : ''].filter(Boolean).join(' '); };
 function render() { hideTip(); if (run) { run.god = settings.god; if (settings.god && run.gold < GOD) run.gold = GOD; }
   if (!finalView) { if (lastPhase === 'combat' && run?.phase === 'store') { sfx(run.outcome === 'win' ? 'win' : 'click'); tab = 'sto'; } else if (lastPhase === 'combat' && run?.phase === 'over') sfx('lose'); lastPhase = run?.phase; } setMode(run?.phase === 'combat' && started ? 'combat' : 'calm'); document.body.classList.toggle('fs', (run?.phase === 'combat' || !!finalView) && started); document.body.classList.toggle('st', !!run && started && run.phase === 'store' && !finalView); document.body.classList.toggle('calm', settings.calm); const thId = run && started && run.phase !== 'over' && !(run.phase === 'store' && run.needsMap) ? REGIONS[run.region ?? '']?.theme ?? 'classic' : 'classic'; THEMES.forEach(t => document.body.classList.toggle('th-' + t, t === thId)); draw(); if (settingsOpen) app.insertAdjacentHTML('beforeend', modal()); if (run?.pending && started && !settingsOpen) choiceModal(); tick(); timerSync(); }
 function drawMap(r: Run) { // oceano con isola centrale + 5 isole a pentagono; hover = contorno tratteggiato lampeggiante; si salpa in barca
@@ -91,10 +92,10 @@ function fireworks() { // fuochi d'artificio ai lati dell'arena
   const q = app.getBoundingClientRect(); for (let i = 0; i < 8; i++) setTimeout(() => { const right = i % 2 === 1, mg = right ? innerWidth - q.right : q.left, k = 0.25 + Math.random() * 0.5, x = mg > 50 ? (right ? q.right + mg * k : q.left - mg * k) : (right ? innerWidth - 30 : 30); burst('fw', x, innerHeight * (0.15 + Math.random() * 0.45)); sfx('firework'); }, i * 200);
 }
 function drawVs() { // schermata di presentazione del duello
-  const v = vs!; app.innerHTML = `<div class="vsscene"><div class="vsside l"><div class="vsimg">${heroImg()}</div><div class="vsname">${heroName()}</div><small>❤ ${maxHp(run!)} · 🔧 ${run!.equipped.length} equip.</small></div><div class="vstxt">VS</div><div class="vsside r"><div class="vsimg">${foeArt(v.art, v.tier)}</div><div class="vsname">${v.name}</div><small>❤ ${v.hp} · ${v.tier}</small></div><button class="vsskip" data-a="skipvs">Tocca per iniziare</button></div>`;
+  const v = vs!; app.innerHTML = `<div class="vsscene"><div class="vsside l"><div class="vsimg">${heroImg()}</div><div class="vsname">${heroName()}</div><small>❤ ${maxHp(run!)} · 🔧 ${run!.equipped.length} equip.</small></div><div class="vstxt">VS</div><div class="vsside r"><div class="vsimg">${foeArt(v.art, v.tier, v.id)}</div><div class="vsname">${v.name}</div><small>❤ ${v.hp} · ${v.tier}</small></div><button class="vsskip" data-a="skipvs">Tocca per iniziare</button></div>`;
 }
 function drawEnd() { // animazione finale: il perdente va KO, il vincitore esulta, poi si passa alla schermata successiva
-  const a = endAnim!; app.innerHTML = `<div class="endscene ${a.win ? 'win' : 'lose'}"><div class="stage"><div class="eh hero">${heroImg()}</div><div class="eh foe">${foeArt(a.art, a.tier)}</div></div><div class="endbanner">${a.win ? '🏆 VITTORIA!' : '💀 SCONFITTA'}</div></div>`;
+  const a = endAnim!; app.innerHTML = `<div class="endscene ${a.win ? 'win' : 'lose'}"><div class="stage"><div class="eh hero">${heroImg()}</div><div class="eh foe">${foeArt(a.art, a.tier, a.id)}</div></div><div class="endbanner">${a.win ? '🏆 VITTORIA!' : '💀 SCONFITTA'}</div></div>`;
   const ctr = (sel: string) => { const q = (app.querySelector(sel) as HTMLElement).getBoundingClientRect(); return [q.left + q.width / 2, q.top + q.height / 2]; };
   const [lx, ly] = ctr(a.win ? '.eh.foe' : '.eh.hero'), [wx, wy] = ctr(a.win ? '.eh.hero' : '.eh.foe');
   [100, 450, 800].forEach(d => setTimeout(() => burst('hit', lx, ly), d)); setTimeout(() => burst('combo', wx, wy), 900);
@@ -112,7 +113,7 @@ function draw() {
   if (r.phase === 'combat' || finalView) {
     const c = finalView ?? r.combat!, php = finalView ? finalHp : r.hp, e = c.enemy, n = c.hand.length, busy = c.phase !== 'player', me = maxEnergy(r), ev = c.ev;
     const reqOk = (mv: Move) => { const q = mv.effect.req; return !q || ((q.hpBelow === undefined || php / maxHp(r) < q.hpBelow) && (q.minTurn === undefined || c.turn >= q.minTurn)); };
-    const ico = (p: Placed) => ART.emoji[p.icon] ?? ICON[p.src] ?? (p.dmg ? ART.kind.atk : ART.kind.def);
+    const ico = (p: Placed) => (p.mv ? customImg('card-' + p.mv) : p.src.startsWith('enemy:') ? customImg('enemycard-' + p.src.slice(6)) : undefined) ?? ART.emoji[p.icon] ?? ICON[p.src] ?? (p.dmg ? ART.kind.atk : ART.kind.def);
     // Carta schierata: stesso formato della carta in mano, con i valori attuali (combo incluse) e la durata residua.
     const pcard = (p: Placed, k: 'off' | 'def', extra = '') => {
       const m = p.mv ? MOVES[p.mv] : null;
@@ -132,7 +133,7 @@ function draw() {
       <div class="board">${rw(c.foeField.def, 'def', ev?.by === 'me' && ev.absorbed > 0)}${rw(c.foeField.off, 'off')}
       <div class="mat">${busy ? `<div class="matr"><small>${c.phase === 'resolve' ? 'Attacchi in corso…' : 'Turno avversario…'}</small><span class="back">${'🂠'.repeat(c.queue.length)}</span></div><div class="combo">&nbsp;</div>` : `<div class="matr"><div class="pips">⚡ ${c.energy}/${me}</div><button class="mercy" data-a="mercy" ${c.mercy ? 'disabled' : ''}>🙏 Pietà${c.mercy ? ' (usata)' : ''}</button><button class="pri end" data-a="end">${settings.timer ? '<i class="tfill" style="width:${Math.max(0, Math.min(1, tLeft / (TLIM[settings.tmode] * 1000))) * 100}%"></i>' : ''}<span>Fine turno ⚔</span>${settings.timer ? '<b class="tsec"></b>' : ''}</button></div><div class="combo">${c.combo ? '🔥 ' + c.combo : '&nbsp;'}</div>`}</div>
       ${rw(c.field.off, 'off')}${rw(c.field.def, 'def', ev?.by === 'foe' && ev.absorbed > 0)}</div>
-      ${side(false, e.hp, e.maxHp, sh(c.foeField.def), pop.e, foeArt(e.art, e.tier), `${(wins(r, r.region ?? '') % CONFIG.matchesPerIsland) + 1}/${CONFIG.matchesPerIsland}`, e.tier, bar0.foe, eqf)}
+      ${side(false, e.hp, e.maxHp, sh(c.foeField.def), pop.e, foeArt(e.art, e.tier, e.id), `${(wins(r, r.region ?? '') % CONFIG.matchesPerIsland) + 1}/${CONFIG.matchesPerIsland}`, e.tier, bar0.foe, eqf)}
     </div></div>
     <div class="handrow"><div class="hand">${c.hand.map((u, i) => card(u, { cls: !busy && c.energy >= MOVES[moveOf(u)].cost && reqOk(MOVES[moveOf(u)]) ? '' : 'off', badge: busy ? '' : badge(c, u), attr: `data-drag="${u}" style="--i:${i};--n:${n}"` })).join('')}</div><div class="pile"><b>${c.draw.length}</b><small>Mazzo</small></div></div>`;
     const pr = (app.querySelector('.pile') as HTMLElement).getBoundingClientRect(); let dealt = 0; // animazione di pesca: le carte nuove arrivano dal mazzo
@@ -162,16 +163,16 @@ function draw() {
   const emv = rg.enemyMoves.map(id => ENEMY_MOVES.find(x => x.id === id)?.name).filter(Boolean).join(', ');
   const tale = (nme.story ?? `${esc(nme.name)} ti aspetta a ${rg.name}.`).replace(/\{nome\}/g, heroName()), chap = islandIndex(rg.id) * CONFIG.matchesPerIsland + idx + 1;
   const storyHtml = `<div class="story"><div class="sbook"><div class="chap">Capitolo ${chap} · ${rg.name} · ${STYLES.find(x => x.id === (r.style ?? 'boxing'))?.name}</div><h3>${boss ? '⚔ ' : ''}${esc(nme.name)}</h3><p class="tale">${tale}</p></div>
-    <div class="sbox foe"><div class="sface">${foeArt(rg.id, rg.level)}</div><div><b>${boss ? 'BOSS · ' : ''}${esc(nme.name)}</b><br><small>${rg.level} · partita ${idx + 1}/${CONFIG.matchesPerIsland} · ❤ ${pre.maxHp}</small><br><small>Mosse: ${emv}</small></div></div></div>`;
+    <div class="sbox foe"><div class="sface">${foeArt(rg.id, rg.level, nme.id)}</div><div><b>${boss ? 'BOSS · ' : ''}${esc(nme.name)}</b><br><small>${rg.level} · partita ${idx + 1}/${CONFIG.matchesPerIsland} · ❤ ${pre.maxHp}</small><br><small>Mosse: ${emv}</small></div></div></div>`;
   const healRow = r.wounded ? `<div class="energyrow"><b>🩹 Ferite gravi: parti all'${Math.round(CONFIG.woundedStart * 100)}% dei PV</b><button class="ebtn" data-a="heal">Cura <span class="price">💰${CONFIG.healCost}</span></button></div>` : '';
-  const back = (k: 'eq' | 'mv', p: number) => `<div class="offer"><div class="card back" data-drag="offer:${k}:2"><div class="bk">?</div></div><div class="ptag mys">🎁 ${p}</div></div>`;
+  const back = (k: 'eq' | 'mv', p: number) => `<div class="offer"><div class="card back" data-drag="offer:${k}:2"><div class="bk">?<span class="pd"></span></div></div><div class="ptag mys">🎁 ${p}</div></div>`;
   const en = maxEnergy(r), energy = `<div class="energyrow"><b>⚡ ENERGIA ${en}/${CONFIG.maxEnergy}</b><div class="eticks">${Array.from({ length: CONFIG.maxEnergy }, (_, i) => `<div class="tick ${i < en ? 'fill' : ''}"></div>`).join('')}</div>${en >= CONFIG.maxEnergy ? '<small>✔ MAX</small>' : `<button class="ebtn" data-a="buyEn">+1 <span class="price">💰${energyPrice(r)}</span></button>`}</div>`;
   const store = `<div class="store"><div class="sl"><div class="og6">
     <div class="og"><small class="lbl">⚙ POTENZIAMENTI</small><div class="offers">${r.offers.eq.map((x, i) => i === 2 && x ? back('eq', r.offers.eqPrice) : slot(x, (id, j) => offer(eqCard(id, j), EQUIPMENT[id].price), i)).join('')}</div></div>
     <div class="og"><small class="lbl">✦ MOSSE</small><div class="offers">${r.offers.mv.map((x, i) => i === 2 && x ? back('mv', r.offers.mvPrice) : slot(x, (id, j) => offer(card('buy:' + id, { attr: `data-drag="offer:mv:${j}"` }), MOVES[id].price), i)).join('')}</div></div></div>
     <div class="eqline"><div class="eqleft"><div class="zone dz" data-zone="eqbar"><div class="eqwrap"><b>Equipaggiamento ${r.equipped.length}/${r.slots}</b><small> · ⬆ trascina qui un potenziamento</small><div class="eqrow">${r.equipped.map(id => eqCard(id, -1)).join('')}${Array.from({ length: Math.max(0, r.slots - r.equipped.length) }, () => '<div class="ph">slot libero</div>').join('')}</div></div></div>
     <div class="zone dz sellz" data-zone="sell"><div><b>💰 Vendita</b> <small>Trascina qui un equipaggiamento (50%)</small></div></div></div>
-    <div class="zone dz deckz" data-zone="deck"><div class="card back"><div class="bk">${r.deck.length}</div></div><b>Mazzo ${r.deck.length}/${CONFIG.maxDeck}</b><small>⬆ trascina qui una mossa</small></div></div>${energy}${healRow}</div></div>`;
+    <div class="zone dz deckz" data-zone="deck"><div class="card back"><div class="bk">${r.deck.length}<span class="pd"></span></div></div><b>Mazzo ${r.deck.length}/${CONFIG.maxDeck}</b><small>⬆ trascina qui una mossa</small></div></div>${energy}${healRow}</div></div>`;
   if (tab === 'me') {
     const inn = own.filter(c => r.deck.includes(c.uid)), out = own.filter(c => !r.deck.includes(c.uid));
     const cs = (l: typeof own) => l.map(c => card(c.uid, { attr: `data-drag="${c.uid}"` })).join('');
@@ -205,7 +206,7 @@ function loreOf(kind: 'eq' | 'mv' | 'mercy' | 'style', id: string) {
   const rg = REGIONS[run?.region ?? 'boxing'] ?? REGION_LIST[0], name = kind === 'eq' ? EQUIPMENT[id].name : MOVES[id].name, k = kind === 'eq' ? LORE_EQ[EQUIPMENT[id].kind] ?? LORE_EQ.gear : LORE_MV;
   return k[(id.length + name.length) % k.length](name, rg.name);
 }
-const styleFace = (id: string) => { const st = STYLES.find(x => x.id === id)!, cnt: Record<string, number> = {}; st.deck.forEach(m => cnt[m] = (cnt[m] ?? 0) + 1); return `<div class="card style"><div class="nm">${st.name}</div><div class="art" style="font-size:clamp(40px,9dvh,84px)">${st.icon}</div><div class="efs"><div class="ef">${st.desc}</div>${Object.entries(cnt).map(([m, n]) => `<div class="ef">${MOVES[m].name} ×${n}</div>`).join('')}</div></div>`; };
+const styleFace = (id: string) => { const st = STYLES.find(x => x.id === id)!, cnt: Record<string, number> = {}; st.deck.forEach(m => cnt[m] = (cnt[m] ?? 0) + 1); return `<div class="card style"><div class="nm">${st.name}</div><div class="art" style="font-size:clamp(40px,9dvh,84px)">${customImg('style-' + id) ?? st.icon}</div><div class="efs"><div class="ef">${st.desc}</div>${Object.entries(cnt).map(([m, n]) => `<div class="ef">${MOVES[m].name} ×${n}</div>`).join('')}</div></div>`; };
 function slotMachine(kind: 'eq' | 'mv' | 'mercy' | 'style', id: string) {
   const pool = kind === 'eq' ? Object.keys(EQUIPMENT) : kind === 'mv' ? Object.values(MOVES).filter(m => m.price > 0).map(m => m.id) : kind === 'style' ? STYLES.map(x => x.id) : ['ok', 'no'], face = (x: string) => kind === 'eq' ? eqFace(x) : kind === 'mv' ? card('buy:' + x) : kind === 'style' ? styleFace(x) : `<div class="card mercy ${x}"><div class="nm">${x === 'ok' ? 'Risparmiato' : 'Nessuna pietà'}</div><div class="art">${x === 'ok' ? '🕊️' : '💀'}</div></div>`;
   const N = 10, fin = 6, base = Array.from({ length: N }, (_, i) => i === fin ? id : pool[(i * 7 + 3) % pool.length]);
@@ -277,7 +278,7 @@ function act(a: string, id = '') {
     else if (a === 'go') err = beginArena(run); else if (a === 'play') err = playCard(run, id); else if (a === 'end') err = endTurn(run);
     if (!['tab', 'next', 'play', 'end'].includes(a)) run.msg = '';
     if (!err) { if (a === 'end') sfx('turn'); if (run.gold !== g0 && !settings.god) coinFx(g0, run.gold); if (mys) slotMachine(a === 'offerEq' ? 'eq' : 'mv', mys);
-      if (a === 'go') { const en = run.combat!.enemy, o = { tier: en.tier, art: en.art, name: en.name, hp: en.maxHp, lv: run.arena }; vs = o; sfx('hit'); setTimeout(() => { if (vs === o) { vs = null; render(); } }, 2600); } }
+      if (a === 'go') { const en = run.combat!.enemy, o = { tier: en.tier, art: en.art, id: en.id, name: en.name, hp: en.maxHp, lv: run.arena }; vs = o; sfx('hit'); setTimeout(() => { if (vs === o) { vs = null; render(); } }, 2600); } }
   }
   note = err ?? ''; if (run) saveRun(run, localStorage); render();
 }

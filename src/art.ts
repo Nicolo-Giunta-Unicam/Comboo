@@ -50,6 +50,11 @@ export const ART = {
 // Immagini personalizzate: se in assets/ esiste un file con la chiave giusta, sostituisce l'illustrazione provvisoria (vedi assets/README.md).
 const custom = (k: string) => ASSETS[k] ? `<img class="ic" alt="" draggable="false" src="${ASSETS[k]}">` : undefined;
 const ov = (o: Record<string, string>, prefix: string) => { for (const k of Object.keys(o)) o[k] = custom(prefix + k) ?? o[k]; };
-ov(ART.avatar, 'avatar-'); ov(ART.eq, 'eq-'); ov(ART.kind, 'kind-'); ov(ART.region, 'foe-'); ART.hero = custom('hero') ?? ART.hero; ART.boat = custom('boat') ?? ART.boat;
+ov(ART.avatar, 'avatar-'); ov(ART.eq, 'eq-'); ov(ART.kind, 'kind-'); ov(ART.region, 'foe-'); ART.boat = custom('boat') ?? ART.boat;
+// le icone delle carte nemiche usano le immagini dei tipi (aggiornate se personalizzate)
+ART.emoji = { '👊': ART.kind.atk, '💢': ART.kind.atk, '🛡️': ART.kind.def, '🌪️': ART.kind.atk, '🩸': ART.kind.utl };
 /** Icona di un equipaggiamento: immagine personalizzata `eq-<id>`, altrimenti quella provvisoria, altrimenti quella del suo tipo. */
 export const eqIcon = (id: string, kind?: string): string => custom('eq-' + id) ?? ART.eq[id] ?? (ART as unknown as { eqKind: Record<string, string> }).eqKind[kind ?? 'gear'] ?? (ART as unknown as { eqKind: Record<string, string> }).eqKind.gear;
+
+/** Immagine personalizzata (assets/<chiave>.*) oppure undefined: usata per nemici singoli, singole carte e stili. */
+export const customImg = custom;

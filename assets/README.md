@@ -11,7 +11,16 @@ Consigliato: immagini quadrate (es. 256×256), sfondo trasparente per personaggi
 | `eq-<id>` (es. `eq-wraps`, `eq-aura`, `eq-fruit`) | carta/icona dell'equipaggiamento. Gli id sono in `data/game.json` |
 | `kind-atk`, `kind-def`, `kind-utl` | immagine delle carte base e delle mosse (attacco / difesa / supporto) |
 | `boat` | barca della mappa |
-| `hero` | immagine di riserva del protagonista |
 
 Dopo aver aggiunto i file: `npm run build` (o `npm run dev` per ricompilare a ogni modifica).
 Le immagini vengono incorporate nel bundle come data URI: tieni file leggeri (meglio < 100 KB ciascuno).
+
+## Immagini per singolo nemico e per singola carta
+La lista **completa e aggiornata** di tutte le chiavi è in `assets/KEYS.md` (si rigenera con `npm run assets:list` dopo aver cambiato `data/game.json`).
+
+| Chiave | Cosa | Ripiego se manca |
+|---|---|---|
+| `enemy-<id>` (es. `enemy-boxing-1`) | ritratto di quel nemico (id nel JSON, 5 per isola) | `foe-<isola>` |
+| `card-<idMossa>` (es. `card-jab`, `card-wraps_0`) | immagine di quella carta mossa | icona dell'equipaggiamento, poi `kind-*` |
+| `enemycard-<id>` (es. `enemycard-heavy`) | carte giocate dai nemici | `kind-*` |
+| `style-<id>` (`style-boxing`, `style-taekwondo`, `style-jujitsu`) | carta dello stile iniziale (slot machine) | emoji |

@@ -66,7 +66,7 @@ test('combo base: stessa carta nello stesso round +10%/+20%, massimo 3', () => {
 });
 test('concatenazione: bonus solo se la carta precedente è quella indicata', () => {
   const r = newRun(3); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['eq:wraps:2', 'base:jab:0', 'eq:wraps:2'];
-  for (let i = 0; i < 3; i++) assert.equal(playCard(r, c.hand[0]), null); assert.deepEqual(c.field.off.map(p => p.dmg), [5, 4, 12]);
+  for (let i = 0; i < 3; i++) assert.equal(playCard(r, c.hand[0]), null); assert.deepEqual(c.field.off.map(p => p.dmg), [5, 4, 10]);
 });
 test('campo: danni solo a fine turno; pesca immediata al piazzamento', () => {
   const r = newRun(3); beginArena(r); const c = r.combat!; c.energy = 10; c.enemy.hp = c.enemy.maxHp = 1000; c.hand = ['base:jab:0', 'base:focus:8']; const dr = c.draw.length;
@@ -149,4 +149,11 @@ test('vita: duello a PV pieni (anche con PV massimi aumentati); sotto il 30% par
   r.hp = 10; r.combat!.enemy.hp = 1; r.combat!.hand.push('base:jab:0'); playCard(r, 'base:jab:0'); endTurn(r); settle(r); assert.equal(r.wounded, true);
   const r2: Run = JSON.parse(JSON.stringify(r)); beginArena(r2); assert.equal(r2.hp, Math.ceil(48 * 0.8));
   const g = r.gold; assert.equal(healRun(r), null); assert.equal(r.gold, g - 15); assert.ok(healRun(r)); beginArena(r); assert.equal(r.hp, 48);
+});
+test('combo: valida solo tra carte consecutive; Comboo = catena di almeno 3 mosse (uguali o concatenate)', () => {
+  const r = rich(); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['eq:servo:0', 'base:jab:0', 'eq:servo:0'];
+  for (let i = 0; i < 3; i++) assert.equal(playCard(r, c.hand[0]), null); assert.deepEqual(c.field.off.map(p => p.dmg), [9, 4, 9]); assert.equal(c.tier, 0); // non adiacenti: nessun bonus
+  c.hand = ['base:jab:1', 'base:jab:2', 'eq:wraps:2']; c.prev = null; c.chain = 0; c.run = 0; c.field.off = [];
+  playCard(r, 'base:jab:1'); assert.equal(c.tier, 0); playCard(r, 'base:jab:2'); assert.equal(c.tier, 1); playCard(r, 'eq:wraps:2'); assert.equal(c.tier, 2); // jab, jab (+20%), Uno-due dopo Jab: Comboo
+  c.hand.push('base:guard:5'); playCard(r, 'base:guard:5'); assert.equal(c.tier, 0); assert.equal(c.combo, '');
 });
