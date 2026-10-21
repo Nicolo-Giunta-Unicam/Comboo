@@ -153,7 +153,15 @@ test('vita: duello a PV pieni (anche con PV massimi aumentati); sotto il 30% par
 test('combo: valida solo tra carte consecutive; Comboo = catena di almeno 3 mosse (uguali o concatenate)', () => {
   const r = rich(); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['eq:servo:0', 'base:jab:0', 'eq:servo:0'];
   for (let i = 0; i < 3; i++) assert.equal(playCard(r, c.hand[0]), null); assert.deepEqual(c.field.off.map(p => p.dmg), [9, 4, 9]); assert.equal(c.tier, 0); // non adiacenti: nessun bonus
-  c.hand = ['base:jab:1', 'base:jab:2', 'eq:wraps:2']; c.prev = null; c.chain = 0; c.run = 0; c.field.off = [];
+  c.hand = ['base:jab:1', 'base:jab:2', 'eq:wraps:2']; c.lastBy = { off: null, def: null }; c.runs = { off: 0, def: 0 }; c.chains = { off: 0, def: 0 }; c.field.off = [];
   playCard(r, 'base:jab:1'); assert.equal(c.tier, 0); playCard(r, 'base:jab:2'); assert.equal(c.tier, 1); playCard(r, 'eq:wraps:2'); assert.equal(c.tier, 2); // jab, jab (+20%), Uno-due dopo Jab: Comboo
   c.hand.push('base:guard:5'); playCard(r, 'base:guard:5'); assert.equal(c.tier, 0); assert.equal(c.combo, '');
+});
+test('combo: una carta di genere diverso non interrompe la combo (jab, guardia, jab = combo di jab)', () => {
+  const r = newRun(3); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 30; c.hand = ['base:jab:0', 'base:guard:5', 'base:jab:1'];
+  for (let i = 0; i < 3; i++) assert.equal(playCard(r, c.hand[0]), null); assert.deepEqual(c.field.off.map(p => p.dmg), [4, 5]); assert.equal(c.field.def.length, 1);
+});
+test('concatenazione tra generi: Distorsione (difesa) -> Nova (attacco) anche con un attacco in mezzo', () => {
+  const r = newRun(3); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 30; c.hand = ['eq:rift:1', 'base:jab:0', 'buy:rift_a0'];
+  for (let i = 0; i < 3; i++) assert.equal(playCard(r, c.hand[0]), null); assert.deepEqual(c.field.off.map(p => p.dmg), [4, 35]);
 });

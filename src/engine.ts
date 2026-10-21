@@ -5,7 +5,7 @@ import { defeatOutcome, movesRetainedAfterRemoval } from './policies';
 export type Phase = 'store' | 'combat' | 'over';
 export type Err = string | null;
 export interface Enemy { name: string; tier: string; hp: number; maxHp: number; block: number; gear: string[]; art?: string; id?: string; atk: number }
-export interface Combat { enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; run?: number; chain?: number; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
+export interface Combat { enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; lastBy?: Rec2<string | null>; runs?: Rec2<number>; chains?: Rec2<number>; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
 export interface Run {
   /** Carta misteriosa pagata ma non ancora installata (nessuno slot libero): si risolve con resolvePending. */
   pending?: { id: string; paid: number } | null;
@@ -18,6 +18,7 @@ export interface Run {
   equipped: string[]; bought: string[]; retained: string[]; energyBonus: number; offers: Offers; paid: Record<string, number>;
   deck: string[]; phase: Phase; combat: Combat | null; msg: string;
 }
+type Rec2<T> = { off: T; def: T };
 export interface Placed { uid: string; name: string; icon: string; src: string; dmg: number; hits: number; block: number; ttl: number; id?: number; mv?: string; fx?: string; tag?: string }
 export interface Ev { by: 'me' | 'foe'; card: Placed; absorbed: number; dmg: number }
 export interface Side { off: Placed[]; def: Placed[] }
@@ -170,7 +171,7 @@ function absorb(c: Combat, sh: Placed[], d: number) {
   for (const s of sh) { if (d <= 0) break; const a = Math.min(s.block, d); s.block -= a; d -= a; }
   sh.splice(0, sh.length, ...sh.filter(s => { if (s.block > 0) return true; if (s.uid) c.discard.push(s.uid); return false; })); return d;
 }
-function startTurn(r: Run) { const c = r.combat!; c.turn++; c.field.def = decay(c, c.field.def); c.block = 0; c.combo = ''; c.played = {}; c.prev = null; c.ev = null; c.energy = maxEnergy(r); c.phase = 'player'; drawCards(c, r, c.turn === 1 ? CONFIG.startHand : CONFIG.drawPerTurn); }
+function startTurn(r: Run) { const c = r.combat!; c.turn++; c.field.def = decay(c, c.field.def); c.block = 0; c.combo = ''; c.played = {}; c.prev = null; c.lastBy = { off: null, def: null }; c.runs = { off: 0, def: 0 }; c.chains = { off: 0, def: 0 }; c.ev = null; c.energy = maxEnergy(r); c.phase = 'player'; drawCards(c, r, c.turn === 1 ? CONFIG.startHand : CONFIG.drawPerTurn); }
 export function playCard(r: Run, uid: string): Err {
   const c = r.combat; if (r.phase !== 'combat' || !c) return 'Nessun combattimento.'; if (c.phase !== 'player') return 'Non è il tuo turno.';
   if (!c.hand.includes(uid)) return 'Carta non in mano.';
@@ -182,9 +183,12 @@ export function playCard(r: Run, uid: string): Err {
   if (c.energy < m.cost) return 'Energia insufficiente.'; if (row.length >= CONFIG.rowSize) return `Riga ${off ? 'offensiva' : 'difensiva'} piena.`;
   c.energy -= m.cost; c.hand.splice(c.hand.indexOf(uid), 1);
   // Combo base (stessa carta nel round) e concatenazione (carta precedente indicata): calcolate in ordine di schieramento.
-  const same = c.prev === m.id, n = same ? (c.run ?? 1) + 1 : 1, pct = CONFIG.combo.same[Math.min(n, CONFIG.combo.max) - 1] ?? 0, lk = f.link && c.prev === f.link.from ? f.link : null, mul = (x: number) => Math.round(x * (1 + pct));
-  // Combo: valida solo tra carte consecutive (stessa carta o concatenazione). Comboo = catena di almeno 3 mosse.
-  const chain = same || lk ? (c.chain ?? 1) + 1 : 1; c.played[m.id] = (c.played[m.id] ?? 0) + 1; c.run = n; c.chain = chain; c.prev = m.id; c.tier = chain >= 3 ? 2 : chain === 2 ? 1 : 0;
+  // Combo: valida solo tra carte consecutive DELLO STESSO GENERE (offensive o difensive): una carta dell'altro genere non la interrompe.
+  // Comboo = catena di almeno 3 mosse (stessa carta o concatenazione). Le concatenazioni guardano l'ultima carta del genere della carta indicata.
+  const g: 'off' | 'def' = off ? 'off' : 'def', L = c.lastBy ?? (c.lastBy = { off: null, def: null }), R = c.runs ?? (c.runs = { off: 0, def: 0 }), C = c.chains ?? (c.chains = { off: 0, def: 0 });
+  const same = L[g] === m.id, n = same ? R[g] + 1 : 1, pct = CONFIG.combo.same[Math.min(n, CONFIG.combo.max) - 1] ?? 0, fg: 'off' | 'def' = f.link ? (MOVES[f.link.from]?.effect.dmg ? 'off' : 'def') : g;
+  const lk = f.link && L[fg] === f.link.from ? f.link : null, mul = (x: number) => Math.round(x * (1 + pct)), chain = same ? C[g] + 1 : lk ? C[fg] + 1 : 1;
+  c.played[m.id] = (c.played[m.id] ?? 0) + 1; R[g] = n; C[g] = chain; L[g] = m.id; c.prev = m.id; c.tier = chain >= 3 ? 2 : chain === 2 ? 1 : 0;
   const p: Placed = { uid, name: m.name, icon: '', src: m.source, dmg: off ? mul(f.dmg! + dmgBonus(r) + (lk?.dmg ?? 0)) : 0, hits: f.hits ?? 1, block: 0, ttl: 1, id: ++c.seq, mv: m.id };
   const blk = mul((f.block ?? 0) + (lk?.block ?? 0));
   if (off) c.block += blk; else { p.block = blk; p.ttl = f.dur === 0 ? -1 : f.dur ?? 1; } // guardia di una carta offensiva: temporanea
