@@ -183,6 +183,18 @@
             }
           },
           "price": 22
+        },
+        {
+          "id": "wraps_a1",
+          "name": "Adrenalina",
+          "price": 24,
+          "effect": {
+            "syn": {
+              "k": "adrenaline",
+              "n": 2
+            }
+          },
+          "cost": 1
         }
       ],
       "island": "boxing",
@@ -235,6 +247,18 @@
             "dur": 3
           },
           "price": 26
+        },
+        {
+          "id": "stance_a1",
+          "name": "Flow",
+          "price": 26,
+          "effect": {
+            "syn": {
+              "k": "flow",
+              "n": 4
+            }
+          },
+          "cost": 1
         }
       ],
       "kind": "style"
@@ -301,6 +325,17 @@
             }
           },
           "cost": 2
+        },
+        {
+          "id": "footwork_a2",
+          "name": "Riscaldamento",
+          "price": 20,
+          "effect": {
+            "syn": {
+              "k": "freeNext"
+            }
+          },
+          "cost": 1
         }
       ],
       "kind": "style"
@@ -400,6 +435,18 @@
             "energy": 1
           },
           "price": 45
+        },
+        {
+          "id": "servo_a1",
+          "name": "Momentum",
+          "price": 40,
+          "effect": {
+            "syn": {
+              "k": "momentum",
+              "n": 1
+            }
+          },
+          "cost": 1
         }
       ],
       "island": "battlefield",
@@ -448,6 +495,17 @@
             }
           },
           "price": 50
+        },
+        {
+          "id": "blade_a1",
+          "name": "Punti deboli",
+          "price": 55,
+          "effect": {
+            "syn": {
+              "k": "bypass"
+            }
+          },
+          "cost": 3
         }
       ],
       "island": "battlefield",
@@ -602,6 +660,17 @@
             }
           },
           "price": 70
+        },
+        {
+          "id": "reactor_a1",
+          "name": "Stratega",
+          "price": 65,
+          "effect": {
+            "syn": {
+              "k": "scout"
+            }
+          },
+          "cost": 1
         }
       ],
       "island": "ocean",
@@ -668,6 +737,17 @@
             }
           },
           "cost": 2
+        },
+        {
+          "id": "dash_a2",
+          "name": "Clonazione",
+          "price": 60,
+          "effect": {
+            "syn": {
+              "k": "clone"
+            }
+          },
+          "cost": 1
         }
       ],
       "kind": "implant"
@@ -782,6 +862,17 @@
             }
           },
           "cost": 3
+        },
+        {
+          "id": "fruit_a2",
+          "name": "Duplicazione",
+          "price": 80,
+          "effect": {
+            "syn": {
+              "k": "dup"
+            }
+          },
+          "cost": 2
         }
       ],
       "kind": "arcane"
@@ -957,7 +1048,7 @@
   "regions": [
     {
       "id": "boxing",
-      "name": "Boxing Arena",
+      "name": "Fighting Arena",
       "level": "Umano",
       "concept": "tecnica, disciplina e corpo a corpo",
       "story": "Il protagonista impara a combattere davvero. Nessun superpotere: vince grazie a difesa, combinazioni e diversi stili di combattimento.",

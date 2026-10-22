@@ -1,7 +1,7 @@
 import { CONFIG } from './config';
 // Dati di gioco (carte, equipaggiamenti). Aggiungere contenuti = aggiungere righe qui.
 export interface Link { from: string; dmg?: number; block?: number; draw?: number; energy?: number }
-export interface Effect { dmg?: number; block?: number; heal?: number; draw?: number; hits?: number; link?: Link; dur?: number; flee?: boolean; req?: { hpBelow?: number; minTurn?: number }; energy?: number }
+export interface Effect { dmg?: number; block?: number; heal?: number; draw?: number; hits?: number; link?: Link; dur?: number; flee?: boolean; syn?: { k: string; n?: number }; req?: { hpBelow?: number; minTurn?: number }; energy?: number }
 export interface Move { id: string; name: string; desc: string; cost: number; source: string; price: number; effect: Effect }
 export interface Equipment {
   kind: string;  // natura dell'oggetto (gear, implant, body, style, arcane): determina il racconto di come lo si ottiene
@@ -16,7 +16,8 @@ const power = (e: Effect) => (e.dmg ?? 0) * (e.hits ?? 1) + (e.link?.dmg ?? 0) *
 /** Costo di energia derivato dalla forza della carta (formula in CONFIG.cost). */
 export const costOf = (e: Effect) => { const p = power(e); return p <= 0 ? 0 : Math.min(CONFIG.cost.max, Math.max(1, Math.round(p / CONFIG.cost.div))); };
 /** Effetti scritti in forma compatta, una riga ciascuno (mostrati sulla carta). */
-export const effectLines = (e: Effect): string[] => [e.dmg && `⚔️ Danni ${e.dmg}${e.hits ? '×' + e.hits : ''}`, e.link && `🔗 Dopo ${MOVES[e.link.from]?.name ?? e.link.from}: ${linkText(e.link)}`, e.block && `🛡️ Guardia ${e.block}`, e.block && !e.dmg && `⏳ ${e.dur === 0 ? 'Finché abbattuta' : (e.dur ?? 1) + ((e.dur ?? 1) > 1 ? ' turni' : ' turno')}`, e.heal && `✚ Cura ${e.heal}`, e.draw && `✦ Pesca ${e.draw}`, e.energy && `⚡ +${e.energy} energia`, e.flee && '🏃 Fuga: lasci il duello senza conseguenze', e.req && `⚠ Richiede: ${[e.req.hpBelow !== undefined && `PV < ${Math.round(e.req.hpBelow * 100)}%`, e.req.minTurn !== undefined && `dal turno ${e.req.minTurn}`].filter(Boolean).join(', ')}`].filter(Boolean) as string[];
+const synText = (s: { k: string; n?: number }) => (({ adrenaline: `⚡ +${s.n} danni alle carte offensive del turno`, bypass: '🎯 Gli scudi nemici vengono ignorati (turno)', freeNext: '🆓 La prossima carta costa 0', flow: `🌊 +${s.n} scudi per ogni combo giocata`, momentum: `📈 ${s.n} danno per ogni carta giocata nel turno`, scout: '🔍 Vedi 3 carte del mazzo: ne scegli una (costa 1)', dup: '✖️ La prossima carta è schierata due volte', clone: '🧬 Copia in mano l\'ultima carta giocata' } as Record<string, string>)[s.k] ?? s.k);
+export const effectLines = (e: Effect): string[] => [e.dmg && `⚔️ Danni ${e.dmg}${e.hits ? '×' + e.hits : ''}`, e.link && `🔗 Dopo ${MOVES[e.link.from]?.name ?? e.link.from}: ${linkText(e.link)}`, e.block && `🛡️ Guardia ${e.block}`, e.block && !e.dmg && `⏳ ${e.dur === 0 ? 'Finché abbattuta' : (e.dur ?? 1) + ((e.dur ?? 1) > 1 ? ' turni' : ' turno')}`, e.heal && `✚ Cura ${e.heal}`, e.draw && `✦ Pesca ${e.draw}`, e.energy && `⚡ +${e.energy} energia`, e.syn && synText(e.syn), e.flee && '🏃 Fuga: lasci il duello senza conseguenze', e.req && `⚠ Richiede: ${[e.req.hpBelow !== undefined && `PV < ${Math.round(e.req.hpBelow * 100)}%`, e.req.minTurn !== undefined && `dal turno ${e.req.minTurn}`].filter(Boolean).join(', ')}`].filter(Boolean) as string[];
 export const describe = (e: Effect) => effectLines(e).join(' · ');
 import J from '../data/game.json';
 export const MOVES: Record<string, Move> = {};
@@ -37,5 +38,5 @@ export interface EnemyMove { id: string; name: string; icon: string; dmg?: numbe
 export const ENEMY_MOVES: EnemyMove[] = J.enemyMoves;
 export const moveOf = (uid: string): string => {
   const [k, a, b] = uid.split(':');
-  return k === 'base' ? a : k === 'eq' ? EQUIPMENT[a].moves[+b] : a;
+  return k === 'base' || k === 'clone' ? a : k === 'eq' ? EQUIPMENT[a].moves[+b] : a;
 };

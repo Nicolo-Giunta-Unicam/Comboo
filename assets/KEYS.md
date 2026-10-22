@@ -17,7 +17,7 @@ Nome file = chiave (senza estensione). Generato da `npm run assets:list`: rilanc
 
 | Chiave | Cosa |
 |---|---|
-| `foe-boxing` | Boxing Arena |
+| `foe-boxing` | Fighting Arena |
 | `foe-battlefield` | Campo di battaglia |
 | `foe-desert` | Deserto |
 | `foe-ocean` | Oceano |
@@ -28,11 +28,11 @@ Nome file = chiave (senza estensione). Generato da `npm run assets:list`: rilanc
 
 | Chiave | Cosa |
 |---|---|
-| `enemy-boxing-1` | Sparring partner (Boxing Arena) |
-| `enemy-boxing-2` | Pugile di strada (Boxing Arena) |
-| `enemy-boxing-3` | Campione regionale (Boxing Arena) |
-| `enemy-boxing-4` | Peso massimo (Boxing Arena) |
-| `enemy-boxing-5` | Leggenda del ring (Boxing Arena) |
+| `enemy-boxing-1` | Sparring partner (Fighting Arena) |
+| `enemy-boxing-2` | Pugile di strada (Fighting Arena) |
+| `enemy-boxing-3` | Campione regionale (Fighting Arena) |
+| `enemy-boxing-4` | Peso massimo (Fighting Arena) |
+| `enemy-boxing-5` | Leggenda del ring (Fighting Arena) |
 | `enemy-battlefield-1` | Recluta cibernetica (Campo di battaglia) |
 | `enemy-battlefield-2` | Cecchino (Campo di battaglia) |
 | `enemy-battlefield-3` | Soldato in esoscheletro (Campo di battaglia) |
@@ -95,15 +95,18 @@ Nome file = chiave (senza estensione). Generato da `npm run assets:list`: rilanc
 | `card-wraps_1` | Doppio jab (Fasce da combattimento) |
 | `card-wraps_2` | Uno-due (Fasce da combattimento) |
 | `card-wraps_a0` | Overhand (Fasce da combattimento) |
+| `card-wraps_a1` | Adrenalina (Fasce da combattimento) |
 | `card-stance_0` | Parata alta (Guardia a conchiglia) |
 | `card-stance_1` | Schivata (Guardia a conchiglia) |
 | `card-stance_2` | Contrattacco (Guardia a conchiglia) |
 | `card-stance_a0` | Muro di guardia (Guardia a conchiglia) |
+| `card-stance_a1` | Flow (Guardia a conchiglia) |
 | `card-footwork_0` | Passo laterale (Gioco di gambe) |
 | `card-footwork_1` | Colpo di rimessa (Gioco di gambe) |
 | `card-footwork_2` | Serie veloce (Gioco di gambe) |
 | `card-footwork_a0` | Combinazione perfetta (Gioco di gambe) |
 | `card-footwork_a1` | Ritirata strategica (Gioco di gambe) |
+| `card-footwork_a2` | Riscaldamento (Gioco di gambe) |
 | `card-plating_0` | Indurisci (Placcatura sottocutanea) |
 | `card-plating_1` | Reggi (Placcatura sottocutanea) |
 | `card-plating_2` | Scrollata (Placcatura sottocutanea) |
@@ -112,10 +115,12 @@ Nome file = chiave (senza estensione). Generato da `npm run assets:list`: rilanc
 | `card-servo_1` | Overclock (Braccio servoassistito) |
 | `card-servo_2` | Idraulico (Braccio servoassistito) |
 | `card-servo_a0` | Pugno a rotaia (Braccio servoassistito) |
+| `card-servo_a1` | Momentum (Braccio servoassistito) |
 | `card-blade_0` | Fendente (Lama monomolecolare) |
 | `card-blade_1` | Riposta (Lama monomolecolare) |
 | `card-blade_2` | Raffica di tagli (Lama monomolecolare) |
 | `card-blade_a0` | Recisione (Lama monomolecolare) |
+| `card-blade_a1` | Punti deboli (Lama monomolecolare) |
 | `card-titan_0` | Pugno devastante (Muscoli titanici) |
 | `card-titan_1` | Onda d'impatto (Muscoli titanici) |
 | `card-titan_2` | Presa schiacciante (Muscoli titanici) |
@@ -128,11 +133,13 @@ Nome file = chiave (senza estensione). Generato da `npm run assets:list`: rilanc
 | `card-reactor_1` | Sovraccarico (Reattore interno) |
 | `card-reactor_2` | Esplosione (Reattore interno) |
 | `card-reactor_a0` | Raggio (Reattore interno) |
+| `card-reactor_a1` | Stratega (Reattore interno) |
 | `card-dash_0` | Scatto sonico (Impulso sonico) |
 | `card-dash_1` | Onda d'urto (Impulso sonico) |
 | `card-dash_2` | Controllo del campo (Impulso sonico) |
 | `card-dash_a0` | Muro del suono (Impulso sonico) |
 | `card-dash_a1` | Scatto di fuga (Impulso sonico) |
+| `card-dash_a2` | Clonazione (Impulso sonico) |
 | `card-regen_0` | Rigenerazione (Cellule rigeneranti) |
 | `card-regen_1` | Sensi acuti (Cellule rigeneranti) |
 | `card-regen_2` | Morso istintivo (Cellule rigeneranti) |
@@ -142,6 +149,7 @@ Nome file = chiave (senza estensione). Generato da `npm run assets:list`: rilanc
 | `card-fruit_2` | Incantesimo (Frutto arcano) |
 | `card-fruit_a0` | Risveglio del frutto (Frutto arcano) |
 | `card-fruit_a1` | Forma sfuggente (Frutto arcano) |
+| `card-fruit_a2` | Duplicazione (Frutto arcano) |
 | `card-rift_0` | Frantuma (Guanto della frattura) |
 | `card-rift_1` | Distorsione (Guanto della frattura) |
 | `card-rift_2` | Squarcio (Guanto della frattura) |

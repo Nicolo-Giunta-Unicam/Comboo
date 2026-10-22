@@ -1,5 +1,5 @@
 import { test } from 'node:test'; import assert from 'node:assert/strict';
-import { newRun, maxHp, askMercy, healRun, rollStyle, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
+import { newRun, maxHp, askMercy, healRun, setStyle, effCost, choosePick, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
 import { EQUIPMENT, MOVES, STYLES } from '../src/data'; import { REGIONS } from '../src/regions'; import { CONFIG } from '../src/config'; import { saveRun, loadRun, SAVE_KEY, type KV } from '../src/save';
 const kv = (): KV & { m: Map<string, string> } => { const m = new Map<string, string>(); return { m, getItem: k => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v), removeItem: k => void m.delete(k) }; };
 const settle = (r: Run) => { const c = r.combat!; for (let i = 0; i < 10 && c.phase === 'resolve'; i++) enemyStep(r); };
@@ -140,10 +140,6 @@ test('pietà: se risparmiato soldi dimezzati e si torna allo store; altrimenti i
   }
   assert.ok(s1 && s2);
 });
-test('stile iniziale: la slot machine assegna uno stile con il suo mazzo base di 10 carte', () => {
-  const seen = new Set<string>(); for (let s = 1; s < 40; s++) { const r = newRun(s); const id = rollStyle(r); seen.add(id); assert.equal(r.deck.length, 10); const st = STYLES.find(x => x.id === id)!; assert.deepEqual(ownedCards(r).map(c => c.move), st.deck); }
-  assert.equal(seen.size, STYLES.length);
-});
 test('vita: duello a PV pieni (anche con PV massimi aumentati); sotto il 30% parti all\'80% finché non paghi la cura', () => {
   const r = rich(); buyEquipment(r, 'plating'); beginArena(r); assert.equal(maxHp(r), 48); assert.equal(r.hp, 48);
   r.hp = 10; r.combat!.enemy.hp = 1; r.combat!.hand.push('base:jab:0'); playCard(r, 'base:jab:0'); endTurn(r); settle(r); assert.equal(r.wounded, true);
@@ -164,4 +160,26 @@ test('combo: una carta di genere diverso non interrompe la combo (jab, guardia, 
 test('concatenazione tra generi: Distorsione (difesa) -> Nova (attacco) anche con un attacco in mezzo', () => {
   const r = newRun(3); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 30; c.hand = ['eq:rift:1', 'base:jab:0', 'buy:rift_a0'];
   for (let i = 0; i < 3; i++) assert.equal(playCard(r, c.hand[0]), null); assert.deepEqual(c.field.off.map(p => p.dmg), [4, 35]);
+});
+test('stile iniziale scelto a mano: ogni stile ha il suo mazzo base di 10 carte', () => {
+  for (const st of STYLES) { const r = newRun(1); assert.equal(setStyle(r, st.id), null); assert.equal(r.deck.length, 10); assert.deepEqual(ownedCards(r).map(c => c.move), st.deck); }
+  assert.ok(setStyle(newRun(1), 'nope'));
+});
+const fresh = (hand: string[]) => { const r = newRun(3); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 30; c.hand = hand; return { r, c }; };
+test('sinergie: Adrenalina (+2 alle offensive, anche già schierate), Momentum, Flow', () => {
+  let { r, c } = fresh(['base:jab:0', 'buy:wraps_a1', 'base:jab:1']); playCard(r, 'base:jab:0'); playCard(r, 'buy:wraps_a1'); assert.equal(c.field.off[0].dmg, 6); playCard(r, 'base:jab:1'); assert.equal(c.field.off[1].dmg, 7); assert.equal(c.field.def.length, 0);
+  ({ r, c } = fresh(['base:jab:0', 'base:guard:5', 'buy:servo_a1'])); for (let i = 0; i < 3; i++) playCard(r, c.hand[0]); assert.equal(c.field.off[1].dmg, 3);
+  ({ r, c } = fresh(['base:jab:0', 'base:jab:1', 'buy:stance_a1'])); for (let i = 0; i < 3; i++) playCard(r, c.hand[0]); assert.equal(c.field.def[0].block, 4);
+});
+test('sinergie: Riscaldamento (prossima carta a costo 0), Duplicazione (schierata due volte), Punti deboli (scudi nemici ignorati)', () => {
+  let { r, c } = fresh(['buy:footwork_a2', 'eq:servo:0']); c.energy = 5; playCard(r, 'buy:footwork_a2'); assert.equal(c.energy, 4); playCard(r, 'eq:servo:0'); assert.equal(c.energy, 4);
+  ({ r, c } = fresh(['buy:fruit_a2', 'base:jab:0'])); playCard(r, 'buy:fruit_a2'); playCard(r, 'base:jab:0'); assert.equal(c.field.off.length, 2); assert.equal(c.field.off[1].uid, '');
+  ({ r, c } = fresh(['base:jab:0', 'buy:blade_a1'])); c.foeField.def.push({ uid: '', name: 's', icon: '', src: '', dmg: 0, hits: 1, block: 50, ttl: 5 }); for (let i = 0; i < 2; i++) playCard(r, c.hand[0]);
+  endTurn(r); settle(r); assert.equal(c.enemy.hp, 996); assert.equal(c.foeField.def[0].block, 50);
+});
+test('sinergie: Clonazione copia l\'ultima carta; Stratega mostra 3 carte e la scelta costa 1', () => {
+  let { r, c } = fresh(['buy:dash_a2']); assert.ok(playCard(r, 'buy:dash_a2'));
+  ({ r, c } = fresh(['base:jab:0', 'buy:dash_a2'])); playCard(r, 'base:jab:0'); playCard(r, 'buy:dash_a2'); assert.ok(c.hand.some(u => u.startsWith('clone:jab:'))); const cl = c.hand[0]; assert.equal(playCard(r, cl), null); assert.equal(c.discard.includes(cl), false);
+  ({ r, c } = fresh(['buy:reactor_a1'])); c.draw = ['base:guard:5', 'base:jab:1', 'eq:servo:0']; playCard(r, 'buy:reactor_a1'); assert.equal(c.pick!.length, 3); assert.ok(playCard(r, 'buy:reactor_a1')); assert.ok(endTurn(r));
+  assert.equal(choosePick(r, 'eq:servo:0'), null); assert.ok(c.hand.includes('eq:servo:0')); assert.equal(effCost(c, 'eq:servo:0'), 1); assert.equal(c.draw.includes('eq:servo:0'), false);
 });
