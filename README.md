@@ -27,3 +27,6 @@ npm run build:single   # dist/comboo.html: file unico giocabile (itch.io, condiv
 1. Crea un repository e fai push del progetto sul ramo `main`.
 2. In *Settings → Pages* scegli **GitHub Actions** come sorgente.
 3. Il workflow `.github/workflows/pages.yml` esegue typecheck, test e build, poi pubblica il sito.
+
+## Tutorial
+Dal menu principale: **📘 Tutorial**. Gira su una run di prova (mai salvata) con mano e nemico predefiniti; `src/tutorial.ts` contiene i passi e blocca ogni azione non prevista. `tests/tutorial.test.ts` verifica che il percorso guidato porti davvero alla vittoria: se cambi le regole o le carte usate dal tutorial, aggiorna entrambi.

@@ -1,7 +1,8 @@
 import { CONFIG } from './config';
 import { ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, effectLines, moveOf, type Move } from './data';
-import { beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, setStyle, effCost, choosePick, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
+import { beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
 import { ART, customImg, eqIcon } from './art';
+import { tutActive, tutPatchCombat, tutPatchEnemy, tutStart, tutSync } from './tutorial';
 import { REGIONS, REGION_LIST, type Region } from './regions';
 import { banner, burst } from './fx';
 import { config as audioCfg, setMode, sfx, unlock } from './audio';
@@ -9,6 +10,7 @@ import { clearRun, loadRun, saveRun } from './save';
 const app = document.getElementById('app')!;
 const ICON = new Proxy({} as Record<string, string>, { get: (_t, k: string) => EQUIPMENT[k] ? eqIcon(k, EQUIPMENT[k].kind) : undefined }); // icona dell'equipaggiamento (non per le carte base)
 const FOE = ART.foe, foeArt = (art: string | undefined, tier: string, id?: string) => (id ? customImg('enemy-' + id) : undefined) ?? ART.region[art ?? ''] ?? FOE[tier];
+const persist = (r: Run) => { if (!tutActive()) saveRun(r, localStorage); }; // il tutorial non tocca il salvataggio
 const SET_KEY = 'cardrogue.settings.v1', DELAYS = [1500, 900, 450, 120], LABELS = ['Lenta', 'Normale', 'Veloce', 'Rapida'];
 const THEMES = ['classic', 'boxing', 'battle', 'forest', 'ocean', 'desert', 'ember']; // il tema dipende dalla regione scelta
 const settings = { speed: 1, calm: false, music: true, sfx: true, god: false, mv: 0.8, sv: 0.8, theme: 'classic', timer: true, tmode: 1 }; try { Object.assign(settings, JSON.parse(localStorage.getItem(SET_KEY) ?? '{}')); } catch { /* ignora */ }
@@ -35,22 +37,22 @@ function paintTimer() {
 function timerSync() {
   const c = run?.combat; if (run?.phase !== 'combat') tTurn = -1;
   if (c && c.phase === 'player' && c.turn !== tTurn) { tTurn = c.turn; tLeft = TLIM[settings.tmode] * 1000; }
-  const on = settings.timer && !!c && c.phase === 'player' && started && !settingsOpen && !vs && !endAnim && !document.querySelector('.slotov');
+  const on = settings.timer && !!c && c.phase === 'player' && started && !settingsOpen && !vs && !endAnim && !tutActive() && !document.querySelector('.slotov');
   if (!on) { clearInterval(tTick); tTick = 0; return; }
   if (!tTick) { let last = performance.now(); tTick = window.setInterval(() => { const n = performance.now(); tLeft -= n - last; last = n; paintTimer(); if (tLeft <= 0) { clearInterval(tTick); tTick = 0; act('end'); } }, 200); }
   paintTimer();
 }
 function tick() { // turno nemico: una carta alla volta, ripreso anche dopo un reload
   const c = run?.combat; if (timer || run?.phase !== 'combat' || !c || c.phase === 'player' || !started || settingsOpen || document.querySelector('.slotov')) return;
-  timer = window.setTimeout(() => { timer = 0; if (!run || !started || settingsOpen || document.querySelector('.slotov')) return; const hp = run.hp, eh = run.combat?.enemy.hp ?? 0; const tier = run.combat?.enemy.tier ?? 'Strada', art = run.combat?.enemy.art, eid = run.combat?.enemy.id, snap: Combat | null = run.combat ? JSON.parse(JSON.stringify(run.combat)) : null, hp0 = run.hp; enemyStep(run); pop.p = Math.max(0, hp - run.hp); pop.e = Math.max(0, eh - (run.combat?.enemy.hp ?? 0)); const ev = run.combat?.ev; if (pop.p || pop.e) sfx('hit'); else if (ev && ev.absorbed) sfx('shield'); if (run.phase !== 'combat' && snap) { // colpo finale: prima si vede l'attacco, poi i fuochi d'artificio (se vinci), poi la scena finale
+  timer = window.setTimeout(() => { timer = 0; if (!run || !started || settingsOpen || document.querySelector('.slotov')) return; const hp = run.hp, eh = run.combat?.enemy.hp ?? 0; const tier = run.combat?.enemy.tier ?? 'Strada', art = run.combat?.enemy.art, eid = run.combat?.enemy.id, snap: Combat | null = run.combat ? JSON.parse(JSON.stringify(run.combat)) : null, hp0 = run.hp; enemyStep(run); if (tutActive()) tutPatchEnemy(); pop.p = Math.max(0, hp - run.hp); pop.e = Math.max(0, eh - (run.combat?.enemy.hp ?? 0)); const ev = run.combat?.ev; if (pop.p || pop.e) sfx('hit'); else if (ev && ev.absorbed) sfx('shield'); if (run.phase !== 'combat' && snap) { // colpo finale: prima si vede l'attacco, poi i fuochi d'artificio (se vinci), poi la scena finale
       const win = run.phase === 'store'; if (win) snap.enemy.hp = 0; snap.ev = run.finalEv ?? null; (snap.phase === 'resolve' ? snap.field.off : snap.foeField.off).shift(); finalView = snap; finalHp = win ? hp0 : 0;
       const showEnd = () => { finalView = null; endAnim = { win, tier, art, id: eid }; render(); setTimeout(() => { endAnim = null; render(); }, 2800); };
       if (win) { setTimeout(fireworks, 1000); setTimeout(showEnd, 2900); } else setTimeout(showEnd, 1400);
-    } saveRun(run, localStorage); render(); }, DELAYS[settings.speed] ?? 900);
+    } persist(run); render(); }, DELAYS[settings.speed] ?? 900);
 }
 const badge = (c: Combat, u: string) => { const m = MOVES[moveOf(u)], g = m.effect.dmg ? 'off' : 'def', fg = m.effect.link && MOVES[m.effect.link.from]?.effect.dmg ? 'off' : 'def', p = CONFIG.combo.same[Math.min(c.lastBy?.[g] === m.id ? (c.runs?.[g] ?? 1) + 1 : 1, CONFIG.combo.max) - 1]; return [p ? `🔥+${Math.round(p * 100)}%` : '', m.effect.link && c.lastBy?.[fg] === m.effect.link.from ? '🔗' : ''].filter(Boolean).join(' '); };
-function render() { hideTip(); if (run) { run.god = settings.god; if (settings.god && run.gold < GOD) run.gold = GOD; }
-  if (!finalView) { if (lastPhase === 'combat' && run?.phase === 'store') { sfx(run.outcome === 'win' ? 'win' : 'click'); tab = 'sto'; } else if (lastPhase === 'combat' && run?.phase === 'over') sfx('lose'); lastPhase = run?.phase; } setMode(run?.phase === 'combat' && started ? 'combat' : 'calm'); document.body.classList.toggle('fs', (run?.phase === 'combat' || !!finalView) && started); document.body.classList.toggle('st', !!run && started && run.phase === 'store' && !finalView); document.body.classList.toggle('calm', settings.calm); const thId = run && started && run.phase !== 'over' && !(run.phase === 'store' && run.needsMap) ? REGIONS[run.region ?? '']?.theme ?? 'classic' : 'classic'; THEMES.forEach(t => document.body.classList.toggle('th-' + t, t === thId)); draw(); if (settingsOpen) app.insertAdjacentHTML('beforeend', modal()); if (run?.pending && started && !settingsOpen) choiceModal(); if (run?.combat?.pick?.length && started && !settingsOpen) pickModal(); tick(); timerSync(); }
+function render() { hideTip(); if (run) { run.god = settings.god && !tutActive(); if (run.god && run.gold < GOD) run.gold = GOD; }
+  if (!finalView) { if (lastPhase === 'combat' && run?.phase === 'store') { sfx(run.outcome === 'win' ? 'win' : 'click'); tab = 'sto'; } else if (lastPhase === 'combat' && run?.phase === 'over') sfx('lose'); lastPhase = run?.phase; } setMode(run?.phase === 'combat' && started ? 'combat' : 'calm'); document.body.classList.toggle('fs', (run?.phase === 'combat' || !!finalView) && started); document.body.classList.toggle('st', !!run && started && run.phase === 'store' && !finalView); document.body.classList.toggle('calm', settings.calm); const thId = run && started && run.phase !== 'over' && !(run.phase === 'store' && run.needsMap) ? REGIONS[run.region ?? '']?.theme ?? 'classic' : 'classic'; THEMES.forEach(t => document.body.classList.toggle('th-' + t, t === thId)); draw(); if (settingsOpen) app.insertAdjacentHTML('beforeend', modal()); if (run?.pending && started && !settingsOpen) choiceModal(); if (run?.combat?.pick?.length && started && !settingsOpen) pickModal(); tick(); timerSync(); tutSync(); }
 function drawMap(r: Run) { // oceano con isola centrale + 5 isole a pentagono; hover = contorno tratteggiato lampeggiante; si salpa in barca
   const BP = 'M-9 0Q-8.5 -6 -2 -6.5Q6 -7.5 9 -1Q10 5 2 6.5Q-6 7 -9 0Z', ROT = [0, -12, 18, -8, 24, 10], here = REGIONS[r.region ?? 'boxing'] ?? REGION_LIST[0], sel = mapSel ? REGIONS[mapSel] : null;
   const ul = unlocked(r), src = (id: string) => /src="([^"]+)"/.exec(ART.region[id])?.[1] ?? '';
@@ -95,7 +97,14 @@ function fireworks() { // fuochi d'artificio ai lati dell'arena
 function pickModal() { // Stratega: scelta di una tra le prime 3 carte del mazzo
   const c = run?.combat; if (!c?.pick?.length || document.querySelector('.pickov')) return;
   const ov = document.createElement('div'); ov.className = 'slotov pickov'; ov.innerHTML = `<div class="slotbox"><h2>🔍 Stratega: scegli una carta</h2><div class="pickrow">${c.pick.map(u => `<div class="pk" data-pick="${u}">${card(u, { cost: 1 })}</div>`).join('')}</div><small>Va in mano e, se la giochi questo turno, costa 1.</small></div>`; document.body.appendChild(ov);
-  ov.onclick = ev => { const t = (ev.target as HTMLElement).closest('[data-pick]') as HTMLElement | null; if (!t || !run) return; const err = choosePick(run, t.dataset.pick!); if (err) note = err; ov.remove(); saveRun(run, localStorage); render(); };
+  ov.onclick = ev => { const t = (ev.target as HTMLElement).closest('[data-pick]') as HTMLElement | null; if (!t || !run) return; const err = choosePick(run, t.dataset.pick!); if (err) note = err; ov.remove(); persist(run); render(); };
+}
+let stash: { run: Run | null; started: boolean; tab: 'sto' | 'st' | 'me' } | null = null;
+/** Tutorial: gira su una run di prova (mai salvata) e poi ripristina quella reale. */
+function startTutorial() {
+  stash = { run, started, tab }; const r = newRun(11); r.hero = { name: 'Recluta', avatar: 'a0' }; setStyle(r, 'boxing'); r.gold = 90; r.offers = { eq: ['wraps', 'stance', 'footwork'], mv: [null, null, null], eqPrice: r.offers.eqPrice, mvPrice: r.offers.mvPrice };
+  run = r; started = true; tab = 'sto'; mapSel = null; settingsOpen = false;
+  tutStart({ run: () => run, tab: () => tab, mapSel: () => mapSel, busy: () => !!vs || !!finalView || !!endAnim || sailing, render, exit: () => { run = stash?.run ?? null; started = false; tab = stash?.tab ?? 'sto'; stash = null; vs = null; finalView = null; endAnim = null; render(); } }); render();
 }
 function drawVs() { // schermata di presentazione del duello
   const v = vs!; app.innerHTML = `<div class="vsscene"><div class="vsside l"><div class="vsimg">${heroImg()}</div><div class="vsname">${heroName()}</div><small>❤ ${maxHp(run!)} · 🔧 ${run!.equipped.length} equip.</small></div><div class="vstxt">VS</div><div class="vsside r"><div class="vsimg">${foeArt(v.art, v.tier, v.id)}</div><div class="vsname">${v.name}</div><small>❤ ${v.hp} · ${v.tier}</small></div><button class="vsskip" data-a="skipvs">Tocca per iniziare</button></div>`;
@@ -113,7 +122,7 @@ function draw() {
   if (run?.phase !== 'combat' && !finalView) { bars = null; prevHand = []; lastCombo = ''; lastEv = null; lastSynN = 0; }
   const r = run, t = note ? `<div class="toast">${note}</div>` : '';
   if (!r || (!started && r.phase !== 'over')) {
-    app.innerHTML = `<div class="logo">COMB<span class="inf">∞</span></div><p style="text-align:center"><small>Prototipo — ambientazione provvisoria. Da lottatore umano a potenza cosmica.</small></p>${r ? `<button class="pri" data-a="cont" style="width:100%">Continua run (arena ${r.arena})</button><br><br>` : ''}<button data-a="new" style="width:100%">Nuova run</button><br><br><button data-a="set" style="width:100%">⚙ Impostazioni</button>`; return;
+    app.innerHTML = `<div class="logo">COMB<span class="inf">∞</span></div><p style="text-align:center"><small>Prototipo — ambientazione provvisoria. Da lottatore umano a potenza cosmica.</small></p>${r ? `<button class="pri" data-a="cont" style="width:100%">Continua run (arena ${r.arena})</button><br><br>` : ''}<button data-a="new" style="width:100%">Nuova run</button><br><br><button data-a="tutorial" style="width:100%">📘 Tutorial</button><br><br><button data-a="set" style="width:100%">⚙ Impostazioni</button>`; return;
   }
   if (r.phase === 'over' && !finalView) { app.innerHTML = `<div class="logo" style="font-size:36px">SCONFITTA</div><div class="item"><div class="big">💀</div>Arene superate: <b>${r.arena - 1}</b><small>Regola provvisoria: la sconfitta termina la run.</small></div><br><button class="pri" data-a="new" style="width:100%">Nuova run</button><br><br><button data-a="menu" style="width:100%">🏠 Menu principale</button>`; return; }
   if (r.phase === 'combat' || finalView) {
@@ -137,11 +146,11 @@ function draw() {
     app.innerHTML = `${head(r)}${t}<div class="field" data-zone="field">${evh}<div class="arena">
       ${side(true, php, maxHp(r), c.block + sh(c.field.def), pop.p, heroImg(), `Turno ${c.turn}`, heroName(), bar0.me, eqh)}
       <div class="board">${rw(c.foeField.def, 'def', ev?.by === 'me' && ev.absorbed > 0)}${rw(c.foeField.off, 'off')}
-      <div class="mat">${busy ? `<div class="matr"><small>${c.phase === 'resolve' ? 'Attacchi in corso…' : 'Turno avversario…'}</small><span class="back">${'🂠'.repeat(c.queue.length)}</span></div><div class="combo">&nbsp;</div>` : `<div class="matr"><div class="pips">⚡ ${c.energy}/${me}</div><button class="mercy" data-a="mercy" ${c.mercy ? 'disabled' : ''}>🙏 Pietà${c.mercy ? ' (usata)' : ''}</button><button class="pri end" data-a="end">${settings.timer ? '<i class="tfill" style="width:${Math.max(0, Math.min(1, tLeft / (TLIM[settings.tmode] * 1000))) * 100}%"></i>' : ''}<span>Fine turno ⚔</span>${settings.timer ? '<b class="tsec"></b>' : ''}</button></div><div class="combo">${c.combo ? '🔥 ' + c.combo : '&nbsp;'}</div>`}</div>
+      <div class="mat">${busy ? `<div class="matr"><small>${c.phase === 'resolve' ? 'Attacchi in corso…' : 'Turno avversario…'}</small><span class="back">${'🂠'.repeat(c.queue.length)}</span></div><div class="combo">&nbsp;</div>` : `<div class="matr"><div class="pips">⚡ ${c.energy}/${me}</div>${c.draw.length === 0 && c.discard.length ? `<button class="mercy" data-a="ddraw" ${c.energy < CONFIG.discardDrawCost || c.hand.length >= CONFIG.maxHand ? 'disabled' : ''}>♻ ${CONFIG.discardDrawCost}⚡</button>` : ''}<button class="mercy" data-a="mercy" ${c.mercy ? 'disabled' : ''}>🙏 Pietà${c.mercy ? ' (usata)' : ''}</button><button class="pri end" data-a="end">${settings.timer ? '<i class="tfill" style="width:${Math.max(0, Math.min(1, tLeft / (TLIM[settings.tmode] * 1000))) * 100}%"></i>' : ''}<span>Fine turno ⚔</span>${settings.timer ? '<b class="tsec"></b>' : ''}</button></div><div class="combo">${c.combo ? '🔥 ' + c.combo : '&nbsp;'}</div>`}</div>
       ${rw(c.field.off, 'off')}${rw(c.field.def, 'def', ev?.by === 'foe' && ev.absorbed > 0)}</div>
       ${side(false, e.hp, e.maxHp, sh(c.foeField.def), pop.e, foeArt(e.art, e.tier, e.id), `${(wins(r, r.region ?? '') % CONFIG.matchesPerIsland) + 1}/${CONFIG.matchesPerIsland}`, e.tier, bar0.foe, eqf)}
     </div></div>
-    <div class="handrow"><div class="hand">${c.hand.map((u, i) => card(u, { cls: !busy && c.energy >= effCost(c, u) && reqOk(MOVES[moveOf(u)]) ? '' : 'off', cost: effCost(c, u), badge: busy ? '' : badge(c, u), attr: `data-drag="${u}" style="--i:${i};--n:${n}"` })).join('')}</div><div class="pile"><b>${c.draw.length}</b><small>Mazzo</small></div></div>`;
+    <div class="handrow"><div class="hand">${c.hand.map((u, i) => card(u, { cls: !busy && c.energy >= effCost(c, u) && reqOk(MOVES[moveOf(u)]) ? '' : 'off', cost: effCost(c, u), badge: busy ? '' : badge(c, u), attr: `data-drag="${u}" style="--i:${i};--n:${n}"` })).join('')}</div><div class="pile"><b>${c.draw.length}</b><small>Mazzo</small><span class="dc">🗑 ${c.discard.length}</span></div></div>`;
     const pr = (app.querySelector('.pile') as HTMLElement).getBoundingClientRect(); let dealt = 0; // animazione di pesca: le carte nuove arrivano dal mazzo
     app.querySelectorAll<HTMLElement>('.hand .card').forEach(el => { if (prevHand.includes(el.dataset.drag!)) return; const q = el.getBoundingClientRect(); el.style.setProperty('--dx', pr.left + pr.width / 2 - q.left - q.width / 2 + 'px'); el.style.setProperty('--dy', pr.top + pr.height / 2 - q.top - q.height / 2 + 'px'); el.style.animationDelay = dealt++ * 110 + 'ms'; el.classList.add('dealt'); });
     if (dealt) sfx('draw'); prevHand = [...c.hand];
@@ -247,7 +256,7 @@ function choiceModal() { // nessuno slot libero: sostituire un equipaggiamento (
   ov.onclick = ev => {
     const b = (ev.target as HTMLElement).closest('button') as HTMLElement | null; if (!b || !run) return; const g0 = run.gold, id = p.id;
     const err = b.dataset.rep ? resolvePending(run, 'replace', b.dataset.rep) : resolvePending(run, 'discard'); if (err) { note = err; render(); return; }
-    ov.remove(); saveRun(run, localStorage); if (run.gold !== g0 && !settings.god) coinFx(g0, run.gold); render(); if (b.dataset.rep) flyTo(eqFace(id), '[data-zone="eqbar"]');
+    ov.remove(); persist(run); if (run.gold !== g0 && !settings.god) coinFx(g0, run.gold); render(); if (b.dataset.rep) flyTo(eqFace(id), '[data-zone="eqbar"]');
   };
 }
 const GOD = 9999999;
@@ -274,18 +283,18 @@ function act(a: string, id = '') {
   let err: Err = null; note = '';
   if (a === 'new') { creating = true; draft = { name: run?.hero?.name ?? '', av: run?.hero?.avatar ?? 'a0', style: run?.style ?? 'boxing' }; }
   else if (a === 'startrun') { run = newRun(); run.hero = { name: draft.name.trim() || 'Protagonista', avatar: draft.av }; setStyle(run, draft.style); started = true; tab = 'sto'; mapSel = null; creating = false; }
-  else if (a === 'avatar') draft.av = id; else if (a === 'style') draft.style = id; else if (a === 'cancelnew') creating = false; else if (a === 'cont') started = true;
+  else if (a === 'avatar') draft.av = id; else if (a === 'style') draft.style = id; else if (a === 'cancelnew') creating = false; else if (a === 'cont') started = true; else if (a === 'tutorial') startTutorial();
   else if (run) {
     const mys = a === 'offerEq' && +id === 2 ? run.offers.eq[2] : a === 'offerMv' && +id === 2 ? run.offers.mv[2] : null, g0 = run.gold, e0 = run.combat?.enemy.hp ?? 0, p0 = run.hp;
     if (a === 'tab') tab = id as typeof tab; else if (a === 'next') tab = tab === 'sto' ? 'st' : 'me'; else if (a === 'region') { if (unlocked(run).includes(id)) mapSel = id; else err = '🔒 Isola bloccata: vinci le 5 partite dell\'isola precedente.'; } else if (a === 'openmap') err = openMap(run);
-    else if (a === 'mercy') { if (Date.now() - mercyArm > 3000) { mercyArm = Date.now(); err = 'Tocca di nuovo 🙏 Pietà per confermare: se vieni risparmiato perdi metà dei soldi.'; } else { const res = askMercy(run); err = res.err; if (!err) { mercyArm = 0; slotMachine('mercy', res.spared ? 'ok' : 'no'); } } } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'heal') err = healRun(run); else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
+    else if (a === 'mercy') { if (Date.now() - mercyArm > 3000) { mercyArm = Date.now(); err = 'Tocca di nuovo 🙏 Pietà per confermare: se vieni risparmiato perdi metà dei soldi.'; } else { const res = askMercy(run); err = res.err; if (!err) { mercyArm = 0; slotMachine('mercy', res.spared ? 'ok' : 'no'); } } } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'heal') err = healRun(run); else if (a === 'ddraw') { err = drawDiscard(run); if (!err) sfx('draw'); } else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
     else if (a === 'buyM') err = buyMove(run, id); else if (a === 'buyEn') err = buyEnergy(run); else if (a === 'offerEq') err = buyOfferEq(run, +id); else if (a === 'offerMv') err = buyOfferMv(run, +id); else if (a === 'hint') err = id; else if (a === 'sellM') err = sellMove(run, id); else if (a === 'deck') err = toggleDeck(run, id);
     else if (a === 'go') err = beginArena(run); else if (a === 'play') err = playCard(run, id); else if (a === 'end') err = endTurn(run);
     if (!['tab', 'next', 'play', 'end'].includes(a)) run.msg = '';
     if (!err) { if (a === 'end') sfx('turn'); if (run.gold !== g0 && !settings.god) coinFx(g0, run.gold); if (mys) slotMachine(a === 'offerEq' ? 'eq' : 'mv', mys);
       if (a === 'go') { const en = run.combat!.enemy, o = { tier: en.tier, art: en.art, id: en.id, name: en.name, hp: en.maxHp, lv: run.arena }; vs = o; sfx('hit'); setTimeout(() => { if (vs === o) { vs = null; render(); } }, 2600); } }
   }
-  note = err ?? ''; if (run) saveRun(run, localStorage); render();
+  note = err ?? ''; if (run) persist(run); if (tutActive()) tutPatchCombat(); render();
 }
 app.addEventListener('click', ev => { const b = (ev.target as HTMLElement).closest('button[data-a], g[data-a]') as HTMLButtonElement | null; if (b && !b.disabled) { sfx('click'); act(b.dataset.a!, b.dataset.id); } });
 // ---- Drag & drop (pointer events: mouse + touch) ----

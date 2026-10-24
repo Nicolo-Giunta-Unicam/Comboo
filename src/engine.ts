@@ -162,7 +162,7 @@ export function beginArena(r: Run): Err {
   r.phase = 'combat'; r.msg = ''; startTurn(r); return null;
 }
 function drawCards(c: Combat, r: Run, n: number) {
-  for (; n > 0 && c.hand.length < CONFIG.maxHand; n--) { if (!c.draw.length) { c.draw = shuffle(r, c.discard); c.discard = []; } const u = c.draw.pop(); if (!u) break; c.hand.push(u); }
+  for (; n > 0 && c.hand.length < CONFIG.maxHand; n--) { const u = c.draw.pop(); if (!u) break; c.hand.push(u); } // il mazzo non si rimescola: finito, finito
 }
 /** Scala la durata delle difese; quelle scadute o abbattute vanno agli scarti. ttl<0 = finché abbattuta. */
 function decay(c: Combat, sh: Placed[]) { sh.forEach(s => { if (s.ttl > 0) s.ttl--; }); return sh.filter(s => { const keep = s.ttl !== 0 && s.block > 0; if (!keep && s.uid) c.discard.push(s.uid); return keep; }); }
@@ -186,7 +186,7 @@ export function playCard(r: Run, uid: string): Err {
   }
   if (c.energy < cost) return 'Energia insufficiente.';
   if (instant) { // carte sinergia: effetto immediato basato sulle altre carte del turno, non occupano il campo
-    if (S!.k === 'clone' && !c.lastUid) return 'Nessuna carta giocata da copiare.'; if (S!.k === 'scout' && !c.draw.length && !c.discard.length) return 'Nessuna carta da guardare.';
+    if (S!.k === 'clone' && !c.lastUid) return 'Nessuna carta giocata da copiare.'; if (S!.k === 'scout' && !c.draw.length) return 'Il mazzo è finito: nessuna carta da guardare.';
     c.energy -= cost; mods.freeNext = false; c.hand.splice(c.hand.indexOf(uid), 1); if (keep) c.discard.push(keep); c.played[m.id] = (c.played[m.id] ?? 0) + 1; let msg = '';
     switch (S!.k) {
       case 'adrenaline': mods.off += S!.n ?? 0; c.field.off.forEach(p => { p.dmg += S!.n ?? 0; }); msg = `+${S!.n} danni a tutte le carte offensive del turno`; break;
@@ -194,7 +194,7 @@ export function playCard(r: Run, uid: string): Err {
       case 'freeNext': mods.freeNext = true; msg = 'La prossima carta costa 0'; break;
       case 'dup': mods.dupNext = true; msg = 'La prossima carta sarà schierata due volte'; break;
       case 'clone': c.hand.push(`clone:${moveOf(c.lastUid!)}:${++c.seq}`); msg = 'Copia dell\'ultima carta aggiunta alla mano'; break;
-      case 'scout': if (c.draw.length < 3) { c.draw = [...shuffle(r, c.discard), ...c.draw]; c.discard = []; } c.pick = c.draw.slice(-3).reverse(); msg = 'Scegli una carta tra le prime 3 del mazzo'; break;
+      case 'scout': c.pick = c.draw.slice(-3).reverse(); msg = 'Scegli una carta tra le prime 3 del mazzo'; break;
     }
     c.lastUid = uid; c.syn = { n: ++c.seq, text: msg }; c.log.push(`${m.name}: ${msg}.`); return null;
   }
@@ -219,6 +219,12 @@ export function playCard(r: Run, uid: string): Err {
   const tag = [pct ? `${m.name} ×${n} (+${Math.round(pct * 100)}%)` : '', lk ? `${MOVES[lk.from].name} → ${m.name}` : ''].filter(Boolean).join(' · '); c.combo = tag;
   p.fx = [dr && `✦${dr}`, en && `⚡+${en}`, heal && `✚${heal}`, off && blk && `🛡️${blk}`].filter(Boolean).join(' '); p.tag = [pct ? `🔥+${Math.round(pct * 100)}%` : '', lk ? '🔗' : ''].filter(Boolean).join(' ');
   return null;
+}
+/** Mazzo esaurito: per CONFIG.discardDrawCost energia si pesca una carta a caso dalla pila degli scarti. */
+export function drawDiscard(r: Run): Err {
+  const c = r.combat; if (r.phase !== 'combat' || !c) return 'Nessun combattimento.'; if (c.phase !== 'player') return 'Non è il tuo turno.'; if (c.pick?.length) return 'Scegli prima una carta (Stratega).';
+  if (c.draw.length) return 'Hai ancora carte da pescare nel mazzo.'; if (!c.discard.length) return 'Nessuna carta negli scarti.'; if (c.hand.length >= CONFIG.maxHand) return `Mano piena (${CONFIG.maxHand}).`; if (c.energy < CONFIG.discardDrawCost) return 'Energia insufficiente.';
+  c.energy -= CONFIG.discardDrawCost; c.hand.push(c.discard.splice(Math.floor(rand(r) * c.discard.length), 1)[0]); return null;
 }
 /** Stratega: sceglie una delle 3 carte mostrate; entra in mano e, se giocata nel turno, costa 1. */
 export function choosePick(r: Run, uid: string): Err {

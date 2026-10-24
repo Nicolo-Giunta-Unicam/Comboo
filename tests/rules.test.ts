@@ -1,5 +1,5 @@
 import { test } from 'node:test'; import assert from 'node:assert/strict';
-import { newRun, maxHp, askMercy, healRun, setStyle, effCost, choosePick, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
+import { newRun, maxHp, askMercy, healRun, setStyle, effCost, choosePick, drawDiscard, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
 import { EQUIPMENT, MOVES, STYLES } from '../src/data'; import { REGIONS } from '../src/regions'; import { CONFIG } from '../src/config'; import { saveRun, loadRun, SAVE_KEY, type KV } from '../src/save';
 const kv = (): KV & { m: Map<string, string> } => { const m = new Map<string, string>(); return { m, getItem: k => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v), removeItem: k => void m.delete(k) }; };
 const settle = (r: Run) => { const c = r.combat!; for (let i = 0; i < 10 && c.phase === 'resolve'; i++) enemyStep(r); };
@@ -182,4 +182,11 @@ test('sinergie: Clonazione copia l\'ultima carta; Stratega mostra 3 carte e la s
   ({ r, c } = fresh(['base:jab:0', 'buy:dash_a2'])); playCard(r, 'base:jab:0'); playCard(r, 'buy:dash_a2'); assert.ok(c.hand.some(u => u.startsWith('clone:jab:'))); const cl = c.hand[0]; assert.equal(playCard(r, cl), null); assert.equal(c.discard.includes(cl), false);
   ({ r, c } = fresh(['buy:reactor_a1'])); c.draw = ['base:guard:5', 'base:jab:1', 'eq:servo:0']; playCard(r, 'buy:reactor_a1'); assert.equal(c.pick!.length, 3); assert.ok(playCard(r, 'buy:reactor_a1')); assert.ok(endTurn(r));
   assert.equal(choosePick(r, 'eq:servo:0'), null); assert.ok(c.hand.includes('eq:servo:0')); assert.equal(effCost(c, 'eq:servo:0'), 1); assert.equal(c.draw.includes('eq:servo:0'), false);
+});
+test('mazzo finito: niente rimescolo; mano massima 10; pesca dagli scarti per 3 energia', () => {
+  const { r, c } = fresh(Array(9).fill('base:jab:0')); c.draw = ['base:guard:5', 'base:guard:6', 'base:guard:7']; endTurn(r); settle(r); c.queue = []; enemyStep(r);
+  assert.equal(c.hand.length, 10); assert.equal(c.draw.length, 2); // a 9 carte se ne pesca una sola
+  c.draw = []; c.discard = ['base:jab:3', 'base:jab:4']; c.hand = ['base:guard:5']; c.energy = 2; assert.ok(drawDiscard(r)); c.energy = 5;
+  assert.equal(drawDiscard(r), null); assert.equal(c.energy, 2); assert.equal(c.hand.length, 2); assert.equal(c.discard.length, 1);
+  c.draw = ['base:jab:1']; assert.ok(drawDiscard(r)); c.draw = []; c.hand = Array(10).fill('base:jab:0'); c.energy = 9; assert.ok(drawDiscard(r));
 });

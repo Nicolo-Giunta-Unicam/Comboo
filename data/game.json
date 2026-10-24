@@ -56,7 +56,8 @@
     },
     "woundedBelow": 0.3,
     "woundedStart": 0.8,
-    "healCost": 15
+    "healCost": 15,
+    "discardDrawCost": 3
   },
   "baseMoves": [
     {
