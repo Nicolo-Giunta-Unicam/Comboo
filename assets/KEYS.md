@@ -13,6 +13,37 @@ Nome file = chiave (senza estensione). Generato da `npm run assets:list`: rilanc
 | `avatar-a4` | avatar della creazione del personaggio |
 | `avatar-a5` | avatar della creazione del personaggio |
 
+## Sagoma del protagonista (schermata Storia, tela consigliata 400x800 px, PNG trasparente)
+
+| Chiave | Cosa |
+|---|---|
+| `body-a0` | sagoma per l'avatar a0 |
+| `body-a1` | sagoma per l'avatar a1 |
+| `body-a2` | sagoma per l'avatar a2 |
+| `body-a3` | sagoma per l'avatar a3 |
+| `body-a4` | sagoma per l'avatar a4 |
+| `body-a5` | sagoma per l'avatar a5 |
+| `body-default` | sagoma di riserva (usata anche con la foto caricata) |
+
+## Livelli equipaggiamento sul personaggio (stessa tela 400x800 della sagoma, PNG trasparente; sovrapposti nell'ordine di data/game.json)
+
+| Chiave | Cosa |
+|---|---|
+| `layer-wraps` | Fasce da combattimento |
+| `layer-stance` | Guardia a conchiglia |
+| `layer-footwork` | Gioco di gambe |
+| `layer-plating` | Placcatura sottocutanea |
+| `layer-servo` | Braccio servoassistito |
+| `layer-blade` | Lama monomolecolare |
+| `layer-titan` | Muscoli titanici |
+| `layer-hide` | Pelle di roccia |
+| `layer-reactor` | Reattore interno |
+| `layer-dash` | Impulso sonico |
+| `layer-regen` | Cellule rigeneranti |
+| `layer-fruit` | Frutto arcano |
+| `layer-rift` | Guanto della frattura |
+| `layer-aura` | Aura cataclismica |
+
 ## Nemici di isola (immagine di riserva per tutti i nemici dell'isola, e icona sulla mappa)
 
 | Chiave | Cosa |
@@ -101,6 +132,7 @@ Nome file = chiave (senza estensione). Generato da `npm run assets:list`: rilanc
 | `card-stance_2` | Contrattacco (Guardia a conchiglia) |
 | `card-stance_a0` | Muro di guardia (Guardia a conchiglia) |
 | `card-stance_a1` | Flow (Guardia a conchiglia) |
+| `card-stance_a2` | Scudo d'assalto (Guardia a conchiglia) |
 | `card-footwork_0` | Passo laterale (Gioco di gambe) |
 | `card-footwork_1` | Colpo di rimessa (Gioco di gambe) |
 | `card-footwork_2` | Serie veloce (Gioco di gambe) |

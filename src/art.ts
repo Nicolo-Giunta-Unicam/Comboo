@@ -58,3 +58,12 @@ export const eqIcon = (id: string, kind?: string): string => custom('eq-' + id) 
 
 /** Immagine personalizzata (assets/<chiave>.*) oppure undefined: usata per nemici singoli, singole carte e stili. */
 export const customImg = custom;
+
+// ---- Personaggio a livelli (schermata Storia) ----
+// Tutti i livelli hanno la STESSA tela (consigliato 400x800 px, PNG trasparente) e si sovrappongono: prima la sagoma, poi gli equipaggiamenti.
+const SKIN: Record<string, string> = { a0: '#f2c9a0', a1: '#d9a57a', a2: '#8d5a3a', a3: '#f7d9bf', a4: '#c68b5e', a5: '#5a3a28' };
+const silhouette = (skin: string) => `<img class="ic" alt="" draggable="false" src="data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800"><g fill="${skin}" stroke="#00000055" stroke-width="3" stroke-linejoin="round"><circle cx="200" cy="112" r="52"/><rect x="180" y="156" width="40" height="34" rx="10"/><path d="M128 196Q200 170 272 196L292 400Q200 428 108 400Z"/><path d="M128 198L92 216 70 420 108 428 138 270Z"/><path d="M272 198L308 216 330 420 292 428 262 270Z"/><path d="M116 396L196 410 188 760 128 760Z"/><path d="M284 396L204 410 212 760 272 760Z"/><path d="M122 756L192 756 196 786 112 786Z"/><path d="M278 756L208 756 204 786 288 786Z"/></g></svg>`)}">`;
+/** Sagoma del protagonista: `body-<avatar>` (a0…a5; con foto caricata si usa `body-default`), altrimenti `body-default`, altrimenti una sagoma provvisoria. */
+export const bodyImg = (avatarId: string) => custom('body-' + avatarId) ?? custom('body-default') ?? silhouette(SKIN[avatarId] ?? '#c9b9e8');
+/** Livello di un equipaggiamento sul personaggio: `layer-<id>` (undefined se non esiste ancora l'immagine). */
+export const layerImg = (eqId: string) => custom('layer-' + eqId);

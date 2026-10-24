@@ -1,7 +1,7 @@
 import { CONFIG } from './config';
 import { ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, effectLines, moveOf, type Move } from './data';
 import { beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, cardValue, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
-import { ART, customImg, eqIcon } from './art';
+import { ART, bodyImg, customImg, eqIcon, layerImg } from './art';
 import { tutActive, tutPatchCombat, tutPatchEnemy, tutStart, tutSync } from './tutorial';
 import { REGIONS, REGION_LIST, type Region } from './regions';
 import { banner, burst } from './fx';
@@ -11,10 +11,10 @@ const app = document.getElementById('app')!;
 const ICON = new Proxy({} as Record<string, string>, { get: (_t, k: string) => EQUIPMENT[k] ? eqIcon(k, EQUIPMENT[k].kind) : undefined }); // icona dell'equipaggiamento (non per le carte base)
 const FOE = ART.foe, foeArt = (art: string | undefined, tier: string, id?: string) => (id ? customImg('enemy-' + id) : undefined) ?? ART.region[art ?? ''] ?? FOE[tier];
 const persist = (r: Run) => { if (!tutActive()) saveRun(r, localStorage); }; // il tutorial non tocca il salvataggio
-const SET_KEY = 'cardrogue.settings.v1', DELAYS = [1500, 900, 450, 120], LABELS = ['Lenta', 'Normale', 'Veloce', 'Rapida'];
+const SET_KEY = 'cardrogue.settings.v1', DELAYS = [900, 450], LABELS = ['Normale', 'Veloce'];
 const THEMES = ['classic', 'boxing', 'battle', 'forest', 'ocean', 'desert', 'ember']; // il tema dipende dalla regione scelta
-const settings = { speed: 1, calm: false, music: true, sfx: true, god: false, mv: 0.8, sv: 0.8, theme: 'classic', timer: true, tmode: 1 }; try { Object.assign(settings, JSON.parse(localStorage.getItem(SET_KEY) ?? '{}')); } catch { /* ignora */ }
-if (!(settings.speed in DELAYS)) settings.speed = 1; if (![0, 1, 2].includes(settings.tmode)) settings.tmode = 1;
+const settings = { speed: 0, speedV: 2, calm: false, music: true, sfx: true, god: false, mv: 0.8, sv: 0.8, theme: 'classic', timer: true, tmode: 1 }; try { const sv = JSON.parse(localStorage.getItem(SET_KEY) ?? '{}'); Object.assign(settings, sv); if (sv.speedV !== 2) settings.speed = (sv.speed ?? 1) >= 2 ? 1 : 0; settings.speedV = 2; } catch { /* ignora */ } // vecchie 4 velocità: Lenta/Normale -> Normale, Veloce/Rapida -> Veloce
+if (!(settings.speed in DELAYS)) settings.speed = 0; if (![0, 1, 2].includes(settings.tmode)) settings.tmode = 1;
 audioCfg(settings.music, settings.sfx, settings.mv, settings.sv); addEventListener('pointerdown', () => unlock());
 let settingsOpen = false, sure = false, pileView: 'draw' | 'discard' | null = null;
 let run = loadRun(localStorage), tab: 'sto' | 'st' | 'me' = 'sto', note = '', started = !!run && run.phase === 'combat', pop = { e: 0, p: 0 };
@@ -26,7 +26,7 @@ function card(uid: string, o: { cls?: string; attr?: string; price?: number; bad
 }
 const bar = (v: number, mx: number, c = '') => `<div class="bar ${c}"><i style="width:${Math.max(0, v / mx * 100)}%"></i><b>${v}/${mx}</b></div>`;
 const head = (r: Run) => `<div class="top"><span>⚔ ${REGIONS[r.region ?? '']?.name ?? 'Arena'} ${r.region ? Math.min(wins(r, r.region), CONFIG.matchesPerIsland) + '/' + CONFIG.matchesPerIsland : r.arena}</span><span>💰 ${r.god ? '∞' : r.gold}</span><span>❤ ${r.phase === 'combat' ? r.hp : startHp(r)}/${maxHp(r)}</span><span>🎴 ${r.deck.length}/${CONFIG.maxDeck}</span><span>⚡ ${maxEnergy(r)}/${CONFIG.maxEnergy}</span><span>🔧 ${r.equipped.length}/${r.slots}</span><button class="gear" data-a="set">⚙</button></div>`;
-let mercyArm = 0, finalView: Combat | null = null, finalHp = 0, creating = false, draft = { name: '', av: 'a0', style: 'boxing' }, sailing = false, mapSel: string | null = null, vs: { tier: string; art?: string; id?: string; name: string; hp: number; lv: number } | null = null, prevEn = -1, lastSynN = 0, lastCombo = '', lastEv: unknown = null, endAnim: { win: boolean; tier: string; art?: string; id?: string } | null = null, lastPhase: string | undefined, prevHand: string[] = [], timer = 0, bars: { me: number; foe: number } | null = null;
+let layersSeen: { run: Run | null; ids: Set<string> } = { run: null, ids: new Set() }, finalView: Combat | null = null, finalHp = 0, creating = false, draft = { name: '', av: 'a0', style: 'boxing' }, sailing = false, mapSel: string | null = null, vs: { tier: string; art?: string; id?: string; name: string; hp: number; lv: number } | null = null, prevEn = -1, lastSynN = 0, lastCombo = '', lastEv: unknown = null, endAnim: { win: boolean; tier: string; art?: string; id?: string } | null = null, lastPhase: string | undefined, prevHand: string[] = [], timer = 0, bars: { me: number; foe: number } | null = null;
 // ---- Timer di turno (disattivabile): scaduto il tempo, il turno termina da solo; in pausa con impostazioni/menu ----
 const TLIM = [10, 30, 60];
 let tLeft = 0, tTurn = -1, tTick = 0;
@@ -48,7 +48,7 @@ function tick() { // turno nemico: una carta alla volta, ripreso anche dopo un r
       const win = run.phase === 'store'; if (win) snap.enemy.hp = 0; snap.ev = run.finalEv ?? null; (snap.phase === 'resolve' ? snap.field.off : snap.foeField.off).shift(); finalView = snap; finalHp = win ? hp0 : 0;
       const showEnd = () => { finalView = null; endAnim = { win, tier, art, id: eid }; render(); setTimeout(() => { endAnim = null; render(); }, 2800); };
       if (win) { setTimeout(fireworks, 1000); setTimeout(showEnd, 2900); } else setTimeout(showEnd, 1400);
-    } persist(run); render(); }, DELAYS[settings.speed] ?? 900);
+    } persist(run); render(); }, DELAYS[settings.speed] ?? DELAYS[0]);
 }
 const badge = (c: Combat, u: string) => { const m = MOVES[moveOf(u)], g = m.effect.dmg ? 'off' : 'def', fg = m.effect.link && MOVES[m.effect.link.from]?.effect.dmg ? 'off' : 'def', p = CONFIG.combo.same[Math.min(c.lastBy?.[g] === m.id ? (c.runs?.[g] ?? 1) + 1 : 1, CONFIG.combo.max) - 1]; return [p ? `🔥+${Math.round(p * 100)}%` : '', m.effect.link && c.lastBy?.[fg] === m.effect.link.from ? '🔗' : ''].filter(Boolean).join(' '); };
 function render() { hideTip(); if (run) { run.god = settings.god && !tutActive(); if (run.god && run.gold < GOD) run.gold = GOD; }
@@ -178,8 +178,13 @@ function draw() {
   const rg = REGIONS[r.region ?? 'boxing'] ?? REGION_LIST[0], w = wins(r, rg.id), idx = w % CONFIG.matchesPerIsland, nme = rg.enemies[idx], pre = enemyFor(r.arena, rg.id, idx), boss = idx === CONFIG.matchesPerIsland - 1;
   const emv = rg.enemyMoves.map(id => ENEMY_MOVES.find(x => x.id === id)?.name).filter(Boolean).join(', ');
   const tale = (nme.story ?? `${esc(nme.name)} ti aspetta a ${rg.name}.`).replace(/\{nome\}/g, heroName()), chap = islandIndex(rg.id) * CONFIG.matchesPerIsland + idx + 1;
-  const storyHtml = `<div class="story"><div class="sbook"><div class="chap">Capitolo ${chap} · ${rg.name} · ${STYLES.find(x => x.id === (r.style ?? 'boxing'))?.name}</div><h3>${boss ? '⚔ ' : ''}${esc(nme.name)}</h3><p class="tale">${tale}</p></div>
-    <div class="sbox foe"><div class="sface">${foeArt(rg.id, rg.level, nme.id)}</div><div><b>${boss ? 'BOSS · ' : ''}${esc(nme.name)}</b><br><small>${rg.level} · partita ${idx + 1}/${CONFIG.matchesPerIsland} · ❤ ${pre.maxHp}</small><br><small>Mosse: ${emv}</small></div></div></div>`;
+  // Personaggio a livelli: sagoma + un livello per ogni equipaggiamento installato (stessa tela, sovrapposti nell'ordine di data/game.json)
+  if (layersSeen.run !== r) layersSeen = { run: r, ids: new Set(r.equipped) };
+  const eqOrder = Object.keys(EQUIPMENT).filter(id => r.equipped.includes(id)), withArt = eqOrder.filter(id => layerImg(id)), noArt = eqOrder.filter(id => !layerImg(id)), aid = (r.hero?.avatar ?? 'a0').startsWith('data:') ? 'default' : r.hero?.avatar ?? 'a0';
+  const figHtml = `<div class="hfig" title="${heroName()}"><div class="lyr body">${bodyImg(aid)}</div>${withArt.map(id => `<div class="lyr ${layersSeen.ids.has(id) ? '' : 'new'}" data-layer="${id}">${layerImg(id)}</div>`).join('')}${noArt.length ? `<div class="hmiss">${noArt.map(id => `<span title="${EQUIPMENT[id].name}">${ICON[id]}</span>`).join('')}</div>` : ''}<div class="hname">${heroName()}</div></div>`;
+  r.equipped.forEach(id => layersSeen.ids.add(id));
+  const storyHtml = `<div class="storywrap">${figHtml}<div class="story"><div class="sbook"><div class="chap">Capitolo ${chap} · ${rg.name} · ${STYLES.find(x => x.id === (r.style ?? 'boxing'))?.name}</div><h3>${boss ? '⚔ ' : ''}${esc(nme.name)}</h3><p class="tale">${tale}</p></div>
+    <div class="sbox foe"><div class="sface">${foeArt(rg.id, rg.level, nme.id)}</div><div><b>${boss ? 'BOSS · ' : ''}${esc(nme.name)}</b><br><small>${rg.level} · partita ${idx + 1}/${CONFIG.matchesPerIsland} · ❤ ${pre.maxHp}</small><br><small>Mosse: ${emv}</small></div></div></div></div>`;
   const healRow = r.wounded ? `<div class="energyrow"><b>🩹 Ferite gravi: parti all'${Math.round(CONFIG.woundedStart * 100)}% dei PV</b><button class="ebtn" data-a="heal">Cura <span class="price">💰${CONFIG.healCost}</span></button></div>` : '';
   const back = (k: 'eq' | 'mv', p: number) => `<div class="offer"><div class="card back" data-drag="offer:${k}:2"><div class="bk">?<span class="pd"></span></div></div><div class="ptag mys">🎁 ${p}</div></div>`;
   const en = maxEnergy(r), energy = `<div class="energyrow"><b>⚡ ENERGIA ${en}/${CONFIG.maxEnergy}</b><div class="eticks">${Array.from({ length: CONFIG.maxEnergy }, (_, i) => `<div class="tick ${i < en ? 'fill' : ''}"></div>`).join('')}</div>${en >= CONFIG.maxEnergy ? '<small>✔ MAX</small>' : `<button class="ebtn" data-a="buyEn">+1 <span class="price">💰${energyPrice(r)}</span></button>`}</div>`;
@@ -221,11 +226,12 @@ function loreOf(kind: 'eq' | 'mv' | 'mercy', id: string) {
   const rg = REGIONS[run?.region ?? 'boxing'] ?? REGION_LIST[0], name = kind === 'eq' ? EQUIPMENT[id].name : MOVES[id].name, k = kind === 'eq' ? LORE_EQ[EQUIPMENT[id].kind] ?? LORE_EQ.gear : LORE_MV;
   return k[(id.length + name.length) % k.length](name, rg.name);
 }
-function slotMachine(kind: 'eq' | 'mv' | 'mercy', id: string) {
+/** Slot machine. Con `intro` (pietà) la slot parte ferma: "Gira" esegue l'azione e restituisce l'esito, "Annulla" chiude il riquadro senza conseguenze. */
+function slotMachine(kind: 'eq' | 'mv' | 'mercy', id: string, intro?: () => string | null) {
   const pool = kind === 'eq' ? Object.keys(EQUIPMENT) : kind === 'mv' ? Object.values(MOVES).filter(m => m.price > 0).map(m => m.id) : ['ok', 'no'], face = (x: string) => kind === 'eq' ? eqFace(x) : kind === 'mv' ? card('buy:' + x) : `<div class="card mercy ${x}"><div class="nm">${x === 'ok' ? 'Risparmiato' : 'Nessuna pietà'}</div><div class="art">${x === 'ok' ? '🕊️' : '💀'}</div></div>`;
   const N = 10, fin = 6, base = Array.from({ length: N }, (_, i) => i === fin ? id : pool[(i * 7 + 3) % pool.length]);
   const ov = document.createElement('div'); ov.className = 'slotov';
-  ov.innerHTML = `<div class="slotbox"><h2>${kind === 'mercy' ? '🙏 Il destino decide…' : '🎰 Carta misteriosa'}</h2><div class="slotrow"><div class="reelwin"><div class="reel">${[0, 1, 2].map(() => base.map(x => `<div class="ritem">${face(x)}</div>`).join('')).join('')}</div><div class="reelframe"></div></div><div class="slotlore"><h3>${kind === 'mercy' ? '📜 L\'esito' : '📜 Come l\'hai ottenuta'}</h3><p></p></div></div><button class="pri" id="slb">⏹ FERMA</button></div>`; document.body.appendChild(ov);
+  ov.innerHTML = `<div class="slotbox"><h2>${kind === 'mercy' ? (intro ? '🙏 Chiedere pietà?' : '🙏 Il destino decide…') : '🎰 Carta misteriosa'}</h2><div class="slotrow"><div class="reelwin"><div class="reel">${[0, 1, 2].map(() => base.map(x => `<div class="ritem">${intro ? '<div class="card back"><div class="bk">?</div></div>' : face(x)}</div>`).join('')).join('')}</div><div class="reelframe"></div></div><div class="slotlore"><h3>${kind === 'mercy' ? '📜 L\'esito' : '📜 Come l\'hai ottenuta'}</h3><p></p></div></div>${intro ? `<small class="mhint">Se vieni risparmiato perdi metà delle monete e rifai il duello; altrimenti perdi il turno. Si può chiedere una sola volta per duello.</small>` : ''}<div class="slbtns"><button class="pri" id="slb">${intro ? '🎰 Gira' : '⏹ FERMA'}</button>${intro ? '<button id="slc">✖ Annulla</button>' : ''}</div></div>`; document.body.appendChild(ov);
   const reel = ov.querySelector('.reel') as HTMLElement, win = ov.querySelector('.reelwin') as HTMLElement, btn = ov.querySelector('#slb') as HTMLButtonElement, title = ov.querySelector('h2') as HTMLElement;
   let y = 0, stopping = false, from = 0, to = 0, t0 = 0, last = performance.now(), lastIdx = -1;
   const finish = () => { const lore = ov.querySelector('.slotlore') as HTMLElement; (lore.querySelector('p') as HTMLElement).textContent = loreOf(kind, id); lore.classList.add('show'); title.textContent = kind === 'mercy' ? (id === 'ok' ? '🕊️ Sei stato risparmiato!' : '💀 Nessuna pietà!') : `✨ ${kind === 'eq' ? EQUIPMENT[id].name : MOVES[id].name} sbloccata!`; sfx(id === 'no' ? 'lose' : 'win'); const q = win.getBoundingClientRect(); burst('combo', q.left + q.width / 2, q.top + q.height / 2); btn.textContent = 'Continua'; btn.disabled = false; btn.onclick = () => { ov.remove(); afterReveal(kind, id); }; };
@@ -234,8 +240,14 @@ function slotMachine(kind: 'eq' | 'mv' | 'mercy', id: string) {
     if (!stopping) y += 1600 * (now - last) / 1000; else { const p = Math.min(1, (now - t0) / 2600); y = from + (to - from) * (1 - (1 - p) ** 3); if (p >= 1) { reel.style.transform = `translateY(${-(to % T)}px)`; finish(); return; } }
     last = now; reel.style.transform = `translateY(${-(y % T)}px)`; const idx = Math.floor(y / H); if (idx !== lastIdx) { lastIdx = idx; sfx('click'); } requestAnimationFrame(frame);
   };
-  btn.onclick = () => { const H = win.clientHeight, T = N * H; stopping = true; from = y; to = y + ((fin * H - (y % T) + T) % T) + 2 * T; t0 = performance.now(); btn.disabled = true; };
-  requestAnimationFrame(frame);
+  const stop = () => { const H = win.clientHeight, T = N * H; stopping = true; from = y; to = y + ((fin * H - (y % T) + T) % T) + 2 * T; t0 = performance.now(); btn.disabled = true; };
+  if (!intro) { btn.onclick = stop; requestAnimationFrame(frame); return; }
+  (ov.querySelector('#slc') as HTMLElement).onclick = () => ov.remove(); // annulla: si torna alla partita, nulla è cambiato
+  btn.onclick = () => { // gira: solo ora si decide l'esito (e si consuma la richiesta di pietà)
+    const res = intro(); if (res === null) { ov.remove(); return; } id = res;
+    reel.querySelectorAll('.ritem').forEach((it, k) => { it.innerHTML = face(k % N === fin ? id : base[k % N]); }); // da carte coperte a facce vere, con l'esito già al posto giusto
+    title.textContent = '🙏 Il destino decide…'; ov.querySelector('.mhint')?.remove(); ov.querySelector('#slc')?.remove(); btn.textContent = '⏹ FERMA'; btn.onclick = stop; last = performance.now(); requestAnimationFrame(frame);
+  };
 }
 function afterReveal(kind: 'eq' | 'mv' | 'mercy', id: string) {
   if (kind === 'mercy') { render(); return; } // chiusa la slot machine: se non c'è slot si sceglie, altrimenti la carta vola al suo posto
@@ -294,7 +306,7 @@ function act(a: string, id = '') {
   else if (run) {
     const mys = a === 'offerEq' && +id === 2 ? run.offers.eq[2] : a === 'offerMv' && +id === 2 ? run.offers.mv[2] : null, g0 = run.gold, e0 = run.combat?.enemy.hp ?? 0, p0 = run.hp;
     if (a === 'tab') tab = id as typeof tab; else if (a === 'next') tab = tab === 'sto' ? 'st' : 'me'; else if (a === 'region') { if (unlocked(run).includes(id)) mapSel = id; else err = '🔒 Isola bloccata: vinci le 5 partite dell\'isola precedente.'; } else if (a === 'openmap') err = openMap(run);
-    else if (a === 'mercy') { if (Date.now() - mercyArm > 3000) { mercyArm = Date.now(); err = 'Tocca di nuovo 🙏 Pietà per confermare: se vieni risparmiato perdi metà dei soldi.'; } else { const res = askMercy(run); err = res.err; if (!err) { mercyArm = 0; slotMachine('mercy', res.spared ? 'ok' : 'no'); } } } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'heal') err = healRun(run); else if (a === 'ddraw') { err = drawDiscard(run); if (!err) sfx('shuffle'); } else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
+    else if (a === 'mercy') { const c = run.combat; if (c?.mercy) err = 'Hai già chiesto pietà in questo duello.'; else if (c?.phase !== 'player') err = 'Non è il tuo turno.'; else slotMachine('mercy', '', () => { const res = askMercy(run!); if (res.err) { note = res.err; render(); return null; } persist(run!); return res.spared ? 'ok' : 'no'; }); } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'heal') err = healRun(run); else if (a === 'ddraw') { err = drawDiscard(run); if (!err) sfx('shuffle'); } else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
     else if (a === 'buyM') err = buyMove(run, id); else if (a === 'buyEn') err = buyEnergy(run); else if (a === 'offerEq') err = buyOfferEq(run, +id); else if (a === 'offerMv') err = buyOfferMv(run, +id); else if (a === 'hint') err = id; else if (a === 'sellM') err = sellMove(run, id); else if (a === 'deck') err = toggleDeck(run, id);
     else if (a === 'go') err = beginArena(run); else if (a === 'play') err = playCard(run, id); else if (a === 'end') err = endTurn(run);
     if (!['tab', 'next', 'play', 'end'].includes(a)) run.msg = '';

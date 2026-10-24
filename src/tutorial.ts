@@ -11,6 +11,7 @@ const STEPS: Step[] = [
   { t: `📍 Scegli un'isola`, sel: 'g.isl[data-id="boxing"]', allow: 'g.isl[data-id="boxing"]', until: () => ctx!.mapSel() === 'boxing', x: `Tocca la <b>Fighting Arena</b>. Passando il cursore sulle isole il contorno lampeggia.` },
   { t: '⛵ Salpa', sel: '[data-a="sail"]', allow: '[data-a="sail"]', until: () => !R().needsMap, x: `Premi il pulsante per partire. Con un'altra isola il protagonista ci andrebbe in barca; qui sei già arrivato.` },
   { t: '📖 La storia', sel: '.sbook', x: `Prima di ogni duello leggi un breve capitolo che ti presenta l'avversario e ti collega alla vicenda.` },
+  { t: '🧍 Il tuo personaggio', sel: '.hfig', x: `A sinistra vedi <b>il tuo combattente</b>: ogni equipaggiamento che installi compare sul suo corpo, così lo vedi evolversi isola dopo isola.` },
   { t: '⚔ Il tuo avversario', sel: '.sbox.foe', x: `Qui vedi il nemico: <b>livello</b>, <b>punti vita</b> e le <b>mosse</b> che può usare. Studiale prima di combattere!` },
   { t: '➡ Avanti', sel: '.actbar .go', allow: '[data-a="next"]', until: () => ctx!.tab() === 'st', x: `Il pulsante in basso ti guida: <b>Storia → Store → Mazzo</b>, e dal Mazzo si inizia il duello. Puoi anche usare le tab in alto. Premilo ora.` },
   { t: '🛒 Lo store', sel: '.og6', x: `A sinistra i <b>potenziamenti</b> (equipaggiamento), a destra le <b>mosse</b>. Le prime due carte sono visibili; la terza è <b>misteriosa</b>: costa meno ma non sai cosa ottieni (lo scopri con una slot machine).` },

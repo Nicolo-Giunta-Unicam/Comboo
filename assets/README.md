@@ -11,6 +11,10 @@ Consigliato: immagini quadrate (es. 256×256), sfondo trasparente per personaggi
 | `eq-<id>` (es. `eq-wraps`, `eq-aura`, `eq-fruit`) | carta/icona dell'equipaggiamento. Gli id sono in `data/game.json` |
 | `kind-atk`, `kind-def`, `kind-utl` | immagine delle carte base e delle mosse (attacco / difesa / supporto) |
 | `boat` | barca della mappa |
+| `body-a0` … `body-a5`, `body-default` | **sagoma del protagonista** nella schermata Storia (una per avatar; `body-default` è il ripiego, usato anche con la foto caricata) |
+| `layer-<id>` (es. `layer-wraps`, `layer-servo`) | **livello dell'equipaggiamento sul personaggio**: compare sulla sagoma quando l'equipaggiamento è installato (diverso da `eq-<id>`, che è l'immagine della carta) |
+
+Sagoma e livelli devono avere **la stessa tela** (consigliato 400×800 px, PNG trasparente): si sovrappongono 1:1, prima la sagoma e poi i livelli nell'ordine in cui gli equipaggiamenti compaiono in `data/game.json`. Un equipaggiamento senza `layer-<id>` non mostra nulla sul corpo (finché manca compare una piccola icona sotto la sagoma).
 
 Dopo aver aggiunto i file: `npm run build` (o `npm run dev` per ricompilare a ogni modifica).
 Le immagini vengono incorporate nel bundle come data URI: tieni file leggeri (meglio < 100 KB ciascuno).
