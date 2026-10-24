@@ -1,11 +1,13 @@
 import { CONFIG } from './config';
-import { ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, moveOf } from './data';
+import { CHOICES, ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, moveOf, type ChoiceEv, type ChoiceFx, type ChoiceOpt } from './data';
 import { REGION_LIST, REGIONS } from './regions';
 import { defeatOutcome, movesRetainedAfterRemoval } from './policies';
 export type Phase = 'store' | 'combat' | 'over';
 export type Err = string | null;
 export interface Enemy { name: string; tier: string; hp: number; maxHp: number; block: number; gear: string[]; art?: string; id?: string; atk: number }
 export interface Combat { enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; lastBy?: Rec2<string | null>; mods?: { off: number; bypass: boolean; freeNext: boolean; dupNext: boolean; combos: number }; cardCost?: Record<string, number>; lastUid?: string; pick?: string[] | null; syn?: { n: number; text: string }; runs?: Rec2<number>; chains?: Rec2<number>; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
+/** Effetti di una scelta di capitolo che valgono solo per il prossimo duello. */
+export interface Boon { block?: number; energy?: number; draw?: number; foeHp?: number; hp?: number }
 export interface Run {
   /** Carta misteriosa pagata ma non ancora installata (nessuno slot libero): si risolve con resolvePending. */
   pending?: { id: string; paid: number } | null;
@@ -14,6 +16,8 @@ export interface Run {
   /** Carte vendute singolarmente (uid di carte base o di mosse di equipaggiamento): escluse dalla collezione. */
   god?: boolean; finalEv?: Ev | null; outcome?: string; style?: string; wounded?: boolean;
   sold?: string[]; hero?: { name: string; avatar: string };
+  /** Scelte di capitolo: seme dell'ordine degli eventi, scelte già fatte (per capitolo) e bonus/malus per il prossimo duello. */
+  cs?: number; chapters?: Record<string, { ev: string; opt: string; gold: number }>; boon?: Boon;
   v: 1; rng: number; arena: number; gold: number; hp: number; slots: number;
   equipped: string[]; bought: string[]; retained: string[]; energyBonus: number; offers: Offers; paid: Record<string, number>;
   deck: string[]; phase: Phase; combat: Combat | null; msg: string;
@@ -82,6 +86,28 @@ export function chooseRegion(r: Run, id: string): Err {
   if (r.phase !== 'store' || !r.needsMap) return 'Non puoi scegliere ora.'; const g = REGIONS[id]; if (!g) return 'Regione sconosciuta.'; if (!unlocked(r).includes(id)) return 'Isola bloccata.';
   r.region = id; r.needsMap = false; r.msg = `Arena: ${g.name}.`; return null;
 }
+// ---- Scelte di capitolo ----
+const seeded = (seed: number) => () => { seed = (seed + 0x6D2B79F5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+function sshuffle<T>(a: T[], seed: number) { const b = [...a], f = seeded(seed); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(f() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+/** Un capitolo = un incontro di un'isola; ripetere lo stesso duello (fuga/pietà) non genera una nuova scelta. */
+export const chapterKey = (r: Run) => r.region ? `${r.region}:${wins(r, r.region)}` : '';
+/** Valore in oro di 1 "unità" di ricompensa: cresce con l'arena (1/3 della vittoria). */
+export const goldUnit = (r: Run) => Math.max(1, Math.round(CONFIG.reward(r.arena) / CONFIG.choice.goldDivisor));
+export const choiceGold = (r: Run, fx: ChoiceFx) => Math.round((fx.gold ?? 0) * goldUnit(r));
+export interface PendingChoice { key: string; ev: ChoiceEv; options: ChoiceOpt[] }
+/** Scelta ancora da fare nel capitolo corrente (evento deterministico dal seme della run, opzioni in ordine mescolato). */
+export function pendingChoice(r: Run): PendingChoice | null {
+  if (r.phase !== 'store' || r.needsMap || !r.region || r.pending || !CHOICES.length) return null;
+  const key = chapterKey(r); if (r.chapters?.[key]) return null;
+  const done = Object.keys(r.chapters ?? {}).length, cs = r.cs ?? 1, ev = sshuffle(CHOICES, cs)[done % CHOICES.length];
+  return { key, ev, options: sshuffle(ev.options, cs + (done + 1) * 7919) };
+}
+export function makeChoice(r: Run, optId: string): Err {
+  const p = pendingChoice(r); if (!p) return 'Nessuna scelta in sospeso.'; const o = p.ev.options.find(x => x.id === optId); if (!o) return 'Scelta non valida.';
+  const g = Math.max(-r.gold, choiceGold(r, o.fx)); r.gold += g;
+  const b: Boon = { ...r.boon }; for (const k of ['block', 'energy', 'draw', 'foeHp', 'hp'] as const) if (o.fx[k]) b[k] = (b[k] ?? 0) + o.fx[k]!;
+  if (Object.values(b).some(Boolean)) r.boon = b; r.chapters = { ...r.chapters, [p.key]: { ev: p.ev.id, opt: o.id, gold: g } }; r.msg = o.text; return null;
+}
 export function openMap(r: Run): Err { if (r.phase !== 'store' || r.pending) return 'Non puoi ora.'; r.needsMap = true; return null; }
 export function resolvePending(r: Run, action: 'discard' | 'replace', target?: string): Err {
   const p = r.pending; if (!p) return 'Nessuna carta in sospeso.';
@@ -94,7 +120,7 @@ export function resolvePending(r: Run, action: 'discard' | 'replace', target?: s
 export function buyOfferMv(r: Run, i: number): Err { const id = r.offers.mv[i]; if (!id) return 'Offerta non disponibile.'; const err = buyMove(r, id, i === 2 ? r.offers.mvPrice : undefined); if (err) return err; r.offers.mv[i] = null; return null; }
 export const slotsFor = (arena: number) => Math.min(CONFIG.maxSlots, CONFIG.startSlots + Math.floor((arena - 1) / CONFIG.slotEveryArenas));
 export function newRun(seed = Date.now()): Run {
-  const r: Run = { v: 1, rng: seed >>> 0, arena: 1, gold: CONFIG.startGold, hp: CONFIG.startHp, slots: CONFIG.startSlots, equipped: [], bought: [], retained: [], energyBonus: 0, offers: { eq: [], mv: [], eqPrice: 0, mvPrice: 0 }, paid: {}, deck: [], phase: 'store', combat: null, msg: 'Preparati: compra equipaggiamento prima della prima arena.' };
+  const r: Run = { v: 1, cs: Math.imul(seed >>> 0, 2654435761) >>> 0, rng: seed >>> 0, arena: 1, gold: CONFIG.startGold, hp: CONFIG.startHp, slots: CONFIG.startSlots, equipped: [], bought: [], retained: [], energyBonus: 0, offers: { eq: [], mv: [], eqPrice: 0, mvPrice: 0 }, paid: {}, deck: [], phase: 'store', combat: null, msg: 'Preparati: compra equipaggiamento prima della prima arena.' };
   r.deck = ownedCards(r).map(c => c.uid); genOffers(r); r.needsMap = true; return r;
 }
 export interface EnemyCard { id?: string; name: string; icon: string; dmg: number; hits: number; block: number; heal: number; dur: number }
@@ -157,9 +183,16 @@ export function sellMove(r: Run, id: string): Err {
 export function beginArena(r: Run): Err {
   if (r.phase !== 'store') return 'Non sei nello store.'; if (r.pending) return 'Risolvi prima la carta in sospeso.'; sanitize(r);
   if (r.deck.length < CONFIG.minDeck) return `Servono almeno ${CONFIG.minDeck} carte nel mazzo.`;
-  r.hp = startHp(r); r.wounded = false;
+  r.hp = Math.max(1, startHp(r) + (r.boon?.hp ?? 0)); r.wounded = false;
   r.combat = { enemy: enemyFor(r.arena, r.region ?? undefined, wins(r, r.region ?? '') % CONFIG.matchesPerIsland), block: 0, draw: shuffle(r, r.deck), hand: [], discard: [], energy: 0, turn: 0, field: { off: [], def: [] }, foeField: { off: [], def: [] }, played: {}, prev: null, combo: '', phase: 'player', seq: 0, fresh: 0, ev: null, queue: [], last: null, log: ['Lo scontro ha inizio!'] };
-  r.phase = 'combat'; r.msg = ''; startTurn(r); return null;
+  r.phase = 'combat'; r.msg = ''; startTurn(r); applyBoon(r); return null;
+}
+/** Applica (e consuma) i bonus/malus di una scelta di capitolo all'inizio del duello. */
+function applyBoon(r: Run) {
+  const b = r.boon, c = r.combat; delete r.boon; if (!b || !c) return;
+  if (b.foeHp) { c.enemy.maxHp = Math.max(1, Math.round(c.enemy.maxHp * (1 + b.foeHp / 100))); c.enemy.hp = c.enemy.maxHp; }
+  if (b.block) c.field.def.push({ uid: '', name: 'Slancio', icon: '🛡️', src: 'Scelta', dmg: 0, hits: 0, block: b.block, ttl: -1, id: ++c.seq });
+  if (b.energy) c.energy += b.energy; if (b.draw) drawCards(c, r, b.draw);
 }
 function drawCards(c: Combat, r: Run, n: number) {
   for (; n > 0 && c.hand.length < CONFIG.maxHand; n--) { const u = c.draw.pop(); if (!u) break; c.hand.push(u); } // a mazzo finito si pesca solo spendendo energia (drawDiscard), che rimescola gli scarti

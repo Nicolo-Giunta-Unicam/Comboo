@@ -40,3 +40,9 @@ export const moveOf = (uid: string): string => {
   const [k, a, b] = uid.split(':');
   return k === 'base' || k === 'clone' ? a : k === 'eq' ? EQUIPMENT[a].moves[+b] : a;
 };
+
+/** Scelte di capitolo (schermata Storia): 3 opzioni con effetti leggeri e bilanciati. gold è in "unità" (vedi goldUnit nel motore); gli altri effetti valgono solo per il duello successivo. */
+export interface ChoiceFx { gold?: number; block?: number; energy?: number; draw?: number; foeHp?: number; hp?: number }
+export interface ChoiceOpt { id: string; label: string; text: string; fx: ChoiceFx }
+export interface ChoiceEv { id: string; title: string; text: string; options: ChoiceOpt[] }
+export const CHOICES: ChoiceEv[] = J.choices as ChoiceEv[];

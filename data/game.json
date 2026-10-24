@@ -57,7 +57,10 @@
     "woundedBelow": 0.3,
     "woundedStart": 0.8,
     "healCost": 15,
-    "discardDrawCost": 3
+    "discardDrawCost": 3,
+    "choice": {
+      "goldDivisor": 3
+    }
   },
   "baseMoves": [
     {
@@ -1404,6 +1407,553 @@
         "lock",
         "lock",
         "lock"
+      ]
+    }
+  ],
+  "choices": [
+    {
+      "id": "sacca",
+      "title": "Una sacca abbandonata",
+      "text": "Davanti alla palestra {nome} trova una sacca da allenamento dimenticata, ancora chiusa.",
+      "options": [
+        {
+          "id": "a",
+          "label": "La apri e ti prendi il contenuto",
+          "text": "Dentro ci sono delle banconote: le tieni.",
+          "fx": {
+            "gold": 2
+          }
+        },
+        {
+          "id": "b",
+          "label": "La riporti al proprietario",
+          "text": "Il proprietario è grato e ti dà un consiglio prezioso.",
+          "fx": {
+            "gold": 1,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "La usi per allenarti",
+          "text": "Un'ora di colpi al sacco ti scalda i muscoli.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "maestro",
+      "title": "Il vecchio maestro",
+      "text": "Un vecchio maestro ti ferma prima dell'incontro: «Hai un minuto, {nome}?»",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ascolti la sua lezione",
+          "text": "Un consiglio semplice, ma ti rimane in testa.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "b",
+          "label": "Gli offri da bere",
+          "text": "Parla per ore e ti regala una vecchia fasciatura.",
+          "fx": {
+            "gold": -1,
+            "energy": 1,
+            "block": 10
+          }
+        },
+        {
+          "id": "c",
+          "label": "Lo sfidi a braccio di ferro",
+          "text": "Perdi un po' di forza, ma impari come si muove un veterano.",
+          "fx": {
+            "foeHp": -10,
+            "hp": -4,
+            "gold": 1.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "folla",
+      "title": "Il pubblico",
+      "text": "Dagli spalti arriva un boato: tutti aspettano di vedere cosa farai.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Saluti la folla",
+          "text": "Il boato ti carica.",
+          "fx": {
+            "gold": 1,
+            "block": 6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Ti isoli e respiri",
+          "text": "Il rumore svanisce, restate solo tu e il tuo respiro.",
+          "fx": {
+            "energy": 1,
+            "draw": 1,
+            "hp": -4
+          }
+        },
+        {
+          "id": "c",
+          "label": "Provochi il tuo avversario",
+          "text": "Perde la calma, ma anche tu rischi di più.",
+          "fx": {
+            "foeHp": -15,
+            "hp": -6,
+            "gold": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "infermiere",
+      "title": "L'infermiere dello spogliatoio",
+      "text": "Un infermiere ti ferma con una cassetta del pronto soccorso in mano.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti fai fasciare bene",
+          "text": "Ti stringe le bende fino a farti sentire invincibile.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "b",
+          "label": "Prendi uno stimolante",
+          "text": "Il cuore va a mille, ma ti senti pronto a tutto.",
+          "fx": {
+            "energy": 1,
+            "draw": 1,
+            "hp": -5,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "c",
+          "label": "Rifiuti le cure e vendi le bende",
+          "text": "Ti pagano volentieri, ma parti un po' ammaccato.",
+          "fx": {
+            "gold": 2.5,
+            "hp": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "scommessa",
+      "title": "Scommessa clandestina",
+      "text": "Un tipo in cappotto ti propone una scommessa sul tuo prossimo incontro.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Punti su di te",
+          "text": "Se vinci incassi bene, ma l'avversario sembra più tosto del previsto.",
+          "fx": {
+            "gold": 3.5,
+            "foeHp": 10
+          }
+        },
+        {
+          "id": "b",
+          "label": "Rifiuti e studi l'avversario",
+          "text": "Guardi come si muove e trovi un punto debole.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "c",
+          "label": "Punti contro di te",
+          "text": "Soldi facili, ma l'orgoglio fa un po' male.",
+          "fx": {
+            "gold": 1.5,
+            "hp": -5,
+            "energy": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "notte",
+      "title": "Notte insonne",
+      "text": "La notte prima dello scontro non riesci a dormire.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Corri fino all'alba",
+          "text": "Sei stanco ma carico, e trovi una banconota per strada.",
+          "fx": {
+            "energy": 1,
+            "hp": -3,
+            "gold": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Dormi il più possibile",
+          "text": "Ti svegli riposato e con i muscoli sciolti.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Rivedi vecchi filmati",
+          "text": "Studi le tue combinazioni migliori.",
+          "fx": {
+            "draw": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "mercante",
+      "title": "Il mercante ambulante",
+      "text": "Un mercante ti sbarra la strada con un carretto pieno di cianfrusaglie.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Compri un'ampolla protettiva",
+          "text": "Costa cara, ma ti sentirai più al sicuro.",
+          "fx": {
+            "gold": -1,
+            "block": 18
+          }
+        },
+        {
+          "id": "b",
+          "label": "Contratti sul prezzo",
+          "text": "Alla fine ci guadagni tu, e impari un trucco.",
+          "fx": {
+            "gold": 1,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Gli vendi un ricordo",
+          "text": "Incassi molto, ma ti senti svuotato.",
+          "fx": {
+            "gold": 3.5,
+            "hp": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "rivale",
+      "title": "Un rivale ti osserva",
+      "text": "Dal fondo della sala un altro combattente non ti toglie gli occhi di dosso.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Gli stringi la mano",
+          "text": "Una stretta sincera: ti senti motivato.",
+          "fx": {
+            "gold": 0.5,
+            "energy": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Lo ignori",
+          "text": "Ti concentri sul riscaldamento e ti copri meglio.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Gli mostri una finta",
+          "text": "Capisce di cosa sei capace, e lo racconta all'avversario… sbagliando.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "infortunio",
+      "title": "Un vecchio infortunio",
+      "text": "Il ginocchio ti manda una fitta proprio prima di salire sul ring.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Stringi i denti",
+          "text": "Il dolore ti sveglia: i riflessi sono al massimo.",
+          "fx": {
+            "energy": 2,
+            "hp": -6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Ti riposi e lo fasci",
+          "text": "Meno scatto, più attenzione.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Ti fai pagare un test medico",
+          "text": "Una clinica cerca volontari: ti danno un compenso.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "pioggia",
+      "title": "Pioggia battente",
+      "text": "Un temporale si abbatte sulla città proprio mentre arrivi.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti ripari sotto un portico",
+          "text": "Aspetti che passi, al caldo e al sicuro.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "b",
+          "label": "Corri sotto la pioggia",
+          "text": "Arrivi fradicio ma con il sangue che ribolle.",
+          "fx": {
+            "energy": 1,
+            "draw": 1,
+            "hp": -4
+          }
+        },
+        {
+          "id": "c",
+          "label": "Raccogli ciò che porta la tempesta",
+          "text": "Tra le pozzanghere trovi qualche moneta.",
+          "fx": {
+            "gold": 2.2
+          }
+        }
+      ]
+    },
+    {
+      "id": "specchio",
+      "title": "Lo specchio dello spogliatoio",
+      "text": "Davanti allo specchio, {nome} si guarda a lungo.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti guardi negli occhi",
+          "text": "Ritrovi la calma e le tue combinazioni.",
+          "fx": {
+            "draw": 1,
+            "block": 6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Colpisci il tuo riflesso",
+          "text": "Ti fai male, ma sfoghi la tensione e trovi un vecchio portafoglio.",
+          "fx": {
+            "foeHp": -10,
+            "hp": -3,
+            "gold": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Ti prendi un momento",
+          "text": "Respiri, ricarichi le energie e metti da parte qualcosa.",
+          "fx": {
+            "energy": 1,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "tifoso",
+      "title": "Un giovane tifoso",
+      "text": "Un ragazzino ti aspetta all'uscita con un guanto da boxe troppo grande per lui.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Firmi il suo guanto",
+          "text": "Ti ringrazia con gli occhi lucidi e con una mancia.",
+          "fx": {
+            "gold": 1,
+            "block": 6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Ti alleni con lui",
+          "text": "Un po' di fatica, ma anche una gran carica.",
+          "fx": {
+            "energy": 1,
+            "hp": -2,
+            "block": 6
+          }
+        },
+        {
+          "id": "c",
+          "label": "Ti fai portare l'acqua",
+          "text": "Con i riflessi di un bambino, ti tiene al passo.",
+          "fx": {
+            "draw": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "messaggio",
+      "title": "Un messaggio misterioso",
+      "text": "Un biglietto scivola sotto la porta del tuo spogliatoio.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lo apri subito",
+          "text": "C'è un indizio sulla tua prossima sfida e una banconota.",
+          "fx": {
+            "gold": 1,
+            "draw": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Lo ignori",
+          "text": "Non hai tempo per i misteri: ti prepari con cura.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Lo mostri al maestro",
+          "text": "Ride, poi ti insegna un piccolo trucco.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "palestra",
+      "title": "La palestra vuota",
+      "text": "A quest'ora la palestra è deserta, a parte te.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti alleni da solo",
+          "text": "Spingi oltre il limite, ma qualcosa ci rimetti.",
+          "fx": {
+            "energy": 1,
+            "hp": -3,
+            "gold": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Aspetti un compagno",
+          "text": "Un po' di sparring leggero ti rimette in moto.",
+          "fx": {
+            "draw": 1,
+            "block": 6
+          }
+        },
+        {
+          "id": "c",
+          "label": "Cerchi attrezzi dimenticati",
+          "text": "Sotto un armadietto trovi qualcosa che vale.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "scarpa",
+      "title": "Una scarpa slacciata",
+      "text": "Poco prima di salire sul ring, ti accorgi di avere i lacci sciolti.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Li allacci con calma",
+          "text": "Un gesto semplice che ti rimette in asse.",
+          "fx": {
+            "block": 8,
+            "draw": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Combatti così",
+          "text": "Più libero, più rischioso.",
+          "fx": {
+            "energy": 1,
+            "hp": -3,
+            "gold": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Chiedi aiuto all'arbitro",
+          "text": "Nel frattempo osservi l'avversario da vicino.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "oste",
+      "title": "Il cibo dell'oste",
+      "text": "All'osteria vicina al ring, l'oste ti serve un piatto fumante.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Mangi abbondante",
+          "text": "Pancia piena e spalle larghe.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "b",
+          "label": "Mangi leggero",
+          "text": "Ti senti scattante e ti avanza qualche soldo.",
+          "fx": {
+            "energy": 1,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "c",
+          "label": "Paghi da bere a tutti",
+          "text": "Costa caro, ma la serata ti insegna parecchio.",
+          "fx": {
+            "gold": -1,
+            "draw": 2,
+            "block": 6
+          }
+        }
       ]
     }
   ]

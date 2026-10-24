@@ -197,3 +197,27 @@ test('Scudo d\'assalto: danno pari agli scudi attivi, aggiornato dalle difese gi
   assert.equal(playCard(r, 'buy:stance_a2'), null); assert.equal(c.field.off.length, 1); assert.equal(c.field.off[0].dmg, sh1); assert.equal(c.hand.length, 1);
   assert.equal(playCard(r, 'base:guard:6'), null); const sh2 = c.field.def.reduce((s, p) => s + p.block, 0); assert.ok(sh2 > sh1); assert.equal(c.field.off[0].dmg, sh2);
 });
+
+import { pendingChoice, makeChoice, chapterKey, goldUnit, choiceGold, resolveOutcome } from '../src/engine'; import { CHOICES } from '../src/data';
+test('scelte di capitolo: nessuna prima della mappa, una per capitolo, effetti applicati e consumati nel duello', () => {
+  const r = newRun(5); assert.equal(pendingChoice(r), null); assert.equal(chooseRegion(r, 'boxing'), null);
+  const p = pendingChoice(r)!; assert.ok(p); assert.equal(p.options.length, 3); assert.equal(chapterKey(r), 'boxing:0');
+  assert.ok(makeChoice(r, 'zzz')); // opzione inesistente
+});
+test('scelte di capitolo: ricompense e malus', () => {
+  const r = newRun(7); chooseRegion(r, 'boxing'); r.gold = 50; const p = pendingChoice(r)!;
+  const o = p.options[0], g0 = r.gold; assert.equal(makeChoice(r, o.id), null); assert.equal(r.gold, Math.max(0, g0 + choiceGold(r, o.fx)));
+  assert.equal(pendingChoice(r), null); assert.ok(makeChoice(r, o.id)); // già fatta
+  // un duello ripetuto (fuga) nello stesso capitolo non genera una nuova scelta
+  r.boon = { block: 6, energy: 1, draw: 1, foeHp: -10, hp: -4 }; const hp0 = maxHp(r); beginArena(r); const c = r.combat!;
+  assert.equal(r.boon, undefined); assert.equal(r.hp, hp0 - 4); assert.equal(c.energy, maxEnergy(r) + 1); assert.equal(c.hand.length, CONFIG.startHand + 1);
+  assert.equal(c.field.def.reduce((s, x) => s + x.block, 0), 6); assert.ok(c.enemy.hp < enemyFor(r.arena, 'boxing', 0).maxHp);
+  resolveOutcome(r, 'flee'); assert.equal(pendingChoice(r), null);
+});
+test('scelte di capitolo: evento diverso a ogni capitolo, deterministico, e bilanciato (nessuna opzione migliore delle altre)', () => {
+  const r = newRun(11); chooseRegion(r, 'boxing'); const seen = new Set<string>();
+  for (let i = 0; i < CHOICES.length; i++) { const p = pendingChoice(r)!; assert.ok(!seen.has(p.ev.id)); seen.add(p.ev.id); assert.deepEqual(pendingChoice(r)!.options.map(x => x.id), p.options.map(x => x.id)); r.chapters = { ...r.chapters, [`x${i}`]: { ev: p.ev.id, opt: 'a', gold: 0 } }; r.progress = { boxing: i + 1 }; if (i + 1 >= CONFIG.matchesPerIsland) break; }
+  const W: Record<string, number> = { gold: 1, block: 1 / 6, energy: 1.5, draw: 1, foeHp: -0.15, hp: 0.2 };
+  for (const e of CHOICES) { assert.equal(e.options.length, 3); const pts = e.options.map(o => Object.entries(o.fx).reduce((s, [k, v]) => s + W[k] * (v as number), 0)); assert.ok(Math.min(...pts) >= 1.6 && Math.max(...pts) <= 2.5 && Math.max(...pts) - Math.min(...pts) <= 0.6, `${e.id}: ${pts}`); }
+  const u = goldUnit(newRun(1)); assert.ok(u >= 1);
+});

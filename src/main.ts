@@ -1,6 +1,6 @@
 import { CONFIG } from './config';
-import { ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, effectLines, moveOf, type Move } from './data';
-import { beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, cardValue, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
+import { CHOICES, ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, effectLines, moveOf, type ChoiceFx, type Move } from './data';
+import { makeChoice, pendingChoice, choiceGold, chapterKey, beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, cardValue, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
 import { ART, bodyImg, customImg, eqIcon, layerImg } from './art';
 import { tutActive, tutPatchCombat, tutPatchEnemy, tutStart, tutSync } from './tutorial';
 import { REGIONS, REGION_LIST, type Region } from './regions';
@@ -13,7 +13,7 @@ const FOE = ART.foe, foeArt = (art: string | undefined, tier: string, id?: strin
 const persist = (r: Run) => { if (!tutActive()) saveRun(r, localStorage); }; // il tutorial non tocca il salvataggio
 const SET_KEY = 'cardrogue.settings.v1', DELAYS = [900, 450], LABELS = ['Normale', 'Veloce'];
 const THEMES = ['classic', 'boxing', 'battle', 'forest', 'ocean', 'desert', 'ember']; // il tema dipende dalla regione scelta
-const settings = { speed: 0, speedV: 2, calm: false, music: true, sfx: true, god: false, mv: 0.8, sv: 0.8, theme: 'classic', timer: true, tmode: 1 }; try { const sv = JSON.parse(localStorage.getItem(SET_KEY) ?? '{}'); Object.assign(settings, sv); if (sv.speedV !== 2) settings.speed = (sv.speed ?? 1) >= 2 ? 1 : 0; settings.speedV = 2; } catch { /* ignora */ } // vecchie 4 velocità: Lenta/Normale -> Normale, Veloce/Rapida -> Veloce
+const settings = { speed: 0, speedV: 2, calm: false, music: true, sfx: true, god: false, mv: 0.8, sv: 0.8, theme: 'classic', timer: true, tmode: 1, story: true }; try { const sv = JSON.parse(localStorage.getItem(SET_KEY) ?? '{}'); Object.assign(settings, sv); if (sv.speedV !== 2) settings.speed = (sv.speed ?? 1) >= 2 ? 1 : 0; settings.speedV = 2; } catch { /* ignora */ } // vecchie 4 velocità: Lenta/Normale -> Normale, Veloce/Rapida -> Veloce
 if (!(settings.speed in DELAYS)) settings.speed = 0; if (![0, 1, 2].includes(settings.tmode)) settings.tmode = 1;
 audioCfg(settings.music, settings.sfx, settings.mv, settings.sv); addEventListener('pointerdown', () => unlock());
 let settingsOpen = false, sure = false, pileView: 'draw' | 'discard' | null = null;
@@ -29,7 +29,7 @@ const head = (r: Run) => `<div class="top"><span>⚔ ${REGIONS[r.region ?? '']?.
 let layersSeen: { run: Run | null; ids: Set<string> } = { run: null, ids: new Set() }, finalView: Combat | null = null, finalHp = 0, creating = false, draft = { name: '', av: 'a0', style: 'boxing' }, sailing = false, mapSel: string | null = null, vs: { tier: string; art?: string; id?: string; name: string; hp: number; lv: number } | null = null, prevEn = -1, lastSynN = 0, lastCombo = '', lastEv: unknown = null, endAnim: { win: boolean; tier: string; art?: string; id?: string } | null = null, lastPhase: string | undefined, prevHand: string[] = [], timer = 0, bars: { me: number; foe: number } | null = null;
 // ---- Timer di turno (disattivabile): scaduto il tempo, il turno termina da solo; in pausa con impostazioni/menu ----
 const TLIM = [10, 30, 60];
-let tLeft = 0, tTurn = -1, tTick = 0;
+let tLeft = 0, tTurn = -1, tTick = 0, mercyIdle = false; // mercyIdle: riquadro della pietà aperto ma non ancora girato (il tempo scorre)
 function paintTimer() {
   const b = document.querySelector('.end') as HTMLElement | null, f = b?.querySelector('.tfill') as HTMLElement | null, s = b?.querySelector('.tsec') as HTMLElement | null; if (!b || !f || !s) return;
   f.style.width = Math.max(0, tLeft / (TLIM[settings.tmode] * 1000)) * 100 + '%'; s.textContent = Math.ceil(Math.max(0, tLeft) / 1000) + 's'; b.classList.toggle('urgent', tLeft < 5000);
@@ -37,9 +37,9 @@ function paintTimer() {
 function timerSync() {
   const c = run?.combat; if (run?.phase !== 'combat') tTurn = -1;
   if (c && c.phase === 'player' && c.turn !== tTurn) { tTurn = c.turn; tLeft = TLIM[settings.tmode] * 1000; }
-  const on = settings.timer && !!c && c.phase === 'player' && started && !settingsOpen && !pileView && !vs && !endAnim && !tutActive() && !document.querySelector('.slotov');
+  const on = settings.timer && !!c && c.phase === 'player' && started && !settingsOpen && !pileView && !vs && !endAnim && !tutActive() && (mercyIdle || !document.querySelector('.slotov'));
   if (!on) { clearInterval(tTick); tTick = 0; return; }
-  if (!tTick) { let last = performance.now(); tTick = window.setInterval(() => { const n = performance.now(); tLeft -= n - last; last = n; paintTimer(); if (tLeft <= 0) { clearInterval(tTick); tTick = 0; act('end'); } }, 200); }
+  if (!tTick) { let last = performance.now(); tTick = window.setInterval(() => { const n = performance.now(); tLeft -= n - last; last = n; paintTimer(); if (tLeft <= 0) { clearInterval(tTick); tTick = 0; if (mercyIdle) { mercyIdle = false; document.querySelector('.slotov')?.remove(); } act('end'); } }, 200); }
   paintTimer();
 }
 function tick() { // turno nemico: una carta alla volta, ripreso anche dopo un reload
@@ -80,6 +80,10 @@ function sail() { // il protagonista raggiunge l'isola scelta in barca (animazio
 }
 const esc = (t: string) => t.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 const heroName = () => esc(run?.hero?.name ?? 'Protagonista');
+/** Effetti di un'opzione di scelta come etichette (bonus verdi, malus rossi). Gli effetti non in oro valgono per il prossimo duello. */
+const fxChips = (r: Run, fx: ChoiceFx, gold = choiceGold(r, fx)) => [
+  gold && `<i class="${gold < 0 ? 'neg' : ''}">💰 ${gold > 0 ? '+' : ''}${gold}</i>`, fx.block && `<i>🛡️ Scudo ${fx.block} a inizio duello</i>`, fx.energy && `<i>⚡ +${fx.energy} energia al 1° turno</i>`, fx.draw && `<i>🂠 Pesca +${fx.draw} al 1° turno</i>`,
+  fx.foeHp && `<i class="${fx.foeHp > 0 ? 'neg' : ''}">👊 Nemico ${fx.foeHp > 0 ? '+' : ''}${fx.foeHp}% PV</i>`, fx.hp && `<i class="${fx.hp < 0 ? 'neg' : ''}">❤ ${fx.hp > 0 ? '+' : ''}${fx.hp} PV a inizio duello</i>`].filter(Boolean).join('');
 const heroImg = () => { const a = run?.hero?.avatar; return a?.startsWith('data:') ? `<img class="ic photo" alt="" src="${a}">` : ART.avatar[a ?? 'a0'] ?? ART.avatar.a0; };
 function drawCreate() { // creazione del personaggio: nome e foto profilo (avatar o foto caricata)
   const big = draft.av.startsWith('data:') ? `<img class="ic photo" alt="" src="${draft.av}">` : ART.avatar[draft.av];
@@ -183,7 +187,12 @@ function draw() {
   const eqOrder = Object.keys(EQUIPMENT).filter(id => r.equipped.includes(id)), withArt = eqOrder.filter(id => layerImg(id)), noArt = eqOrder.filter(id => !layerImg(id)), aid = (r.hero?.avatar ?? 'a0').startsWith('data:') ? 'default' : r.hero?.avatar ?? 'a0';
   const figHtml = `<div class="hfig" title="${heroName()}"><div class="lyr body">${bodyImg(aid)}</div>${withArt.map(id => `<div class="lyr ${layersSeen.ids.has(id) ? '' : 'new'}" data-layer="${id}">${layerImg(id)}</div>`).join('')}${noArt.length ? `<div class="hmiss">${noArt.map(id => `<span title="${EQUIPMENT[id].name}">${ICON[id]}</span>`).join('')}</div>` : ''}<div class="hname">${heroName()}</div></div>`;
   r.equipped.forEach(id => layersSeen.ids.add(id));
-  const storyHtml = `<div class="storywrap">${figHtml}<div class="story"><div class="sbook"><div class="chap">Capitolo ${chap} · ${rg.name} · ${STYLES.find(x => x.id === (r.style ?? 'boxing'))?.name}</div><h3>${boss ? '⚔ ' : ''}${esc(nme.name)}</h3><p class="tale">${tale}</p></div>
+  // Scelta di capitolo: finché non è fatta (e l'impostazione è attiva) si resta nella Storia, senza Store, Mazzo, Avanti o Mappa
+  const pc = settings.story && !tutActive() ? pendingChoice(r) : null; if (pc) tab = 'sto';
+  const nm = (t: string) => t.replace(/\{nome\}/g, heroName()), dn = r.chapters?.[chapterKey(r)], dev = dn && CHOICES.find(e => e.id === dn.ev), dopt = dev?.options.find(o => o.id === dn!.opt);
+  const chHtml = pc ? `<div class="chbox"><div class="chap">✦ Una scelta ti attende</div><h3>${pc.ev.title}</h3><p class="tale">${nm(pc.ev.text)}</p><div class="chopts">${pc.options.map(o => `<button class="chopt" data-a="choose" data-id="${o.id}"><b>${o.label}</b><span class="chchips">${fxChips(r, o.fx)}</span></button>`).join('')}</div><small>Nessuna scelta è giusta o sbagliata: decidi per proseguire.</small></div>`
+    : dev && dopt ? `<div class="chbox done"><div class="chap">✦ La tua scelta</div><b>${dev.title}</b> · ${dopt.label}<span class="chchips">${fxChips(r, dopt.fx, dn!.gold)}</span><small>${dopt.text}</small></div>` : '';
+  const storyHtml = `<div class="storywrap">${figHtml}<div class="story"><div class="sbook"><div class="chap">Capitolo ${chap} · ${rg.name} · ${STYLES.find(x => x.id === (r.style ?? 'boxing'))?.name}</div><h3>${boss ? '⚔ ' : ''}${esc(nme.name)}</h3><p class="tale">${tale}</p></div>${chHtml}
     <div class="sbox foe"><div class="sface">${foeArt(rg.id, rg.level, nme.id)}</div><div><b>${boss ? 'BOSS · ' : ''}${esc(nme.name)}</b><br><small>${rg.level} · partita ${idx + 1}/${CONFIG.matchesPerIsland} · ❤ ${pre.maxHp}</small><br><small>Mosse: ${emv}</small></div></div></div></div>`;
   const healRow = r.wounded ? `<div class="energyrow"><b>🩹 Ferite gravi: parti all'${Math.round(CONFIG.woundedStart * 100)}% dei PV</b><button class="ebtn" data-a="heal">Cura <span class="price">💰${CONFIG.healCost}</span></button></div>` : '';
   const back = (k: 'eq' | 'mv', p: number) => `<div class="offer"><div class="card back" data-drag="offer:${k}:2"><div class="bk">?<span class="pd"></span></div></div><div class="ptag mys">🎁 ${p}</div></div>`;
@@ -201,7 +210,7 @@ function draw() {
     <h3>Mazzo attivo ${inn.length}/${CONFIG.maxDeck}</h3><small>Trascina (o tocca) le carte tra le due aree.</small><div class="zone" data-zone="in"><div class="cards">${cs(inn)}</div></div>
     <h3>Fuori dal mazzo (${out.length})</h3><div class="zone" data-zone="out"><div class="cards">${cs(out)}</div></div>`;
   }
-  app.innerHTML = `${head(r)}${r.msg ? `<div class="toast ok">${r.msg}</div>` : ''}${t}<div class="tabs three">${(['sto', 'st', 'me'] as const).map((k, i) => `<button class="${tab === k ? 'on' : ''}" data-a="tab" data-id="${k}">${['📖 Storia', '🛒 Store', '🎴 Mazzo'][i]}</button>`).join('')}</div><div class="pane">${tab === 'st' ? store : tab === 'sto' ? storyHtml : body}</div><div class="actbar">${tab === 'me' ? go : '<button class="pri go" data-a="next">Avanti ➜</button>'}<button data-a="openmap">🗺 Mappa</button></div>`;
+  app.innerHTML = `${head(r)}${r.msg ? `<div class="toast ok">${r.msg}</div>` : ''}${t}<div class="tabs three">${(['sto', 'st', 'me'] as const).map((k, i) => `<button class="${tab === k ? 'on' : ''}" data-a="tab" data-id="${k}" ${pc && k !== 'sto' ? 'disabled' : ''}>${['📖 Storia', '🛒 Store', '🎴 Mazzo'][i]}</button>`).join('')}</div><div class="pane">${tab === 'st' ? store : tab === 'sto' ? storyHtml : body}</div><div class="actbar">${tab === 'me' ? go : `<button class="pri go" data-a="next" ${pc ? 'disabled' : ''}>Avanti ➜</button>`}<button data-a="openmap" ${pc ? 'disabled' : ''}>🗺 Mappa</button></div>`;
   if (tab === 'st') { const en2 = maxEnergy(r); if (prevEn >= 0 && en2 > prevEn) { const tk = app.querySelectorAll<HTMLElement>('.tick')[en2 - 1]; if (tk) { tk.classList.add('gain'); const q = tk.getBoundingClientRect(); burst('combo', q.left + q.width / 2, q.top + q.height / 2); sfx('energy'); } } prevEn = en2; }
 }
 // ---- Slot machine per le carte misteriose: scorrono carte a caso, FERMA rallenta e atterra sulla carta sbloccata ----
@@ -242,9 +251,9 @@ function slotMachine(kind: 'eq' | 'mv' | 'mercy', id: string, intro?: () => stri
   };
   const stop = () => { const H = win.clientHeight, T = N * H; stopping = true; from = y; to = y + ((fin * H - (y % T) + T) % T) + 2 * T; t0 = performance.now(); btn.disabled = true; };
   if (!intro) { btn.onclick = stop; requestAnimationFrame(frame); return; }
-  (ov.querySelector('#slc') as HTMLElement).onclick = () => ov.remove(); // annulla: si torna alla partita, nulla è cambiato
+  mercyIdle = true; (ov.querySelector('#slc') as HTMLElement).onclick = () => { mercyIdle = false; ov.remove(); timerSync(); }; // annulla: si torna alla partita (il tempo non si è mai fermato)
   btn.onclick = () => { // gira: solo ora si decide l'esito (e si consuma la richiesta di pietà)
-    const res = intro(); if (res === null) { ov.remove(); return; } id = res;
+    mercyIdle = false; const res = intro(); if (res === null) { ov.remove(); return; } id = res;
     reel.querySelectorAll('.ritem').forEach((it, k) => { it.innerHTML = face(k % N === fin ? id : base[k % N]); }); // da carte coperte a facce vere, con l'esito già al posto giusto
     title.textContent = '🙏 Il destino decide…'; ov.querySelector('.mhint')?.remove(); ov.querySelector('#slc')?.remove(); btn.textContent = '⏹ FERMA'; btn.onclick = stop; last = performance.now(); requestAnimationFrame(frame);
   };
@@ -272,7 +281,7 @@ function choiceModal() { // nessuno slot libero: sostituire un equipaggiamento (
   };
 }
 const GOD = 9999999;
-const UIA = ['pile', 'closePile', 'god', 'sail', 'timer', 'tmode', 'theme', 'skipvs', 'set', 'closeSet', 'speed', 'calm', 'music', 'sfx', 'menu', 'abandon'];
+const UIA = ['story', 'pile', 'closePile', 'god', 'sail', 'timer', 'tmode', 'theme', 'skipvs', 'set', 'closeSet', 'speed', 'calm', 'music', 'sfx', 'menu', 'abandon'];
 /** Animazione al centro dello schermo: l'oro scende (o sale) dal valore precedente a quello nuovo. */
 function coinFx(a: number, b: number) {
   const d = document.createElement('div'), diff = b - a; d.className = 'coinfx'; d.innerHTML = `<div class="cf-n">💰 <span>${a}</span></div><div class="cf-d ${diff < 0 ? 'neg' : 'pos'}">${diff > 0 ? '+' : ''}${diff}</div>`; document.body.appendChild(d); sfx('coin');
@@ -280,7 +289,7 @@ function coinFx(a: number, b: number) {
   setTimeout(() => d.remove(), 1700);
 }
 const AUD = [['music', 'mv', '🎵', '🔇', 'Musica'], ['sfx', 'sv', '🔊', '🔈', 'Effetti sonori']] as const;
-const modal = () => `<div class="modal"><div class="mbox"><h2>⚙ Impostazioni</h2><b>Velocità animazioni</b><div class="seg">${LABELS.map((l, i) => `<button class="${settings.speed === i ? 'on' : ''}" data-a="speed" data-id="${i}">${l}</button>`).join('')}</div><button class="${settings.calm ? 'on' : ''}" data-a="calm">${settings.calm ? '☑' : '☐'} Riduci animazioni</button>${AUD.map(([k, v, on, off, l]) => `<div class="arow ${settings[k] ? '' : 'off'}"><button class="tgl ${settings[k] ? 'on' : ''}" data-a="${k}" title="${l}">${settings[k] ? on : off}</button><label class="vol"><span>${l} <b class="vv">${Math.round(settings[v] * 100)}%</b></span><input type="range" min="0" max="100" value="${Math.round(settings[v] * 100)}" style="--v:${Math.round(settings[v] * 100)}%" data-vol="${v}"></label></div>`).join('')}<button class="${settings.god ? 'on' : ''}" data-a="god">🛠 God mode: ${settings.god ? 'ON' : 'OFF'}</button><button class="${settings.timer ? 'on' : ''}" data-a="timer">${settings.timer ? '⏱' : '⏸'} Timer di turno</button><div class="seg3">${['Veloce · 10s', 'Standard · 30s', 'Lento · 1 min'].map((l, i) => `<button class="${settings.tmode === i ? 'on' : ''}" data-a="tmode" data-id="${i}" ${settings.timer ? '' : 'disabled'}>${l}</button>`).join('')}</div>${started && run ? `<button data-a="menu">🏠 Torna al menu principale</button><button data-a="abandon">${sure ? '⚠ Tocca ancora per confermare' : '🗑 Abbandona la run'}</button>` : ''}<button class="pri" data-a="closeSet">Chiudi</button><small>La run viene salvata automaticamente: dal menu puoi riprenderla.</small></div></div>`;
+const modal = () => `<div class="modal"><div class="mbox"><h2>⚙ Impostazioni</h2><b>Velocità animazioni</b><div class="seg">${LABELS.map((l, i) => `<button class="${settings.speed === i ? 'on' : ''}" data-a="speed" data-id="${i}">${l}</button>`).join('')}</div><button class="${settings.calm ? 'on' : ''}" data-a="calm">${settings.calm ? '☑' : '☐'} Riduci animazioni</button>${AUD.map(([k, v, on, off, l]) => `<div class="arow ${settings[k] ? '' : 'off'}"><button class="tgl ${settings[k] ? 'on' : ''}" data-a="${k}" title="${l}">${settings[k] ? on : off}</button><label class="vol"><span>${l} <b class="vv">${Math.round(settings[v] * 100)}%</b></span><input type="range" min="0" max="100" value="${Math.round(settings[v] * 100)}" style="--v:${Math.round(settings[v] * 100)}%" data-vol="${v}"></label></div>`).join('')}<button class="${settings.god ? 'on' : ''}" data-a="god">🛠 God mode: ${settings.god ? 'ON' : 'OFF'}</button><button class="${settings.story ? 'on' : ''}" data-a="story">${settings.story ? '☑' : '☐'} Scelte di capitolo (Storia)</button><button class="${settings.timer ? 'on' : ''}" data-a="timer">${settings.timer ? '⏱' : '⏸'} Timer di turno</button><div class="seg3">${['Veloce · 10s', 'Standard · 30s', 'Lento · 1 min'].map((l, i) => `<button class="${settings.tmode === i ? 'on' : ''}" data-a="tmode" data-id="${i}" ${settings.timer ? '' : 'disabled'}>${l}</button>`).join('')}</div>${started && run ? `<button data-a="menu">🏠 Torna al menu principale</button><button data-a="abandon">${sure ? '⚠ Tocca ancora per confermare' : '🗑 Abbandona la run'}</button>` : ''}<button class="pri" data-a="closeSet">Chiudi</button><small>La run viene salvata automaticamente: dal menu puoi riprenderla.</small></div></div>`;
 function pileModal() { // mazzo (ordine nascosto) o scarti (carte già giocate), raggruppati per carta
   const c = run!.combat!, d = pileView === 'draw', src = d ? c.draw : c.discard, g = new Map<string, { uid: string; n: number }>();
   src.forEach(u => { const k = moveOf(u), e = g.get(k); if (e) e.n++; else g.set(k, { uid: u, n: 1 }); });
@@ -290,6 +299,7 @@ function pileModal() { // mazzo (ordine nascosto) o scarti (carte già giocate),
 function ui(a: string, id: string) {
   if (a === 'pile') pileView = id as typeof pileView; else if (a === 'closePile') pileView = null;
   else if (a === 'set') settingsOpen = true; else if (a === 'closeSet') { settingsOpen = false; sure = false; }
+  else if (a === 'story') settings.story = !settings.story;
   else if (a === 'speed') settings.speed = +id; else if (a === 'theme') settings.theme = id; else if (a === 'timer') { settings.timer = !settings.timer; tTurn = -1; } else if (a === 'tmode') { settings.tmode = +id; tTurn = -1; } else if (a === 'skipvs') vs = null; else if (a === 'god') { settings.god = !settings.god; if (!settings.god && run) { run.god = false; run.gold = 100; } } else if (a === 'sail') { sail(); return; } else if (a === 'calm') settings.calm = !settings.calm; else if (a === 'music' || a === 'sfx') { settings[a] = !settings[a]; audioCfg(settings.music, settings.sfx, settings.mv, settings.sv); }
   else if (a === 'menu') { if (run?.phase === 'over') { run = null; clearRun(localStorage); } started = false; settingsOpen = false; sure = false; }
   else if (a === 'abandon') { if (!sure) sure = true; else { run = null; clearRun(localStorage); started = false; settingsOpen = false; sure = false; } }
@@ -305,7 +315,9 @@ function act(a: string, id = '') {
   else if (a === 'avatar') draft.av = id; else if (a === 'style') draft.style = id; else if (a === 'cancelnew') creating = false; else if (a === 'cont') started = true; else if (a === 'tutorial') startTutorial();
   else if (run) {
     const mys = a === 'offerEq' && +id === 2 ? run.offers.eq[2] : a === 'offerMv' && +id === 2 ? run.offers.mv[2] : null, g0 = run.gold, e0 = run.combat?.enemy.hp ?? 0, p0 = run.hp;
-    if (a === 'tab') tab = id as typeof tab; else if (a === 'next') tab = tab === 'sto' ? 'st' : 'me'; else if (a === 'region') { if (unlocked(run).includes(id)) mapSel = id; else err = '🔒 Isola bloccata: vinci le 5 partite dell\'isola precedente.'; } else if (a === 'openmap') err = openMap(run);
+    if (settings.story && !tutActive() && pendingChoice(run) && (a === 'next' || a === 'openmap' || a === 'go' || (a === 'tab' && id !== 'sto'))) err = 'Prima fai la tua scelta nella Storia.';
+    else if (a === 'choose') { err = makeChoice(run, id); if (!err) sfx('energy'); }
+    else if (a === 'tab') tab = id as typeof tab; else if (a === 'next') tab = tab === 'sto' ? 'st' : 'me'; else if (a === 'region') { if (unlocked(run).includes(id)) mapSel = id; else err = '🔒 Isola bloccata: vinci le 5 partite dell\'isola precedente.'; } else if (a === 'openmap') err = openMap(run);
     else if (a === 'mercy') { const c = run.combat; if (c?.mercy) err = 'Hai già chiesto pietà in questo duello.'; else if (c?.phase !== 'player') err = 'Non è il tuo turno.'; else slotMachine('mercy', '', () => { const res = askMercy(run!); if (res.err) { note = res.err; render(); return null; } persist(run!); return res.spared ? 'ok' : 'no'; }); } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'heal') err = healRun(run); else if (a === 'ddraw') { err = drawDiscard(run); if (!err) sfx('shuffle'); } else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
     else if (a === 'buyM') err = buyMove(run, id); else if (a === 'buyEn') err = buyEnergy(run); else if (a === 'offerEq') err = buyOfferEq(run, +id); else if (a === 'offerMv') err = buyOfferMv(run, +id); else if (a === 'hint') err = id; else if (a === 'sellM') err = sellMove(run, id); else if (a === 'deck') err = toggleDeck(run, id);
     else if (a === 'go') err = beginArena(run); else if (a === 'play') err = playCard(run, id); else if (a === 'end') err = endTurn(run);
