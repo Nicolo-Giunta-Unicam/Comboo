@@ -260,6 +260,17 @@
             }
           },
           "cost": 1
+        },
+        {
+          "id": "stance_a2",
+          "name": "Scudo d'assalto",
+          "price": 30,
+          "effect": {
+            "syn": {
+              "k": "shieldAtk"
+            }
+          },
+          "cost": 2
         }
       ],
       "kind": "style"

@@ -183,10 +183,17 @@ test('sinergie: Clonazione copia l\'ultima carta; Stratega mostra 3 carte e la s
   ({ r, c } = fresh(['buy:reactor_a1'])); c.draw = ['base:guard:5', 'base:jab:1', 'eq:servo:0']; playCard(r, 'buy:reactor_a1'); assert.equal(c.pick!.length, 3); assert.ok(playCard(r, 'buy:reactor_a1')); assert.ok(endTurn(r));
   assert.equal(choosePick(r, 'eq:servo:0'), null); assert.ok(c.hand.includes('eq:servo:0')); assert.equal(effCost(c, 'eq:servo:0'), 1); assert.equal(c.draw.includes('eq:servo:0'), false);
 });
-test('mazzo finito: niente rimescolo; mano massima 10; pesca dagli scarti per 3 energia', () => {
+test('mazzo finito: nessun rimescolo automatico; mano massima 10; per 3 energia gli scarti tornano nel mazzo e si pesca 1 carta', () => {
   const { r, c } = fresh(Array(9).fill('base:jab:0')); c.draw = ['base:guard:5', 'base:guard:6', 'base:guard:7']; endTurn(r); settle(r); c.queue = []; enemyStep(r);
   assert.equal(c.hand.length, 10); assert.equal(c.draw.length, 2); // a 9 carte se ne pesca una sola
   c.draw = []; c.discard = ['base:jab:3', 'base:jab:4']; c.hand = ['base:guard:5']; c.energy = 2; assert.ok(drawDiscard(r)); c.energy = 5;
-  assert.equal(drawDiscard(r), null); assert.equal(c.energy, 2); assert.equal(c.hand.length, 2); assert.equal(c.discard.length, 1);
+  assert.equal(drawDiscard(r), null); assert.equal(c.energy, 2); assert.equal(c.hand.length, 2); assert.equal(c.discard.length, 0); assert.equal(c.draw.length, 1); assert.ok(['base:jab:3', 'base:jab:4'].includes(c.hand[1]) && ['base:jab:3', 'base:jab:4'].includes(c.draw[0]) && c.hand[1] !== c.draw[0]);
   c.draw = ['base:jab:1']; assert.ok(drawDiscard(r)); c.draw = []; c.hand = Array(10).fill('base:jab:0'); c.energy = 9; assert.ok(drawDiscard(r));
+});
+
+test('Scudo d\'assalto: danno pari agli scudi attivi, aggiornato dalle difese giocate dopo', () => {
+  const { r, c } = fresh(['base:guard:5', 'buy:stance_a2', 'base:guard:6']);
+  assert.equal(playCard(r, 'base:guard:5'), null); const sh1 = c.field.def.reduce((s, p) => s + p.block, 0); assert.ok(sh1 > 0);
+  assert.equal(playCard(r, 'buy:stance_a2'), null); assert.equal(c.field.off.length, 1); assert.equal(c.field.off[0].dmg, sh1); assert.equal(c.hand.length, 1);
+  assert.equal(playCard(r, 'base:guard:6'), null); const sh2 = c.field.def.reduce((s, p) => s + p.block, 0); assert.ok(sh2 > sh1); assert.equal(c.field.off[0].dmg, sh2);
 });

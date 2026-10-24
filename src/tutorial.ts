@@ -27,7 +27,7 @@ const STEPS: Step[] = [
   { t: '🧍 Tu', sel: '.side.me', x: `Il tuo personaggio: la barra verticale è la <b>vita</b>, sotto vedi <b>scudi</b> e nome. In alto a sinistra la colonna con il tuo <b>equipaggiamento</b>.` },
   { t: '👹 Il nemico', sel: '.side.foe', x: `A destra il nemico, con la sua vita e il suo equipaggiamento. Vince chi porta a zero la vita dell'altro.` },
   { t: '🖐 La mano', sel: '.handrow .hand', x: `Parti con <b>5 carte</b> e a ogni turno ne peschi <b>2</b>. In mano al massimo <b>10 carte</b>: a 10 non peschi, a 9 ne peschi una sola.` },
-  { t: '🂠 Il mazzo finisce', sel: '.pile', x: `Le carte <b>non sono infinite</b>: quando il mazzo (numero grande) finisce <b>non si rimescola</b>. Se non hai più carte da pescare puoi spendere <b>3 energia</b> per pescare una carta a caso dagli scarti (🗑).` },
+  { t: '🂠 Il mazzo finisce', sel: '.pile.draw', x: `Le carte <b>non sono infinite</b>: il numero grande è quante ne restano nel mazzo (toccalo per vederle). Quando finisce puoi spendere <b>3 energia</b> per <b>rimescolare gli scarti (🗑, in basso a sinistra) nel mazzo</b> e pescare 1 carta.` },
   { t: '⚡ Energia del turno', sel: '.pips', x: `Qui vedi l'energia che ti resta. Si ricarica a ogni turno. Ogni carta ne consuma tanta quanto indicato dal suo costo.` },
   { t: '🧭 Il campo', sel: '.board', x: `Quattro righe: in alto <b>difesa</b> e <b>attacco</b> del nemico, poi <b>il tuo attacco</b> (al centro) e <b>la tua difesa</b> (vicino a te). I danni partono <b>a fine turno</b>, in ordine di schieramento.` },
   { t: '👊 Prima carta', sel: drag('base:jab:0'), allow: drag('base:jab:0'), until: () => offN() >= 1, x: `<b>Trascina</b> il Jab sul campo. Le carte offensive vanno nella riga di attacco e, una volta schierate, <b>non si riprendono</b>.` },
@@ -70,7 +70,7 @@ function place() {
 }
 function show() {
   if (!ctx) return;
-  if (!root) { root = document.createElement('div'); root.id = 'tut'; document.body.appendChild(root); root.addEventListener('click', ev => { const b = (ev.target as HTMLElement).closest('[data-tut]') as HTMLElement | null; if (b?.dataset.tut === 'next') go(i + 1); else if (b?.dataset.tut === 'exit') stop(); }); }
+  if (!root) { root = document.createElement('div'); root.id = 'tut'; document.body.appendChild(root); root.addEventListener('click', ev => { const b = (ev.target as HTMLElement).closest('[data-tut]') as HTMLElement | null; if (b?.dataset.tut === 'next') { go(i + 1); ctx?.render(); } else if (b?.dataset.tut === 'exit') stop(); }); }
   const s = STEPS[i], last = i === STEPS.length - 1;
   root.innerHTML = `<div class="tdim"></div><div class="tspot"></div><button class="tx" data-tut="exit">✕ Esci dal tutorial</button><div class="tcard"><div class="tbar"><i style="width:${(i + 1) / STEPS.length * 100}%"></i></div><h3>${s.t}</h3><p>${s.x}</p><div class="trow">${s.until ? `<span class="thint">${s.allow ? '👉 Fai l\'azione evidenziata' : '⏳ Osserva…'}</span>` : `<span class="thint">${i + 1}/${STEPS.length}</span><button class="pri" data-tut="next">${last ? 'Fine ✓' : 'Avanti ➜'}</button>`}</div></div>`;
   requestAnimationFrame(place);

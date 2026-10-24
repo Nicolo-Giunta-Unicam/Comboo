@@ -19,7 +19,7 @@ export interface Run {
   deck: string[]; phase: Phase; combat: Combat | null; msg: string;
 }
 type Rec2<T> = { off: T; def: T };
-export interface Placed { uid: string; name: string; icon: string; src: string; dmg: number; hits: number; block: number; ttl: number; id?: number; mv?: string; fx?: string; tag?: string }
+export interface Placed { uid: string; name: string; icon: string; src: string; dmg: number; hits: number; block: number; ttl: number; sh?: number; id?: number; mv?: string; fx?: string; tag?: string }
 export interface Ev { by: 'me' | 'foe'; card: Placed; absorbed: number; dmg: number }
 export interface Side { off: Placed[]; def: Placed[] }
 /** Slot 0-1: carte visibili; slot 2: carta MISTERIOSA (id nascosto) a prezzo ridotto (eqPrice/mvPrice). */
@@ -162,7 +162,7 @@ export function beginArena(r: Run): Err {
   r.phase = 'combat'; r.msg = ''; startTurn(r); return null;
 }
 function drawCards(c: Combat, r: Run, n: number) {
-  for (; n > 0 && c.hand.length < CONFIG.maxHand; n--) { const u = c.draw.pop(); if (!u) break; c.hand.push(u); } // il mazzo non si rimescola: finito, finito
+  for (; n > 0 && c.hand.length < CONFIG.maxHand; n--) { const u = c.draw.pop(); if (!u) break; c.hand.push(u); } // a mazzo finito si pesca solo spendendo energia (drawDiscard), che rimescola gli scarti
 }
 /** Scala la durata delle difese; quelle scadute o abbattute vanno agli scarti. ttl<0 = finché abbattuta. */
 function decay(c: Combat, sh: Placed[]) { sh.forEach(s => { if (s.ttl > 0) s.ttl--; }); return sh.filter(s => { const keep = s.ttl !== 0 && s.block > 0; if (!keep && s.uid) c.discard.push(s.uid); return keep; }); }
@@ -172,6 +172,10 @@ function absorb(c: Combat, sh: Placed[], d: number) {
   sh.splice(0, sh.length, ...sh.filter(s => { if (s.block > 0) return true; if (s.uid) c.discard.push(s.uid); return false; })); return d;
 }
 function startTurn(r: Run) { const c = r.combat!; c.turn++; c.field.def = decay(c, c.field.def); c.block = 0; c.combo = ''; c.played = {}; c.prev = null; c.mods = { off: 0, bypass: false, freeNext: false, dupNext: false, combos: 0 }; c.cardCost = {}; delete c.lastUid; c.pick = null; c.lastBy = { off: null, def: null }; c.runs = { off: 0, def: 0 }; c.chains = { off: 0, def: 0 }; c.ev = null; c.energy = maxEnergy(r); c.phase = 'player'; drawCards(c, r, c.turn === 1 ? CONFIG.startHand : CONFIG.drawPerTurn); }
+/** Scudi attivi del giocatore: guardia delle carte offensive del turno + difese schierate. */
+export const shieldsOf = (c: Combat) => c.block + c.field.def.reduce((s, p) => s + p.block, 0);
+/** Le carte "Scudo d'assalto" già schierate seguono gli scudi attivi (se ne giochi altri dopo, il loro danno cresce). */
+function syncShieldAtk(c: Combat) { const n = shieldsOf(c); c.field.off.forEach(p => { if (p.sh !== undefined) { p.dmg = Math.max(0, p.dmg + n - p.sh); p.sh = n; } }); }
 const modsOf = (c: Combat) => c.mods ?? (c.mods = { off: 0, bypass: false, freeNext: false, dupNext: false, combos: 0 });
 /** Costo effettivo di una carta in mano: "prossima carta gratis" (Riscaldamento) e sconti del turno (Stratega). */
 export const effCost = (c: Combat, uid: string) => c.mods?.freeNext ? 0 : (c.cardCost?.[uid] ?? MOVES[moveOf(uid)].cost);
@@ -179,7 +183,7 @@ export function playCard(r: Run, uid: string): Err {
   const c = r.combat; if (r.phase !== 'combat' || !c) return 'Nessun combattimento.'; if (c.phase !== 'player') return 'Non è il tuo turno.';
   if (!c.hand.includes(uid)) return 'Carta non in mano.'; if (c.pick?.length) return 'Scegli prima una carta (Stratega).';
   const m = MOVES[moveOf(uid)], f = m.effect, S = f.syn, mods = modsOf(c), cost = effCost(c, uid), keep = uid.startsWith('clone:') ? '' : uid;
-  const off = !!f.dmg || S?.k === 'momentum', instant = !!S && S.k !== 'momentum' && S.k !== 'flow', row = off ? c.field.off : c.field.def;
+  const off = !!f.dmg || S?.k === 'momentum' || S?.k === 'shieldAtk', instant = !!S && S.k !== 'momentum' && S.k !== 'flow' && S.k !== 'shieldAtk', row = off ? c.field.off : c.field.def;
   if (f.flee) { // carta di fuga: requisiti di partita, poi si lascia il duello senza conseguenze
     const q = f.req ?? {}; if (q.hpBelow !== undefined && r.hp / maxHp(r) >= q.hpBelow) return `Requisito: PV sotto il ${Math.round(q.hpBelow * 100)}%.`; if (q.minTurn !== undefined && c.turn < q.minTurn) return `Requisito: dal turno ${q.minTurn}.`;
     if (c.energy < cost) return 'Energia insufficiente.'; c.hand.splice(c.hand.indexOf(uid), 1); if (keep) c.discard.push(keep); resolveOutcome(r, 'flee'); return null;
@@ -206,8 +210,8 @@ export function playCard(r: Run, uid: string): Err {
   const same = L[g] === m.id, n = same ? R[g] + 1 : 1, pct = CONFIG.combo.same[Math.min(n, CONFIG.combo.max) - 1] ?? 0, fg: 'off' | 'def' = f.link ? (MOVES[f.link.from]?.effect.dmg ? 'off' : 'def') : g;
   const lk = f.link && L[fg] === f.link.from ? f.link : null, mul = (x: number) => Math.round(x * (1 + pct)), chain = same ? C[g] + 1 : lk ? C[fg] + 1 : 1;
   c.played[m.id] = (c.played[m.id] ?? 0) + 1; R[g] = n; C[g] = chain; L[g] = m.id; c.prev = m.id; c.tier = chain >= 3 ? 2 : chain === 2 ? 1 : 0;
-  const total = Object.values(c.played).reduce((a, b) => a + b, 0), dmgBase = S?.k === 'momentum' ? (S.n ?? 1) * total : f.dmg ?? 0;
-  const p: Placed = { uid: keep, name: m.name, icon: '', src: m.source, dmg: off ? mul(dmgBase + dmgBonus(r) + (lk?.dmg ?? 0) + mods.off) : 0, hits: f.hits ?? 1, block: 0, ttl: 1, id: ++c.seq, mv: m.id };
+  const total = Object.values(c.played).reduce((a, b) => a + b, 0), dmgBase = S?.k === 'momentum' ? (S.n ?? 1) * total : S?.k === 'shieldAtk' ? shieldsOf(c) : f.dmg ?? 0;
+  const p: Placed = { uid: keep, name: m.name, icon: '', src: m.source, dmg: off ? mul(dmgBase + dmgBonus(r) + (lk?.dmg ?? 0) + mods.off) : 0, hits: f.hits ?? 1, block: 0, ttl: 1, id: ++c.seq, mv: m.id, ...(S?.k === 'shieldAtk' ? { sh: shieldsOf(c) } : {}) };
   const blk = mul((f.block ?? 0) + (lk?.block ?? 0) + (S?.k === 'flow' ? (S.n ?? 0) * mods.combos : 0));
   if (chain >= 2) mods.combos++;
   if (off) c.block += blk; else { p.block = blk; p.ttl = f.dur === 0 ? -1 : f.dur ?? 1; } // guardia di una carta offensiva: temporanea
@@ -215,16 +219,16 @@ export function playCard(r: Run, uid: string): Err {
   const dr = (f.draw ?? 0) + (lk?.draw ?? 0), en = (f.energy ?? 0) + (lk?.energy ?? 0), heal = f.heal ? mul(f.heal) : 0, fx = () => { if (heal) r.hp = Math.min(maxHp(r), r.hp + heal); if (dr) drawCards(c, r, dr); if (en) c.energy += en; };
   fx();
   if (mods.dupNext) { mods.dupNext = false; if (row.length < CONFIG.rowSize) row.push({ ...p, id: ++c.seq, uid: '' }); if (off) c.block += blk; fx(); } // Duplicazione: schierata due volte
-  c.lastUid = uid;
+  c.lastUid = uid; syncShieldAtk(c);
   const tag = [pct ? `${m.name} ×${n} (+${Math.round(pct * 100)}%)` : '', lk ? `${MOVES[lk.from].name} → ${m.name}` : ''].filter(Boolean).join(' · '); c.combo = tag;
   p.fx = [dr && `✦${dr}`, en && `⚡+${en}`, heal && `✚${heal}`, off && blk && `🛡️${blk}`].filter(Boolean).join(' '); p.tag = [pct ? `🔥+${Math.round(pct * 100)}%` : '', lk ? '🔗' : ''].filter(Boolean).join(' ');
   return null;
 }
-/** Mazzo esaurito: per CONFIG.discardDrawCost energia si pesca una carta a caso dalla pila degli scarti. */
+/** Mazzo esaurito: per CONFIG.discardDrawCost energia gli scarti vengono rimescolati nel mazzo e si pesca 1 carta. */
 export function drawDiscard(r: Run): Err {
   const c = r.combat; if (r.phase !== 'combat' || !c) return 'Nessun combattimento.'; if (c.phase !== 'player') return 'Non è il tuo turno.'; if (c.pick?.length) return 'Scegli prima una carta (Stratega).';
   if (c.draw.length) return 'Hai ancora carte da pescare nel mazzo.'; if (!c.discard.length) return 'Nessuna carta negli scarti.'; if (c.hand.length >= CONFIG.maxHand) return `Mano piena (${CONFIG.maxHand}).`; if (c.energy < CONFIG.discardDrawCost) return 'Energia insufficiente.';
-  c.energy -= CONFIG.discardDrawCost; c.hand.push(c.discard.splice(Math.floor(rand(r) * c.discard.length), 1)[0]); return null;
+  c.energy -= CONFIG.discardDrawCost; c.draw = shuffle(r, c.discard); c.discard = []; drawCards(c, r, 1); c.log.push('Mazzo rimescolato: peschi 1 carta.'); return null;
 }
 /** Stratega: sceglie una delle 3 carte mostrate; entra in mano e, se giocata nel turno, costa 1. */
 export function choosePick(r: Run, uid: string): Err {
@@ -235,7 +239,7 @@ export function choosePick(r: Run, uid: string): Err {
 export function endTurn(r: Run): Err {
   const c = r.combat; if (r.phase !== 'combat' || !c) return 'Nessun combattimento.'; if (c.phase !== 'player') return 'Non è il tuo turno.';
   if (c.pick?.length) return 'Scegli prima una carta (Stratega).';
-  c.phase = 'resolve'; c.ev = null; c.log.push('Fine turno: attacchi!'); return null;
+  syncShieldAtk(c); c.phase = 'resolve'; c.ev = null; c.log.push('Fine turno: attacchi!'); return null;
 }
 function prepareEnemy(r: Run, c: Combat) {
   c.foeField.def = decay(c, c.foeField.def);

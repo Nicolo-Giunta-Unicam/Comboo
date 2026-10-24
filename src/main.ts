@@ -1,6 +1,6 @@
 import { CONFIG } from './config';
 import { ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, effectLines, moveOf, type Move } from './data';
-import { beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
+import { beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, cardValue, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
 import { ART, customImg, eqIcon } from './art';
 import { tutActive, tutPatchCombat, tutPatchEnemy, tutStart, tutSync } from './tutorial';
 import { REGIONS, REGION_LIST, type Region } from './regions';
@@ -16,13 +16,13 @@ const THEMES = ['classic', 'boxing', 'battle', 'forest', 'ocean', 'desert', 'emb
 const settings = { speed: 1, calm: false, music: true, sfx: true, god: false, mv: 0.8, sv: 0.8, theme: 'classic', timer: true, tmode: 1 }; try { Object.assign(settings, JSON.parse(localStorage.getItem(SET_KEY) ?? '{}')); } catch { /* ignora */ }
 if (!(settings.speed in DELAYS)) settings.speed = 1; if (![0, 1, 2].includes(settings.tmode)) settings.tmode = 1;
 audioCfg(settings.music, settings.sfx, settings.mv, settings.sv); addEventListener('pointerdown', () => unlock());
-let settingsOpen = false, sure = false;
+let settingsOpen = false, sure = false, pileView: 'draw' | 'discard' | null = null;
 let run = loadRun(localStorage), tab: 'sto' | 'st' | 'me' = 'sto', note = '', started = !!run && run.phase === 'combat', pop = { e: 0, p: 0 };
 const kind = (m: Move) => m.effect.syn ? 'syn' : m.effect.dmg ? 'atk' : m.effect.block ? 'def' : 'utl';
 const cardArt = (m: Move) => customImg('card-' + m.id) ?? ICON[m.source] ?? (m.effect.dmg ? ART.kind.atk : m.effect.block ? ART.kind.def : ART.kind.utl); // immagine della carta: card-<id> > icona equipaggiamento > tipo
-function card(uid: string, o: { cls?: string; attr?: string; price?: number; badge?: string; cost?: number } = {}) {
+function card(uid: string, o: { cls?: string; attr?: string; price?: number; badge?: string; cost?: number; sell?: number } = {}) {
   const m = MOVES[moveOf(uid)], e = m.effect;
-  return `<div class="card ${kind(m)} ${o.cls ?? ''}" ${o.attr ?? ''}><span class="cost ${o.cost !== undefined && o.cost < m.cost ? 'disc' : ''}">${o.cost ?? m.cost}</span>${o.badge ? `<span class="bdg">${o.badge}</span>` : ''}<div class="nm">${m.name}</div><div class="art">${cardArt(m)}</div><div class="efs">${effectLines(e).map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${m.effect.syn ? '✨ Sinergia · ' : ''}${m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name}${o.price ? ` · 💰${o.price}` : ''}</div></div>`;
+  return `<div class="card ${kind(m)} ${o.cls ?? ''}" ${o.attr ?? ''}><span class="cost ${o.cost !== undefined && o.cost < m.cost ? 'disc' : ''}">${o.cost ?? m.cost}</span>${o.badge ? `<span class="bdg">${o.badge}</span>` : ''}<div class="nm">${m.name}</div><div class="art">${cardArt(m)}</div><div class="efs">${effectLines(e).map(l => `<div class="ef">${l}</div>`).join('')}</div>${o.sell !== undefined ? `<div class="sellv">💵 Vendita: +${o.sell}</div>` : ''}<div class="src">${m.effect.syn ? '✨ Sinergia · ' : ''}${m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name}${o.price ? ` · 💰${o.price}` : ''}</div></div>`;
 }
 const bar = (v: number, mx: number, c = '') => `<div class="bar ${c}"><i style="width:${Math.max(0, v / mx * 100)}%"></i><b>${v}/${mx}</b></div>`;
 const head = (r: Run) => `<div class="top"><span>⚔ ${REGIONS[r.region ?? '']?.name ?? 'Arena'} ${r.region ? Math.min(wins(r, r.region), CONFIG.matchesPerIsland) + '/' + CONFIG.matchesPerIsland : r.arena}</span><span>💰 ${r.god ? '∞' : r.gold}</span><span>❤ ${r.phase === 'combat' ? r.hp : startHp(r)}/${maxHp(r)}</span><span>🎴 ${r.deck.length}/${CONFIG.maxDeck}</span><span>⚡ ${maxEnergy(r)}/${CONFIG.maxEnergy}</span><span>🔧 ${r.equipped.length}/${r.slots}</span><button class="gear" data-a="set">⚙</button></div>`;
@@ -37,14 +37,14 @@ function paintTimer() {
 function timerSync() {
   const c = run?.combat; if (run?.phase !== 'combat') tTurn = -1;
   if (c && c.phase === 'player' && c.turn !== tTurn) { tTurn = c.turn; tLeft = TLIM[settings.tmode] * 1000; }
-  const on = settings.timer && !!c && c.phase === 'player' && started && !settingsOpen && !vs && !endAnim && !tutActive() && !document.querySelector('.slotov');
+  const on = settings.timer && !!c && c.phase === 'player' && started && !settingsOpen && !pileView && !vs && !endAnim && !tutActive() && !document.querySelector('.slotov');
   if (!on) { clearInterval(tTick); tTick = 0; return; }
   if (!tTick) { let last = performance.now(); tTick = window.setInterval(() => { const n = performance.now(); tLeft -= n - last; last = n; paintTimer(); if (tLeft <= 0) { clearInterval(tTick); tTick = 0; act('end'); } }, 200); }
   paintTimer();
 }
 function tick() { // turno nemico: una carta alla volta, ripreso anche dopo un reload
-  const c = run?.combat; if (timer || run?.phase !== 'combat' || !c || c.phase === 'player' || !started || settingsOpen || document.querySelector('.slotov')) return;
-  timer = window.setTimeout(() => { timer = 0; if (!run || !started || settingsOpen || document.querySelector('.slotov')) return; const hp = run.hp, eh = run.combat?.enemy.hp ?? 0; const tier = run.combat?.enemy.tier ?? 'Strada', art = run.combat?.enemy.art, eid = run.combat?.enemy.id, snap: Combat | null = run.combat ? JSON.parse(JSON.stringify(run.combat)) : null, hp0 = run.hp; enemyStep(run); if (tutActive()) tutPatchEnemy(); pop.p = Math.max(0, hp - run.hp); pop.e = Math.max(0, eh - (run.combat?.enemy.hp ?? 0)); const ev = run.combat?.ev; if (pop.p || pop.e) sfx('hit'); else if (ev && ev.absorbed) sfx('shield'); if (run.phase !== 'combat' && snap) { // colpo finale: prima si vede l'attacco, poi i fuochi d'artificio (se vinci), poi la scena finale
+  const c = run?.combat; if (timer || run?.phase !== 'combat' || !c || c.phase === 'player' || !started || settingsOpen || pileView || document.querySelector('.slotov')) return;
+  timer = window.setTimeout(() => { timer = 0; if (!run || !started || settingsOpen || pileView || document.querySelector('.slotov')) return; const hp = run.hp, eh = run.combat?.enemy.hp ?? 0; const tier = run.combat?.enemy.tier ?? 'Strada', art = run.combat?.enemy.art, eid = run.combat?.enemy.id, snap: Combat | null = run.combat ? JSON.parse(JSON.stringify(run.combat)) : null, hp0 = run.hp; enemyStep(run); if (tutActive()) tutPatchEnemy(); pop.p = Math.max(0, hp - run.hp); pop.e = Math.max(0, eh - (run.combat?.enemy.hp ?? 0)); const ev = run.combat?.ev; if (pop.p || pop.e) sfx('hit'); else if (ev && ev.absorbed) sfx('shield'); if (run.phase !== 'combat' && snap) { // colpo finale: prima si vede l'attacco, poi i fuochi d'artificio (se vinci), poi la scena finale
       const win = run.phase === 'store'; if (win) snap.enemy.hp = 0; snap.ev = run.finalEv ?? null; (snap.phase === 'resolve' ? snap.field.off : snap.foeField.off).shift(); finalView = snap; finalHp = win ? hp0 : 0;
       const showEnd = () => { finalView = null; endAnim = { win, tier, art, id: eid }; render(); setTimeout(() => { endAnim = null; render(); }, 2800); };
       if (win) { setTimeout(fireworks, 1000); setTimeout(showEnd, 2900); } else setTimeout(showEnd, 1400);
@@ -52,7 +52,7 @@ function tick() { // turno nemico: una carta alla volta, ripreso anche dopo un r
 }
 const badge = (c: Combat, u: string) => { const m = MOVES[moveOf(u)], g = m.effect.dmg ? 'off' : 'def', fg = m.effect.link && MOVES[m.effect.link.from]?.effect.dmg ? 'off' : 'def', p = CONFIG.combo.same[Math.min(c.lastBy?.[g] === m.id ? (c.runs?.[g] ?? 1) + 1 : 1, CONFIG.combo.max) - 1]; return [p ? `🔥+${Math.round(p * 100)}%` : '', m.effect.link && c.lastBy?.[fg] === m.effect.link.from ? '🔗' : ''].filter(Boolean).join(' '); };
 function render() { hideTip(); if (run) { run.god = settings.god && !tutActive(); if (run.god && run.gold < GOD) run.gold = GOD; }
-  if (!finalView) { if (lastPhase === 'combat' && run?.phase === 'store') { sfx(run.outcome === 'win' ? 'win' : 'click'); tab = 'sto'; } else if (lastPhase === 'combat' && run?.phase === 'over') sfx('lose'); lastPhase = run?.phase; } setMode(run?.phase === 'combat' && started ? 'combat' : 'calm'); document.body.classList.toggle('fs', (run?.phase === 'combat' || !!finalView) && started); document.body.classList.toggle('st', !!run && started && run.phase === 'store' && !finalView); document.body.classList.toggle('calm', settings.calm); const thId = run && started && run.phase !== 'over' && !(run.phase === 'store' && run.needsMap) ? REGIONS[run.region ?? '']?.theme ?? 'classic' : 'classic'; THEMES.forEach(t => document.body.classList.toggle('th-' + t, t === thId)); draw(); if (settingsOpen) app.insertAdjacentHTML('beforeend', modal()); if (run?.pending && started && !settingsOpen) choiceModal(); if (run?.combat?.pick?.length && started && !settingsOpen) pickModal(); tick(); timerSync(); tutSync(); }
+  if (!finalView) { if (lastPhase === 'combat' && run?.phase === 'store') { sfx(run.outcome === 'win' ? 'win' : 'click'); tab = 'sto'; } else if (lastPhase === 'combat' && run?.phase === 'over') sfx('lose'); lastPhase = run?.phase; } setMode(run?.phase === 'combat' && started ? 'combat' : 'calm'); document.body.classList.toggle('fs', (run?.phase === 'combat' || !!finalView) && started); document.body.classList.toggle('st', !!run && started && run.phase === 'store' && !finalView); document.body.classList.toggle('calm', settings.calm); const thId = run && started && run.phase !== 'over' && !(run.phase === 'store' && run.needsMap) ? REGIONS[run.region ?? '']?.theme ?? 'classic' : 'classic'; THEMES.forEach(t => document.body.classList.toggle('th-' + t, t === thId)); draw(); if (settingsOpen) app.insertAdjacentHTML('beforeend', modal()); else if (pileView && run?.combat) app.insertAdjacentHTML('beforeend', pileModal()); if (run?.pending && started && !settingsOpen) choiceModal(); if (run?.combat?.pick?.length && started && !settingsOpen) pickModal(); tick(); timerSync(); tutSync(); }
 function drawMap(r: Run) { // oceano con isola centrale + 5 isole a pentagono; hover = contorno tratteggiato lampeggiante; si salpa in barca
   const BP = 'M-9 0Q-8.5 -6 -2 -6.5Q6 -7.5 9 -1Q10 5 2 6.5Q-6 7 -9 0Z', ROT = [0, -12, 18, -8, 24, 10], here = REGIONS[r.region ?? 'boxing'] ?? REGION_LIST[0], sel = mapSel ? REGIONS[mapSel] : null;
   const ul = unlocked(r), src = (id: string) => /src="([^"]+)"/.exec(ART.region[id])?.[1] ?? '';
@@ -119,7 +119,7 @@ function draw() {
   if (creating) { drawCreate(); return; }
   if (vs) { drawVs(); return; }
   if (endAnim) { drawEnd(); return; }
-  if (run?.phase !== 'combat' && !finalView) { bars = null; prevHand = []; lastCombo = ''; lastEv = null; lastSynN = 0; }
+  if (run?.phase !== 'combat' && !finalView) { pileView = null; bars = null; prevHand = []; lastCombo = ''; lastEv = null; lastSynN = 0; }
   const r = run, t = note ? `<div class="toast">${note}</div>` : '';
   if (!r || (!started && r.phase !== 'over')) {
     app.innerHTML = `<div class="logo">COMB<span class="inf">∞</span></div><p style="text-align:center"><small>Prototipo — ambientazione provvisoria. Da lottatore umano a potenza cosmica.</small></p>${r ? `<button class="pri" data-a="cont" style="width:100%">Continua run (arena ${r.arena})</button><br><br>` : ''}<button data-a="new" style="width:100%">Nuova run</button><br><br><button data-a="tutorial" style="width:100%">📘 Tutorial</button><br><br><button data-a="set" style="width:100%">⚙ Impostazioni</button>`; return;
@@ -150,10 +150,10 @@ function draw() {
       ${rw(c.field.off, 'off')}${rw(c.field.def, 'def', ev?.by === 'foe' && ev.absorbed > 0)}</div>
       ${side(false, e.hp, e.maxHp, sh(c.foeField.def), pop.e, foeArt(e.art, e.tier, e.id), `${(wins(r, r.region ?? '') % CONFIG.matchesPerIsland) + 1}/${CONFIG.matchesPerIsland}`, e.tier, bar0.foe, eqf)}
     </div></div>
-    <div class="handrow"><div class="hand">${c.hand.map((u, i) => card(u, { cls: !busy && c.energy >= effCost(c, u) && reqOk(MOVES[moveOf(u)]) ? '' : 'off', cost: effCost(c, u), badge: busy ? '' : badge(c, u), attr: `data-drag="${u}" style="--i:${i};--n:${n}"` })).join('')}</div><div class="pile"><b>${c.draw.length}</b><small>Mazzo</small><span class="dc">🗑 ${c.discard.length}</span></div></div>`;
-    const pr = (app.querySelector('.pile') as HTMLElement).getBoundingClientRect(); let dealt = 0; // animazione di pesca: le carte nuove arrivano dal mazzo
-    app.querySelectorAll<HTMLElement>('.hand .card').forEach(el => { if (prevHand.includes(el.dataset.drag!)) return; const q = el.getBoundingClientRect(); el.style.setProperty('--dx', pr.left + pr.width / 2 - q.left - q.width / 2 + 'px'); el.style.setProperty('--dy', pr.top + pr.height / 2 - q.top - q.height / 2 + 'px'); el.style.animationDelay = dealt++ * 110 + 'ms'; el.classList.add('dealt'); });
-    if (dealt) sfx('draw'); prevHand = [...c.hand];
+    <div class="handrow"><div class="hand">${c.hand.map((u, i) => card(u, { cls: !busy && c.energy >= effCost(c, u) && reqOk(MOVES[moveOf(u)]) ? '' : 'off', cost: effCost(c, u), badge: busy ? '' : badge(c, u), attr: `data-drag="${u}" style="--i:${i};--n:${n}"` })).join('')}</div><div class="pile disc" data-a="pile" data-id="discard" title="Carte già giocate"><b>${c.discard.length}</b><small>Scarti</small></div><div class="pile draw" data-a="pile" data-id="draw" title="Carte rimaste nel mazzo"><b>${c.draw.length}</b><small>Mazzo</small></div></div>`;
+    const pr = (app.querySelector('.pile.draw') as HTMLElement).getBoundingClientRect(); let dealt = 0; // animazione di pesca: le carte nuove arrivano dal mazzo
+    app.querySelectorAll<HTMLElement>('.hand .card').forEach(el => { if (prevHand.includes(el.dataset.drag!)) return; const q = el.getBoundingClientRect(); el.style.setProperty('--dx', pr.left + pr.width / 2 - q.left - q.width / 2 + 'px'); el.style.setProperty('--dy', pr.top + pr.height / 2 - q.top - q.height / 2 + 'px'); el.style.animationDelay = dealt * 110 + 'ms'; setTimeout(() => sfx('deal'), dealt * 110); dealt++; el.classList.add('dealt'); });
+    prevHand = [...c.hand];
     const nw = app.querySelector('.rowf .card.new') as HTMLElement | null; // carta appena schierata: impatto (offesa) o fortificazione (difesa)
     if (nw) { const q = nw.getBoundingClientRect(), off = (nw.parentElement as HTMLElement).classList.contains('off'); burst(off ? 'hit' : 'guard', q.left + q.width / 2, q.top + q.height / 2); sfx(off ? 'place' : 'fort');
       if (c.combo && c.combo !== lastCombo) { burst(c.tier === 2 ? 'fw' : 'combo', q.left + q.width / 2, q.top + q.height / 2); banner(c.combo, c.tier === 2); sfx('combo'); } }
@@ -191,7 +191,7 @@ function draw() {
     <div class="zone dz deckz" data-zone="deck"><div class="card back"><div class="bk">${r.deck.length}<span class="pd"></span></div></div><b>Mazzo ${r.deck.length}/${CONFIG.maxDeck}</b><small>⬆ trascina qui una mossa</small></div></div>${energy}${healRow}</div></div>`;
   if (tab === 'me') {
     const inn = own.filter(c => r.deck.includes(c.uid)), out = own.filter(c => !r.deck.includes(c.uid));
-    const cs = (l: typeof own) => l.map(c => card(c.uid, { attr: `data-drag="${c.uid}"` })).join('');
+    const cs = (l: typeof own) => l.map(c => card(c.uid, { attr: `data-drag="${c.uid}"`, sell: cardValue(r, c.uid) })).join('');
     body = `<div class="zone sellz" data-zone="sell"><b>🗑 Vendita</b> · trascina qui una carta per venderla (nel mazzo ne restano almeno ${CONFIG.minDeck})</div>
     <h3>Mazzo attivo ${inn.length}/${CONFIG.maxDeck}</h3><small>Trascina (o tocca) le carte tra le due aree.</small><div class="zone" data-zone="in"><div class="cards">${cs(inn)}</div></div>
     <h3>Fuori dal mazzo (${out.length})</h3><div class="zone" data-zone="out"><div class="cards">${cs(out)}</div></div>`;
@@ -260,7 +260,7 @@ function choiceModal() { // nessuno slot libero: sostituire un equipaggiamento (
   };
 }
 const GOD = 9999999;
-const UIA = ['god', 'sail', 'timer', 'tmode', 'theme', 'skipvs', 'set', 'closeSet', 'speed', 'calm', 'music', 'sfx', 'menu', 'abandon'];
+const UIA = ['pile', 'closePile', 'god', 'sail', 'timer', 'tmode', 'theme', 'skipvs', 'set', 'closeSet', 'speed', 'calm', 'music', 'sfx', 'menu', 'abandon'];
 /** Animazione al centro dello schermo: l'oro scende (o sale) dal valore precedente a quello nuovo. */
 function coinFx(a: number, b: number) {
   const d = document.createElement('div'), diff = b - a; d.className = 'coinfx'; d.innerHTML = `<div class="cf-n">💰 <span>${a}</span></div><div class="cf-d ${diff < 0 ? 'neg' : 'pos'}">${diff > 0 ? '+' : ''}${diff}</div>`; document.body.appendChild(d); sfx('coin');
@@ -269,8 +269,15 @@ function coinFx(a: number, b: number) {
 }
 const AUD = [['music', 'mv', '🎵', '🔇', 'Musica'], ['sfx', 'sv', '🔊', '🔈', 'Effetti sonori']] as const;
 const modal = () => `<div class="modal"><div class="mbox"><h2>⚙ Impostazioni</h2><b>Velocità animazioni</b><div class="seg">${LABELS.map((l, i) => `<button class="${settings.speed === i ? 'on' : ''}" data-a="speed" data-id="${i}">${l}</button>`).join('')}</div><button class="${settings.calm ? 'on' : ''}" data-a="calm">${settings.calm ? '☑' : '☐'} Riduci animazioni</button>${AUD.map(([k, v, on, off, l]) => `<div class="arow ${settings[k] ? '' : 'off'}"><button class="tgl ${settings[k] ? 'on' : ''}" data-a="${k}" title="${l}">${settings[k] ? on : off}</button><label class="vol"><span>${l} <b class="vv">${Math.round(settings[v] * 100)}%</b></span><input type="range" min="0" max="100" value="${Math.round(settings[v] * 100)}" style="--v:${Math.round(settings[v] * 100)}%" data-vol="${v}"></label></div>`).join('')}<button class="${settings.god ? 'on' : ''}" data-a="god">🛠 God mode: ${settings.god ? 'ON' : 'OFF'}</button><button class="${settings.timer ? 'on' : ''}" data-a="timer">${settings.timer ? '⏱' : '⏸'} Timer di turno</button><div class="seg3">${['Veloce · 10s', 'Standard · 30s', 'Lento · 1 min'].map((l, i) => `<button class="${settings.tmode === i ? 'on' : ''}" data-a="tmode" data-id="${i}" ${settings.timer ? '' : 'disabled'}>${l}</button>`).join('')}</div>${started && run ? `<button data-a="menu">🏠 Torna al menu principale</button><button data-a="abandon">${sure ? '⚠ Tocca ancora per confermare' : '🗑 Abbandona la run'}</button>` : ''}<button class="pri" data-a="closeSet">Chiudi</button><small>La run viene salvata automaticamente: dal menu puoi riprenderla.</small></div></div>`;
+function pileModal() { // mazzo (ordine nascosto) o scarti (carte già giocate), raggruppati per carta
+  const c = run!.combat!, d = pileView === 'draw', src = d ? c.draw : c.discard, g = new Map<string, { uid: string; n: number }>();
+  src.forEach(u => { const k = moveOf(u), e = g.get(k); if (e) e.n++; else g.set(k, { uid: u, n: 1 }); });
+  const list = [...g.values()].sort((x, y) => MOVES[moveOf(x.uid)].name.localeCompare(MOVES[moveOf(y.uid)].name));
+  return `<div class="modal pilem"><div class="mbox pilebox"><h2>${d ? '🂠 Carte rimaste nel mazzo' : '🗑 Carte già giocate'} (${src.length})</h2><small>${d ? 'Ordine di pesca nascosto: sono elencate per nome.' : `Quando il mazzo finisce, ${CONFIG.discardDrawCost}⚡ le rimescolano nel mazzo e pescano 1 carta.`}</small>${list.length ? `<div class="cards pilecards">${list.map(x => card(x.uid, { badge: x.n > 1 ? '×' + x.n : '' })).join('')}</div>` : `<p class="pileempty">${d ? 'Il mazzo è vuoto.' : 'Nessuna carta negli scarti.'}</p>`}<button class="pri" data-a="closePile">Chiudi</button></div></div>`;
+}
 function ui(a: string, id: string) {
-  if (a === 'set') settingsOpen = true; else if (a === 'closeSet') { settingsOpen = false; sure = false; }
+  if (a === 'pile') pileView = id as typeof pileView; else if (a === 'closePile') pileView = null;
+  else if (a === 'set') settingsOpen = true; else if (a === 'closeSet') { settingsOpen = false; sure = false; }
   else if (a === 'speed') settings.speed = +id; else if (a === 'theme') settings.theme = id; else if (a === 'timer') { settings.timer = !settings.timer; tTurn = -1; } else if (a === 'tmode') { settings.tmode = +id; tTurn = -1; } else if (a === 'skipvs') vs = null; else if (a === 'god') { settings.god = !settings.god; if (!settings.god && run) { run.god = false; run.gold = 100; } } else if (a === 'sail') { sail(); return; } else if (a === 'calm') settings.calm = !settings.calm; else if (a === 'music' || a === 'sfx') { settings[a] = !settings[a]; audioCfg(settings.music, settings.sfx, settings.mv, settings.sv); }
   else if (a === 'menu') { if (run?.phase === 'over') { run = null; clearRun(localStorage); } started = false; settingsOpen = false; sure = false; }
   else if (a === 'abandon') { if (!sure) sure = true; else { run = null; clearRun(localStorage); started = false; settingsOpen = false; sure = false; } }
@@ -287,7 +294,7 @@ function act(a: string, id = '') {
   else if (run) {
     const mys = a === 'offerEq' && +id === 2 ? run.offers.eq[2] : a === 'offerMv' && +id === 2 ? run.offers.mv[2] : null, g0 = run.gold, e0 = run.combat?.enemy.hp ?? 0, p0 = run.hp;
     if (a === 'tab') tab = id as typeof tab; else if (a === 'next') tab = tab === 'sto' ? 'st' : 'me'; else if (a === 'region') { if (unlocked(run).includes(id)) mapSel = id; else err = '🔒 Isola bloccata: vinci le 5 partite dell\'isola precedente.'; } else if (a === 'openmap') err = openMap(run);
-    else if (a === 'mercy') { if (Date.now() - mercyArm > 3000) { mercyArm = Date.now(); err = 'Tocca di nuovo 🙏 Pietà per confermare: se vieni risparmiato perdi metà dei soldi.'; } else { const res = askMercy(run); err = res.err; if (!err) { mercyArm = 0; slotMachine('mercy', res.spared ? 'ok' : 'no'); } } } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'heal') err = healRun(run); else if (a === 'ddraw') { err = drawDiscard(run); if (!err) sfx('draw'); } else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
+    else if (a === 'mercy') { if (Date.now() - mercyArm > 3000) { mercyArm = Date.now(); err = 'Tocca di nuovo 🙏 Pietà per confermare: se vieni risparmiato perdi metà dei soldi.'; } else { const res = askMercy(run); err = res.err; if (!err) { mercyArm = 0; slotMachine('mercy', res.spared ? 'ok' : 'no'); } } } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'heal') err = healRun(run); else if (a === 'ddraw') { err = drawDiscard(run); if (!err) sfx('shuffle'); } else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
     else if (a === 'buyM') err = buyMove(run, id); else if (a === 'buyEn') err = buyEnergy(run); else if (a === 'offerEq') err = buyOfferEq(run, +id); else if (a === 'offerMv') err = buyOfferMv(run, +id); else if (a === 'hint') err = id; else if (a === 'sellM') err = sellMove(run, id); else if (a === 'deck') err = toggleDeck(run, id);
     else if (a === 'go') err = beginArena(run); else if (a === 'play') err = playCard(run, id); else if (a === 'end') err = endTurn(run);
     if (!['tab', 'next', 'play', 'end'].includes(a)) run.msg = '';
@@ -296,7 +303,7 @@ function act(a: string, id = '') {
   }
   note = err ?? ''; if (run) persist(run); if (tutActive()) tutPatchCombat(); render();
 }
-app.addEventListener('click', ev => { const b = (ev.target as HTMLElement).closest('button[data-a], g[data-a]') as HTMLButtonElement | null; if (b && !b.disabled) { sfx('click'); act(b.dataset.a!, b.dataset.id); } });
+app.addEventListener('click', ev => { const b = (ev.target as HTMLElement).closest('button[data-a], g[data-a], .pile[data-a]') as HTMLButtonElement | null; if (b && !b.disabled) { sfx('click'); act(b.dataset.a!, b.dataset.id); } else if ((ev.target as HTMLElement).classList.contains('pilem')) act('closePile'); });
 // ---- Drag & drop (pointer events: mouse + touch) ----
 let el: HTMLElement | null = null, sx = 0, sy = 0, moved = false, ph: HTMLElement | null = null;
 /** Durante il trascinamento la carta passa a position:fixed (con segnaposto): non viene più tagliata dai contenitori con overflow. */
@@ -339,6 +346,9 @@ function showTip(el: HTMLElement) {
 const hideTip = () => { tip.style.display = 'none'; };
 app.addEventListener('mouseover', ev => { const el = (ev.target as HTMLElement).closest('[data-eq]') as HTMLElement | null; if (el) showTip(el); else hideTip(); });
 app.addEventListener('mouseleave', hideTip);
+app.addEventListener('mouseover', ev => { // suono al passaggio del cursore su una carta della mano
+  const c = (ev.target as HTMLElement).closest('.hand .card') as HTMLElement | null; if (!c || c.contains(ev.relatedTarget as Node | null) || el || c.classList.contains('off')) return; sfx('hover');
+});
 app.addEventListener('click', ev => { const el = (ev.target as HTMLElement).closest('[data-eq]') as HTMLElement | null; if (el) showTip(el); else hideTip(); });
 app.addEventListener('input', ev => { // cursori volume
   const el = ev.target as HTMLInputElement, k = el.dataset.vol as 'mv' | 'sv' | undefined; if (el.id === 'nm') { draft.name = el.value; const np = app.querySelector('.nameplate.big'); if (np) np.textContent = el.value || 'Protagonista'; return; }
@@ -349,5 +359,5 @@ app.addEventListener('change', ev => { // foto profilo caricata: ritagliata e ri
   const t = ev.target as HTMLInputElement, f = t.files?.[0]; if (t.id !== 'photo' || !f) return; const img = new Image(), url = URL.createObjectURL(f);
   img.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 128; const s = Math.min(img.width, img.height); c.getContext('2d')!.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 128, 128); draft.av = c.toDataURL('image/jpeg', 0.8); URL.revokeObjectURL(url); render(); }; img.src = url;
 });
-addEventListener('keydown', ev => { if (run?.phase !== 'combat' || !started || settingsOpen) return; if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); act('end'); } const u = run.combat?.hand[+ev.key - 1]; if (u) act('play', u); });
+addEventListener('keydown', ev => { if (run?.phase !== 'combat' || !started || settingsOpen || pileView) return; if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); act('end'); } const u = run.combat?.hand[+ev.key - 1]; if (u) act('play', u); });
 render();

@@ -17,6 +17,9 @@ export function sfx(n: string) {
   if (!sfxOn || !ensure()) return; const t = ctx!.currentTime;
   switch (n) {
     case 'click': tone(700, t, .05, 'square', .05); break; case 'draw': noise(t, .14, .3, 2500); break;
+    case 'deal': noise(t, .09, .35, 4200); noise(t + .03, .07, .2, 1800); tone(1250, t, .05, 'triangle', .05, 700); break;
+    case 'hover': tone(1500, t, .035, 'sine', .035, 1900); noise(t, .025, .06, 5000); break;
+    case 'shuffle': for (let i = 0; i < 5; i++) { noise(t + i * .05, .06, .25, 3000 + i * 300); tone(900 + i * 80, t + i * .05, .04, 'triangle', .04); } break;
     case 'place': tone(200, t, .12, 'triangle', .3, 90); noise(t, .06, .2, 800); break;
     case 'hit': noise(t, .2, .5, 500); tone(160, t, .18, 'sawtooth', .25, 50); break;
     case 'shield': tone(1000, t, .12, 'square', .08, 600); noise(t, .08, .2, 3500); break;
