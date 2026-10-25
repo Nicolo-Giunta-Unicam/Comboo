@@ -62,7 +62,8 @@
       "goldDivisor": 3,
       "blockPerArena": 0.08,
       "hpPerArena": 0.05
-    }
+    },
+    "maxScars": 6
   },
   "baseMoves": [
     {

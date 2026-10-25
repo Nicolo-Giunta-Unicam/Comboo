@@ -25,6 +25,17 @@ Nome file = chiave (senza estensione). Generato da `npm run assets:list`: rilanc
 | `body-a5` | sagoma per l'avatar a5 |
 | `body-default` | sagoma di riserva (usata anche con la foto caricata) |
 
+## Cicatrici sul personaggio (stessa tela 400x800 px; la n-esima compare dopo il n-esimo duello chiuso con meno del 30% di salute, restando per tutta la run)
+
+| Chiave | Cosa |
+|---|---|
+| `scar-1` | cicatrice n. 1 |
+| `scar-2` | cicatrice n. 2 |
+| `scar-3` | cicatrice n. 3 |
+| `scar-4` | cicatrice n. 4 |
+| `scar-5` | cicatrice n. 5 |
+| `scar-6` | cicatrice n. 6 |
+
 ## Livelli equipaggiamento sul personaggio (stessa tela 400x800 della sagoma, PNG trasparente; sovrapposti nell'ordine di data/game.json)
 
 | Chiave | Cosa |

@@ -67,3 +67,7 @@ const silhouette = (skin: string) => `<img class="ic" alt="" draggable="false" s
 export const bodyImg = (avatarId: string) => custom('body-' + avatarId) ?? custom('body-default') ?? silhouette(SKIN[avatarId] ?? '#c9b9e8');
 /** Livello di un equipaggiamento sul personaggio: `layer-<id>` (undefined se non esiste ancora l'immagine). */
 export const layerImg = (eqId: string) => custom('layer-' + eqId);
+
+/** Cicatrici sul corpo (`scar-1` … `scar-6`, stessa tela 400x800 della sagoma, PNG trasparente): la n-esima si applica dopo il n-esimo duello chiuso sotto la soglia di salute. In mancanza dell'immagine si usa un segno provvisorio. */
+const SCAR_PATHS = ['M172 96L198 136M178 102l-9 5M184 112l-9 5M190 122l-9 5', 'M150 242L222 334M168 262l11-6M186 286l11-6M204 310l11-6', 'M78 336L100 404M82 350l12-5M88 368l12-5M94 386l12-5', 'M286 236L314 306M292 252l12 5M300 272l12 5M306 290l12 5', 'M146 520L186 612M154 538l14 3M166 566l14 3M176 590l14 3', 'M214 330L252 394M222 346l13 6M232 364l13 6M242 380l13 6'];
+export const scarImg = (n: number) => custom('scar-' + n) ?? `<img class="ic" alt="" draggable="false" src="data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800"><g fill="none" stroke-linecap="round"><path d="${SCAR_PATHS[(n - 1) % SCAR_PATHS.length]}" stroke="#7a1f2b" stroke-width="7"/><path d="${SCAR_PATHS[(n - 1) % SCAR_PATHS.length]}" stroke="#d96b7a" stroke-width="2.5"/></g></svg>`)}">`;

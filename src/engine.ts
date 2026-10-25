@@ -14,7 +14,7 @@ export interface Run {
   /** Regione dell'arena corrente (tema e nemici); needsMap: prima di ogni arena si sceglie la regione sulla mappa. */
   region?: string | null; needsMap?: boolean; progress?: Record<string, number>;
   /** Carte vendute singolarmente (uid di carte base o di mosse di equipaggiamento): escluse dalla collezione. */
-  god?: boolean; finalEv?: Ev | null; outcome?: string; style?: string; wounded?: boolean;
+  god?: boolean; finalEv?: Ev | null; outcome?: string; style?: string; wounded?: boolean; scars?: number;
   sold?: string[]; hero?: { name: string; avatar: string };
   /** Scelte di capitolo: seme dell'ordine degli eventi, scelte già fatte (per capitolo) e bonus/malus per il prossimo duello. */
   cs?: number; chapters?: Record<string, { ev: string; opt: string; gold: number; fx?: ChoiceFx }>; boon?: Boon;
@@ -321,16 +321,18 @@ export function askMercy(r: Run): { err: Err; spared: boolean } {
   if (rand(r) < p) { resolveOutcome(r, 'spared'); return { err: null, spared: true }; }
   c.log.push('Nessuna pietà!'); endTurn(r); return { err: null, spared: false };
 }
+/** Chiudere un duello (vittoria o pietà) sotto la soglia di salute lascia una cicatrice permanente (anche se poi ci si cura), fino a CONFIG.maxScars. */
+function scar(r: Run) { if (r.wounded && (r.scars ?? 0) < CONFIG.maxScars) { r.scars = (r.scars ?? 0) + 1; r.msg += ' Ti resterà una cicatrice.'; } }
 /** Punto unico di gestione degli esiti: qui si aggiungeranno risparmio/fuga/sopravvivenza. */
 export function resolveOutcome(r: Run, res: 'win' | 'lose' | 'flee' | 'spared') {
   if (res === 'win') {
     const g = CONFIG.reward(r.arena); r.gold += g; r.msg = `Vittoria! +${g} oro.`; r.outcome = 'win';
     if (r.region) { r.progress = { ...r.progress, [r.region]: wins(r, r.region) + 1 }; const nx = REGION_LIST[islandIndex(r.region) + 1]; if (wins(r, r.region) === CONFIG.matchesPerIsland && nx) r.msg += ` Isola completata: si sblocca ${nx.name}!`; }
     r.arena++; r.slots = slotsFor(r.arena);
-    r.wounded = r.hp / maxHp(r) < CONFIG.woundedBelow; r.phase = 'store'; genOffers(r); r.needsMap = !r.region || wins(r, r.region) >= CONFIG.matchesPerIsland;
+    r.wounded = r.hp / maxHp(r) < CONFIG.woundedBelow; scar(r); r.phase = 'store'; genOffers(r); r.needsMap = !r.region || wins(r, r.region) >= CONFIG.matchesPerIsland;
   } else if (res === 'flee' || res === 'spared') { // fuga (nessuna conseguenza) o pietà accettata (soldi dimezzati): si torna alla storia e il duello si ripete
     r.outcome = res; if (res === 'spared') r.gold = Math.floor(r.gold / 2); r.wounded = r.hp / maxHp(r) < CONFIG.woundedBelow; r.phase = 'store'; r.needsMap = false;
-    r.msg = res === 'flee' ? 'Sei fuggito dal duello: nessuna conseguenza.' : 'Vieni risparmiato… ma ti portano via metà dei soldi.';
+    r.msg = res === 'flee' ? 'Sei fuggito dal duello: nessuna conseguenza.' : 'Vieni risparmiato… ma ti portano via metà dei soldi.'; if (res === 'spared') scar(r);
   } else if (defeatOutcome(r) === 'end-run') { r.phase = 'over'; r.msg = 'Sei stato sconfitto.'; }
   r.combat = null;
 }

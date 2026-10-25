@@ -5,6 +5,7 @@ const L = ['# Chiavi immagine disponibili', '', 'Nome file = chiave (senza esten
 const sec = (t, rows) => { L.push(`## ${t}`, '', '| Chiave | Cosa |', '|---|---|', ...rows.map(r => `| \`${r[0]}\` | ${r[1]} |`), ''); };
 sec('Protagonista', Array.from({ length: 6 }, (_, i) => [`avatar-a${i}`, 'avatar della creazione del personaggio']));
 sec('Sagoma del protagonista (schermata Storia, tela consigliata 400x800 px, PNG trasparente)', [...Array.from({ length: 6 }, (_, i) => [`body-a${i}`, `sagoma per l'avatar a${i}`]), ['body-default', 'sagoma di riserva (usata anche con la foto caricata)']]);
+sec('Cicatrici sul personaggio (stessa tela 400x800 px; la n-esima compare dopo il n-esimo duello chiuso con meno del 30% di salute, restando per tutta la run)', Array.from({ length: d.config.maxScars }, (_, i) => [`scar-${i + 1}`, `cicatrice n. ${i + 1}`]));
 sec('Livelli equipaggiamento sul personaggio (stessa tela 400x800 della sagoma, PNG trasparente; sovrapposti nell\'ordine di data/game.json)', d.equipment.map(e => [`layer-${e.id}`, e.name]));
 sec('Nemici di isola (immagine di riserva per tutti i nemici dell\'isola, e icona sulla mappa)', d.regions.map(r => [`foe-${r.id}`, r.name]));
 sec('Singoli nemici (hanno la precedenza su `foe-<isola>`)', d.regions.flatMap(r => r.enemies.map(e => [`enemy-${e.id}`, `${e.name} (${r.name})`])));

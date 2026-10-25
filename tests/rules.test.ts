@@ -225,3 +225,11 @@ test('scelte di capitolo: ogni capitolo di ogni isola ha eventi suoi, coerenti c
   // il livello conta: oro, scudo e malus crescono con l'arena
   const a = newRun(1), b = newRun(1); b.arena = 20; assert.ok(goldUnit(b) > goldUnit(a)); assert.ok(scaledFx(b, { block: 12 }).block! > scaledFx(a, { block: 12 }).block!); assert.ok(scaledFx(b, { hp: -4 }).hp! < scaledFx(a, { hp: -4 }).hp!);
 });
+
+test('cicatrici: un duello chiuso sotto il 30% di salute ne lascia una permanente (anche se poi ti curi); fuga e salute alta no', () => {
+  const r = newRun(3); chooseRegion(r, 'boxing'); beginArena(r); r.hp = Math.floor(maxHp(r) * 0.2); resolveOutcome(r, 'win'); assert.equal(r.scars, 1); assert.match(r.msg, /cicatrice/);
+  r.gold = 100; assert.equal(healRun(r), null); assert.equal(r.wounded, false); assert.equal(r.scars, 1); // curarsi non la toglie
+  beginArena(r); r.hp = maxHp(r); resolveOutcome(r, 'win'); assert.equal(r.scars, 1);
+  beginArena(r); r.hp = 1; resolveOutcome(r, 'flee'); assert.equal(r.scars, 1);
+  for (let i = 0; i < 10; i++) { beginArena(r); r.hp = 1; resolveOutcome(r, 'spared'); } assert.equal(r.scars, CONFIG.maxScars);
+});

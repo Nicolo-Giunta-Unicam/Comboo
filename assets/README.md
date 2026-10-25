@@ -13,6 +13,7 @@ Consigliato: immagini quadrate (es. 256×256), sfondo trasparente per personaggi
 | `boat` | barca della mappa |
 | `body-a0` … `body-a5`, `body-default` | **sagoma del protagonista** nella schermata Storia (una per avatar; `body-default` è il ripiego, usato anche con la foto caricata) |
 | `layer-<id>` (es. `layer-wraps`, `layer-servo`) | **livello dell'equipaggiamento sul personaggio**: compare sulla sagoma quando l'equipaggiamento è installato (diverso da `eq-<id>`, che è l'immagine della carta) |
+| `scar-1` … `scar-6` | **cicatrici** sul personaggio: la n-esima compare quando un duello (vittoria o pietà) finisce con meno del 30% di salute, e resta anche dopo le cure. Stanno sopra la sagoma e sotto gli equipaggiamenti |
 
 Sagoma e livelli devono avere **la stessa tela** (consigliato 400×800 px, PNG trasparente): si sovrappongono 1:1, prima la sagoma e poi i livelli nell'ordine in cui gli equipaggiamenti compaiono in `data/game.json`. Un equipaggiamento senza `layer-<id>` non mostra nulla sul corpo (finché manca compare una piccola icona sotto la sagoma).
 
