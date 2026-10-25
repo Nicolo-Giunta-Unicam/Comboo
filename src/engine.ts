@@ -17,7 +17,7 @@ export interface Run {
   god?: boolean; finalEv?: Ev | null; outcome?: string; style?: string; wounded?: boolean;
   sold?: string[]; hero?: { name: string; avatar: string };
   /** Scelte di capitolo: seme dell'ordine degli eventi, scelte già fatte (per capitolo) e bonus/malus per il prossimo duello. */
-  cs?: number; chapters?: Record<string, { ev: string; opt: string; gold: number }>; boon?: Boon;
+  cs?: number; chapters?: Record<string, { ev: string; opt: string; gold: number; fx?: ChoiceFx }>; boon?: Boon;
   v: 1; rng: number; arena: number; gold: number; hp: number; slots: number;
   equipped: string[]; bought: string[]; retained: string[]; energyBonus: number; offers: Offers; paid: Record<string, number>;
   deck: string[]; phase: Phase; combat: Combat | null; msg: string;
@@ -95,18 +95,26 @@ export const chapterKey = (r: Run) => r.region ? `${r.region}:${wins(r, r.region
 export const goldUnit = (r: Run) => Math.max(1, Math.round(CONFIG.reward(r.arena) / CONFIG.choice.goldDivisor));
 export const choiceGold = (r: Run, fx: ChoiceFx) => Math.round((fx.gold ?? 0) * goldUnit(r));
 export interface PendingChoice { key: string; ev: ChoiceEv; options: ChoiceOpt[] }
-/** Scelta ancora da fare nel capitolo corrente (evento deterministico dal seme della run, opzioni in ordine mescolato). */
+/** Effetti scalati col livello: scudo e malus ai PV crescono con l'arena (oro e altri effetti no: l'oro usa già goldUnit). */
+export function scaledFx(r: Run, fx: ChoiceFx): ChoiceFx {
+  const o = { ...fx }, k = (v: number, per: number) => Math.round(v * (1 + per * (r.arena - 1)));
+  if (fx.block) o.block = k(fx.block, CONFIG.choice.blockPerArena); if (fx.hp) o.hp = k(fx.hp, CONFIG.choice.hpPerArena); return o;
+}
+const hashStr = (t: string) => [...t].reduce((h, ch) => (Math.imul(h, 31) + ch.charCodeAt(0)) >>> 0, 7);
+/** Scelta ancora da fare nel capitolo corrente: l'evento appartiene all'isola e all'incontro attuali (se ce n'è più d'uno, ne sceglie uno in base al seme della run, evitando i già visti); opzioni in ordine mescolato. */
 export function pendingChoice(r: Run): PendingChoice | null {
   if (r.phase !== 'store' || r.needsMap || !r.region || r.pending || !CHOICES.length) return null;
   const key = chapterKey(r); if (r.chapters?.[key]) return null;
-  const done = Object.keys(r.chapters ?? {}).length, cs = r.cs ?? 1, ev = sshuffle(CHOICES, cs)[done % CHOICES.length];
-  return { key, ev, options: sshuffle(ev.options, cs + (done + 1) * 7919) };
+  const at = wins(r, r.region) % CONFIG.matchesPerIsland, cs = (r.cs ?? 1) + hashStr(key);
+  let pool = CHOICES.filter(e => e.region === r.region && e.at === at); if (!pool.length) pool = CHOICES.filter(e => e.region === r.region); if (!pool.length) pool = CHOICES;
+  const used = new Set(Object.values(r.chapters ?? {}).map(c => c.ev)), order = sshuffle(pool, cs), ev = order.find(e => !used.has(e.id)) ?? order[0];
+  return { key, ev, options: sshuffle(ev.options, cs * 31 + 7) };
 }
 export function makeChoice(r: Run, optId: string): Err {
   const p = pendingChoice(r); if (!p) return 'Nessuna scelta in sospeso.'; const o = p.ev.options.find(x => x.id === optId); if (!o) return 'Scelta non valida.';
-  const g = Math.max(-r.gold, choiceGold(r, o.fx)); r.gold += g;
-  const b: Boon = { ...r.boon }; for (const k of ['block', 'energy', 'draw', 'foeHp', 'hp'] as const) if (o.fx[k]) b[k] = (b[k] ?? 0) + o.fx[k]!;
-  if (Object.values(b).some(Boolean)) r.boon = b; r.chapters = { ...r.chapters, [p.key]: { ev: p.ev.id, opt: o.id, gold: g } }; r.msg = o.text; return null;
+  const fx = scaledFx(r, o.fx), g = Math.max(-r.gold, choiceGold(r, fx)); r.gold += g;
+  const b: Boon = { ...r.boon }; for (const k of ['block', 'energy', 'draw', 'foeHp', 'hp'] as const) if (fx[k]) b[k] = (b[k] ?? 0) + fx[k]!;
+  if (Object.values(b).some(Boolean)) r.boon = b; r.chapters = { ...r.chapters, [p.key]: { ev: p.ev.id, opt: o.id, gold: g, fx } }; r.msg = o.text; return null;
 }
 export function openMap(r: Run): Err { if (r.phase !== 'store' || r.pending) return 'Non puoi ora.'; r.needsMap = true; return null; }
 export function resolvePending(r: Run, action: 'discard' | 'replace', target?: string): Err {

@@ -1,6 +1,6 @@
 import { CONFIG } from './config';
 import { CHOICES, ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, effectLines, moveOf, type ChoiceFx, type Move } from './data';
-import { makeChoice, pendingChoice, choiceGold, chapterKey, beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, cardValue, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
+import { makeChoice, pendingChoice, choiceGold, chapterKey, scaledFx, beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, cardValue, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
 import { ART, bodyImg, customImg, eqIcon, layerImg } from './art';
 import { tutActive, tutPatchCombat, tutPatchEnemy, tutStart, tutSync } from './tutorial';
 import { REGIONS, REGION_LIST, type Region } from './regions';
@@ -26,7 +26,7 @@ function card(uid: string, o: { cls?: string; attr?: string; price?: number; bad
 }
 const bar = (v: number, mx: number, c = '') => `<div class="bar ${c}"><i style="width:${Math.max(0, v / mx * 100)}%"></i><b>${v}/${mx}</b></div>`;
 const head = (r: Run) => `<div class="top"><span>⚔ ${REGIONS[r.region ?? '']?.name ?? 'Arena'} ${r.region ? Math.min(wins(r, r.region), CONFIG.matchesPerIsland) + '/' + CONFIG.matchesPerIsland : r.arena}</span><span>💰 ${r.god ? '∞' : r.gold}</span><span>❤ ${r.phase === 'combat' ? r.hp : startHp(r)}/${maxHp(r)}</span><span>🎴 ${r.deck.length}/${CONFIG.maxDeck}</span><span>⚡ ${maxEnergy(r)}/${CONFIG.maxEnergy}</span><span>🔧 ${r.equipped.length}/${r.slots}</span><button class="gear" data-a="set">⚙</button></div>`;
-let layersSeen: { run: Run | null; ids: Set<string> } = { run: null, ids: new Set() }, finalView: Combat | null = null, finalHp = 0, creating = false, draft = { name: '', av: 'a0', style: 'boxing' }, sailing = false, mapSel: string | null = null, vs: { tier: string; art?: string; id?: string; name: string; hp: number; lv: number } | null = null, prevEn = -1, lastSynN = 0, lastCombo = '', lastEv: unknown = null, endAnim: { win: boolean; tier: string; art?: string; id?: string } | null = null, lastPhase: string | undefined, prevHand: string[] = [], timer = 0, bars: { me: number; foe: number } | null = null;
+let prevDraw = -1, layersSeen: { run: Run | null; ids: Set<string> } = { run: null, ids: new Set() }, finalView: Combat | null = null, finalHp = 0, creating = false, draft = { name: '', av: 'a0', style: 'boxing' }, sailing = false, mapSel: string | null = null, vs: { tier: string; art?: string; id?: string; name: string; hp: number; lv: number } | null = null, prevEn = -1, lastSynN = 0, lastCombo = '', lastEv: unknown = null, endAnim: { win: boolean; tier: string; art?: string; id?: string } | null = null, lastPhase: string | undefined, prevHand: string[] = [], timer = 0, bars: { me: number; foe: number } | null = null;
 // ---- Timer di turno (disattivabile): scaduto il tempo, il turno termina da solo; in pausa con impostazioni/menu ----
 const TLIM = [10, 30, 60];
 let tLeft = 0, tTurn = -1, tTick = 0, mercyIdle = false; // mercyIdle: riquadro della pietà aperto ma non ancora girato (il tempo scorre)
@@ -37,9 +37,9 @@ function paintTimer() {
 function timerSync() {
   const c = run?.combat; if (run?.phase !== 'combat') tTurn = -1;
   if (c && c.phase === 'player' && c.turn !== tTurn) { tTurn = c.turn; tLeft = TLIM[settings.tmode] * 1000; }
-  const on = settings.timer && !!c && c.phase === 'player' && started && !settingsOpen && !pileView && !vs && !endAnim && !tutActive() && (mercyIdle || !document.querySelector('.slotov'));
+  const on = settings.timer && !!c && c.phase === 'player' && started && !settingsOpen && !vs && !endAnim && !tutActive() && (mercyIdle || !document.querySelector('.slotov'));
   if (!on) { clearInterval(tTick); tTick = 0; return; }
-  if (!tTick) { let last = performance.now(); tTick = window.setInterval(() => { const n = performance.now(); tLeft -= n - last; last = n; paintTimer(); if (tLeft <= 0) { clearInterval(tTick); tTick = 0; if (mercyIdle) { mercyIdle = false; document.querySelector('.slotov')?.remove(); } act('end'); } }, 200); }
+  if (!tTick) { let last = performance.now(); tTick = window.setInterval(() => { const n = performance.now(); tLeft -= n - last; last = n; paintTimer(); if (tLeft <= 0) { clearInterval(tTick); tTick = 0; pileView = null; if (mercyIdle) { mercyIdle = false; document.querySelector('.slotov')?.remove(); } act('end'); } }, 200); }
   paintTimer();
 }
 function tick() { // turno nemico: una carta alla volta, ripreso anche dopo un reload
@@ -81,6 +81,11 @@ function sail() { // il protagonista raggiunge l'isola scelta in barca (animazio
 const esc = (t: string) => t.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 const heroName = () => esc(run?.hero?.name ?? 'Protagonista');
 /** Effetti di un'opzione di scelta come etichette (bonus verdi, malus rossi). Gli effetti non in oro valgono per il prossimo duello. */
+/** Il mazzo è appena finito: la pila trema in rosso, compare un avviso e suona un allarme (il pulsante ♻ lampeggia finché non viene premuto). */
+function deckEmptyAlert() {
+  const p = app.querySelector('.pile.draw') as HTMLElement | null; if (!p) return; p.classList.add('alert'); sfx('warn');
+  const q = p.getBoundingClientRect(), t = document.createElement('div'); t.className = 'deckfx'; t.textContent = '🂠 Mazzo finito!'; t.style.left = q.left + q.width / 2 + 'px'; t.style.top = q.top + 'px'; document.body.appendChild(t); setTimeout(() => t.remove(), 2200);
+}
 const fxChips = (r: Run, fx: ChoiceFx, gold = choiceGold(r, fx)) => [
   gold && `<i class="${gold < 0 ? 'neg' : ''}">💰 ${gold > 0 ? '+' : ''}${gold}</i>`, fx.block && `<i>🛡️ Scudo ${fx.block} a inizio duello</i>`, fx.energy && `<i>⚡ +${fx.energy} energia al 1° turno</i>`, fx.draw && `<i>🂠 Pesca +${fx.draw} al 1° turno</i>`,
   fx.foeHp && `<i class="${fx.foeHp > 0 ? 'neg' : ''}">👊 Nemico ${fx.foeHp > 0 ? '+' : ''}${fx.foeHp}% PV</i>`, fx.hp && `<i class="${fx.hp < 0 ? 'neg' : ''}">❤ ${fx.hp > 0 ? '+' : ''}${fx.hp} PV a inizio duello</i>`].filter(Boolean).join('');
@@ -123,7 +128,7 @@ function draw() {
   if (creating) { drawCreate(); return; }
   if (vs) { drawVs(); return; }
   if (endAnim) { drawEnd(); return; }
-  if (run?.phase !== 'combat' && !finalView) { pileView = null; bars = null; prevHand = []; lastCombo = ''; lastEv = null; lastSynN = 0; }
+  if (run?.phase !== 'combat' && !finalView) { pileView = null; bars = null; prevHand = []; prevDraw = -1; lastCombo = ''; lastEv = null; lastSynN = 0; }
   const r = run, t = note ? `<div class="toast">${note}</div>` : '';
   if (!r || (!started && r.phase !== 'over')) {
     app.innerHTML = `<div class="logo">COMB<span class="inf">∞</span></div><p style="text-align:center"><small>Prototipo — ambientazione provvisoria. Da lottatore umano a potenza cosmica.</small></p>${r ? `<button class="pri" data-a="cont" style="width:100%">Continua run (arena ${r.arena})</button><br><br>` : ''}<button data-a="new" style="width:100%">Nuova run</button><br><br><button data-a="tutorial" style="width:100%">📘 Tutorial</button><br><br><button data-a="set" style="width:100%">⚙ Impostazioni</button>`; return;
@@ -150,14 +155,15 @@ function draw() {
     app.innerHTML = `${head(r)}${t}<div class="field" data-zone="field">${evh}<div class="arena">
       ${side(true, php, maxHp(r), c.block + sh(c.field.def), pop.p, heroImg(), `Turno ${c.turn}`, heroName(), bar0.me, eqh)}
       <div class="board">${rw(c.foeField.def, 'def', ev?.by === 'me' && ev.absorbed > 0)}${rw(c.foeField.off, 'off')}
-      <div class="mat">${busy ? `<div class="matr"><small>${c.phase === 'resolve' ? 'Attacchi in corso…' : 'Turno avversario…'}</small><span class="back">${'🂠'.repeat(c.queue.length)}</span></div><div class="combo">&nbsp;</div>` : `<div class="matr"><div class="pips">⚡ ${c.energy}/${me}</div>${c.draw.length === 0 && c.discard.length ? `<button class="mercy" data-a="ddraw" ${c.energy < CONFIG.discardDrawCost || c.hand.length >= CONFIG.maxHand ? 'disabled' : ''}>♻ ${CONFIG.discardDrawCost}⚡</button>` : ''}<button class="mercy" data-a="mercy" ${c.mercy ? 'disabled' : ''}>🙏 Pietà${c.mercy ? ' (usata)' : ''}</button><button class="pri end" data-a="end">${settings.timer ? '<i class="tfill" style="width:${Math.max(0, Math.min(1, tLeft / (TLIM[settings.tmode] * 1000))) * 100}%"></i>' : ''}<span>Fine turno ⚔</span>${settings.timer ? '<b class="tsec"></b>' : ''}</button></div><div class="combo">${c.combo ? '🔥 ' + c.combo : '&nbsp;'}</div>`}</div>
+      <div class="mat">${busy ? `<div class="matr"><small>${c.phase === 'resolve' ? 'Attacchi in corso…' : 'Turno avversario…'}</small><span class="back">${'🂠'.repeat(c.queue.length)}</span></div><div class="combo">&nbsp;</div>` : `<div class="matr"><div class="pips">⚡ ${c.energy}/${me}</div>${c.draw.length === 0 && c.discard.length ? `<button class="mercy ${c.energy < CONFIG.discardDrawCost || c.hand.length >= CONFIG.maxHand ? '' : 'blink'}" data-a="ddraw" title="Rimescola gli scarti nel mazzo e pesca 1 carta" ${c.energy < CONFIG.discardDrawCost || c.hand.length >= CONFIG.maxHand ? 'disabled' : ''}>♻ ${CONFIG.discardDrawCost}⚡</button>` : ''}<button class="mercy" data-a="mercy" ${c.mercy ? 'disabled' : ''}>🙏 Pietà${c.mercy ? ' (usata)' : ''}</button><button class="pri end" data-a="end">${settings.timer ? '<i class="tfill" style="width:${Math.max(0, Math.min(1, tLeft / (TLIM[settings.tmode] * 1000))) * 100}%"></i>' : ''}<span>Fine turno ⚔</span>${settings.timer ? '<b class="tsec"></b>' : ''}</button></div><div class="combo">${c.combo ? '🔥 ' + c.combo : '&nbsp;'}</div>`}</div>
       ${rw(c.field.off, 'off')}${rw(c.field.def, 'def', ev?.by === 'foe' && ev.absorbed > 0)}</div>
       ${side(false, e.hp, e.maxHp, sh(c.foeField.def), pop.e, foeArt(e.art, e.tier, e.id), `${(wins(r, r.region ?? '') % CONFIG.matchesPerIsland) + 1}/${CONFIG.matchesPerIsland}`, e.tier, bar0.foe, eqf)}
     </div></div>
-    <div class="handrow"><div class="hand">${c.hand.map((u, i) => card(u, { cls: !busy && c.energy >= effCost(c, u) && reqOk(MOVES[moveOf(u)]) ? '' : 'off', cost: effCost(c, u), badge: busy ? '' : badge(c, u), attr: `data-drag="${u}" style="--i:${i};--n:${n}"` })).join('')}</div><div class="pile disc" data-a="pile" data-id="discard" title="Carte già giocate"><b>${c.discard.length}</b><small>Scarti</small></div><div class="pile draw" data-a="pile" data-id="draw" title="Carte rimaste nel mazzo"><b>${c.draw.length}</b><small>Mazzo</small></div></div>`;
+    <div class="handrow"><div class="hand">${c.hand.map((u, i) => card(u, { cls: !busy && c.energy >= effCost(c, u) && reqOk(MOVES[moveOf(u)]) ? '' : 'off', cost: effCost(c, u), badge: busy ? '' : badge(c, u), attr: `data-drag="${u}" style="--i:${i};--n:${n}"` })).join('')}</div><div class="pile disc" data-a="pile" data-id="discard" title="Carte già giocate"><b>${c.discard.length}</b><small>Scarti</small></div><div class="pile draw ${c.draw.length ? '' : 'empty'}" data-a="pile" data-id="draw" title="Carte rimaste nel mazzo"><b>${c.draw.length}</b><small>Mazzo</small></div></div>`;
     const pr = (app.querySelector('.pile.draw') as HTMLElement).getBoundingClientRect(); let dealt = 0; // animazione di pesca: le carte nuove arrivano dal mazzo
     app.querySelectorAll<HTMLElement>('.hand .card').forEach(el => { if (prevHand.includes(el.dataset.drag!)) return; const q = el.getBoundingClientRect(); el.style.setProperty('--dx', pr.left + pr.width / 2 - q.left - q.width / 2 + 'px'); el.style.setProperty('--dy', pr.top + pr.height / 2 - q.top - q.height / 2 + 'px'); el.style.animationDelay = dealt * 110 + 'ms'; setTimeout(() => sfx('deal'), dealt * 110); dealt++; el.classList.add('dealt'); });
     prevHand = [...c.hand];
+    if (prevDraw > 0 && c.draw.length === 0) deckEmptyAlert(); prevDraw = c.draw.length; // il mazzo è appena finito: avviso
     const nw = app.querySelector('.rowf .card.new') as HTMLElement | null; // carta appena schierata: impatto (offesa) o fortificazione (difesa)
     if (nw) { const q = nw.getBoundingClientRect(), off = (nw.parentElement as HTMLElement).classList.contains('off'); burst(off ? 'hit' : 'guard', q.left + q.width / 2, q.top + q.height / 2); sfx(off ? 'place' : 'fort');
       if (c.combo && c.combo !== lastCombo) { burst(c.tier === 2 ? 'fw' : 'combo', q.left + q.width / 2, q.top + q.height / 2); banner(c.combo, c.tier === 2); sfx('combo'); } }
@@ -190,8 +196,8 @@ function draw() {
   // Scelta di capitolo: finché non è fatta (e l'impostazione è attiva) si resta nella Storia, senza Store, Mazzo, Avanti o Mappa
   const pc = settings.story && !tutActive() ? pendingChoice(r) : null; if (pc) tab = 'sto';
   const nm = (t: string) => t.replace(/\{nome\}/g, heroName()), dn = r.chapters?.[chapterKey(r)], dev = dn && CHOICES.find(e => e.id === dn.ev), dopt = dev?.options.find(o => o.id === dn!.opt);
-  const chHtml = pc ? `<div class="chbox"><div class="chap">✦ Una scelta ti attende</div><h3>${pc.ev.title}</h3><p class="tale">${nm(pc.ev.text)}</p><div class="chopts">${pc.options.map(o => `<button class="chopt" data-a="choose" data-id="${o.id}"><b>${o.label}</b><span class="chchips">${fxChips(r, o.fx)}</span></button>`).join('')}</div><small>Nessuna scelta è giusta o sbagliata: decidi per proseguire.</small></div>`
-    : dev && dopt ? `<div class="chbox done"><div class="chap">✦ La tua scelta</div><b>${dev.title}</b> · ${dopt.label}<span class="chchips">${fxChips(r, dopt.fx, dn!.gold)}</span><small>${dopt.text}</small></div>` : '';
+  const chHtml = pc ? `<div class="chbox"><div class="chap">✦ Una scelta ti attende</div><h3>${pc.ev.title}</h3><p class="tale">${nm(pc.ev.text)}</p><div class="chlist">${pc.options.map(o => `<button class="chopt" data-a="choose" data-id="${o.id}"><b>${o.label}</b><span class="chchips">${fxChips(r, scaledFx(r, o.fx))}</span></button>`).join('')}</div><small>Nessuna scelta è giusta o sbagliata: decidi per proseguire.</small></div>`
+    : dev && dopt ? `<div class="chbox done"><div class="chap">✦ La tua scelta</div><b>${dev.title}</b> · ${dopt.label}<span class="chchips">${fxChips(r, dn!.fx ?? scaledFx(r, dopt.fx), dn!.gold)}</span><small>${dopt.text}</small></div>` : '';
   const storyHtml = `<div class="storywrap">${figHtml}<div class="story"><div class="sbook"><div class="chap">Capitolo ${chap} · ${rg.name} · ${STYLES.find(x => x.id === (r.style ?? 'boxing'))?.name}</div><h3>${boss ? '⚔ ' : ''}${esc(nme.name)}</h3><p class="tale">${tale}</p></div>${chHtml}
     <div class="sbox foe"><div class="sface">${foeArt(rg.id, rg.level, nme.id)}</div><div><b>${boss ? 'BOSS · ' : ''}${esc(nme.name)}</b><br><small>${rg.level} · partita ${idx + 1}/${CONFIG.matchesPerIsland} · ❤ ${pre.maxHp}</small><br><small>Mosse: ${emv}</small></div></div></div></div>`;
   const healRow = r.wounded ? `<div class="energyrow"><b>🩹 Ferite gravi: parti all'${Math.round(CONFIG.woundedStart * 100)}% dei PV</b><button class="ebtn" data-a="heal">Cura <span class="price">💰${CONFIG.healCost}</span></button></div>` : '';

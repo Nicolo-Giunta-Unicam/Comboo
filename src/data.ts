@@ -41,8 +41,8 @@ export const moveOf = (uid: string): string => {
   return k === 'base' || k === 'clone' ? a : k === 'eq' ? EQUIPMENT[a].moves[+b] : a;
 };
 
-/** Scelte di capitolo (schermata Storia): 3 opzioni con effetti leggeri e bilanciati. gold è in "unità" (vedi goldUnit nel motore); gli altri effetti valgono solo per il duello successivo. */
+/** Scelte di capitolo (schermata Storia), legate a un'isola (`region`) e a un incontro (`at`, 0–4): 3 opzioni con effetti leggeri e bilanciati. gold è in "unità" (vedi goldUnit nel motore); gli altri effetti valgono solo per il duello successivo. */
 export interface ChoiceFx { gold?: number; block?: number; energy?: number; draw?: number; foeHp?: number; hp?: number }
 export interface ChoiceOpt { id: string; label: string; text: string; fx: ChoiceFx }
-export interface ChoiceEv { id: string; title: string; text: string; options: ChoiceOpt[] }
+export interface ChoiceEv { id: string; region: string; at: number; title: string; text: string; options: ChoiceOpt[] }
 export const CHOICES: ChoiceEv[] = J.choices as ChoiceEv[];

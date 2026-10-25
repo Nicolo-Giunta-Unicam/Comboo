@@ -59,7 +59,9 @@
     "healCost": 15,
     "discardDrawCost": 3,
     "choice": {
-      "goldDivisor": 3
+      "goldDivisor": 3,
+      "blockPerArena": 0.08,
+      "hpPerArena": 0.05
     }
   },
   "baseMoves": [
@@ -1412,9 +1414,11 @@
   ],
   "choices": [
     {
-      "id": "sacca",
+      "id": "boxing-sacca",
+      "region": "boxing",
+      "at": 0,
       "title": "Una sacca abbandonata",
-      "text": "Davanti alla palestra {nome} trova una sacca da allenamento dimenticata, ancora chiusa.",
+      "text": "Davanti alla palestra di Gorin, {nome} trova una sacca da allenamento dimenticata, ancora chiusa.",
       "options": [
         {
           "id": "a",
@@ -1445,44 +1449,119 @@
       ]
     },
     {
-      "id": "maestro",
-      "title": "Il vecchio maestro",
-      "text": "Un vecchio maestro ti ferma prima dell'incontro: «Hai un minuto, {nome}?»",
+      "id": "boxing-notte",
+      "region": "boxing",
+      "at": 0,
+      "title": "Notte insonne",
+      "text": "La notte prima di affrontare lo sparring partner non riesci a dormire.",
       "options": [
         {
           "id": "a",
-          "label": "Ascolti la sua lezione",
-          "text": "Un consiglio semplice, ma ti rimane in testa.",
+          "label": "Corri fino all'alba",
+          "text": "Sei stanco ma carico, e trovi una banconota per strada.",
           "fx": {
-            "draw": 2
+            "energy": 1,
+            "hp": -3,
+            "gold": 1
           }
         },
         {
           "id": "b",
-          "label": "Gli offri da bere",
-          "text": "Parla per ore e ti regala una vecchia fasciatura.",
+          "label": "Dormi il più possibile",
+          "text": "Ti svegli riposato e con i muscoli sciolti.",
           "fx": {
-            "gold": -1,
-            "energy": 1,
-            "block": 10
+            "block": 12
           }
         },
         {
           "id": "c",
-          "label": "Lo sfidi a braccio di ferro",
-          "text": "Perdi un po' di forza, ma impari come si muove un veterano.",
+          "label": "Rivedi le lezioni di Gorin",
+          "text": "Ripassi le combinazioni una a una.",
           "fx": {
-            "foeHp": -10,
-            "hp": -4,
-            "gold": 1.5
+            "draw": 2
           }
         }
       ]
     },
     {
-      "id": "folla",
+      "id": "boxing-scommessa",
+      "region": "boxing",
+      "at": 1,
+      "title": "Scommessa clandestina",
+      "text": "Dietro il locale, un tipo in cappotto ti propone una scommessa sul tuo scontro col pugile di strada.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Punti su di te",
+          "text": "Se vinci incassi bene, ma il pugile sembra più tosto del previsto.",
+          "fx": {
+            "gold": 3.5,
+            "foeHp": 10
+          }
+        },
+        {
+          "id": "b",
+          "label": "Rifiuti e lo osservi da lontano",
+          "text": "Guardi come si muove e trovi un punto debole.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "c",
+          "label": "Punti contro di te",
+          "text": "Soldi facili, ma l'orgoglio fa un po' male.",
+          "fx": {
+            "gold": 1.5,
+            "hp": -5,
+            "energy": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "boxing-tifoso",
+      "region": "boxing",
+      "at": 1,
+      "title": "Un giovane tifoso",
+      "text": "Un ragazzino ti aspetta nel vicolo con un guanto da boxe troppo grande per lui: ha sentito parlare di te.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Firmi il suo guanto",
+          "text": "Ti ringrazia con gli occhi lucidi e con una mancia.",
+          "fx": {
+            "gold": 1,
+            "block": 6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Ti alleni con lui",
+          "text": "Un po' di fatica, ma anche una gran carica.",
+          "fx": {
+            "energy": 1,
+            "hp": -2,
+            "block": 6
+          }
+        },
+        {
+          "id": "c",
+          "label": "Ti fai portare l'acqua",
+          "text": "Con i riflessi di un bambino, ti tiene al passo.",
+          "fx": {
+            "draw": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "boxing-folla",
+      "region": "boxing",
+      "at": 2,
       "title": "Il pubblico",
-      "text": "Dagli spalti arriva un boato: tutti aspettano di vedere cosa farai.",
+      "text": "Il campione regionale non è ancora entrato, ma dagli spalti arriva già un boato.",
       "options": [
         {
           "id": "a",
@@ -1500,12 +1579,13 @@
           "fx": {
             "energy": 1,
             "draw": 1,
-            "hp": -4
+            "hp": -4,
+            "gold": 0.3
           }
         },
         {
           "id": "c",
-          "label": "Provochi il tuo avversario",
+          "label": "Provochi il campione",
           "text": "Perde la calma, ma anche tu rischi di più.",
           "fx": {
             "foeHp": -15,
@@ -1516,9 +1596,11 @@
       ]
     },
     {
-      "id": "infermiere",
+      "id": "boxing-infermiere",
+      "region": "boxing",
+      "at": 2,
       "title": "L'infermiere dello spogliatoio",
-      "text": "Un infermiere ti ferma con una cassetta del pronto soccorso in mano.",
+      "text": "Prima di una cintura regionale, un infermiere ti ferma con una cassetta del pronto soccorso in mano.",
       "options": [
         {
           "id": "a",
@@ -1551,144 +1633,48 @@
       ]
     },
     {
-      "id": "scommessa",
-      "title": "Scommessa clandestina",
-      "text": "Un tipo in cappotto ti propone una scommessa sul tuo prossimo incontro.",
+      "id": "boxing-maestro",
+      "region": "boxing",
+      "at": 3,
+      "title": "Gorin ti ferma",
+      "text": "Mentre ti stringe le fasce prima del peso massimo, Gorin ti guarda serio: «Hai un minuto, {nome}?»",
       "options": [
         {
           "id": "a",
-          "label": "Punti su di te",
-          "text": "Se vinci incassi bene, ma l'avversario sembra più tosto del previsto.",
-          "fx": {
-            "gold": 3.5,
-            "foeHp": 10
-          }
-        },
-        {
-          "id": "b",
-          "label": "Rifiuti e studi l'avversario",
-          "text": "Guardi come si muove e trovi un punto debole.",
-          "fx": {
-            "foeHp": -10,
-            "gold": 0.5
-          }
-        },
-        {
-          "id": "c",
-          "label": "Punti contro di te",
-          "text": "Soldi facili, ma l'orgoglio fa un po' male.",
-          "fx": {
-            "gold": 1.5,
-            "hp": -5,
-            "energy": 1
-          }
-        }
-      ]
-    },
-    {
-      "id": "notte",
-      "title": "Notte insonne",
-      "text": "La notte prima dello scontro non riesci a dormire.",
-      "options": [
-        {
-          "id": "a",
-          "label": "Corri fino all'alba",
-          "text": "Sei stanco ma carico, e trovi una banconota per strada.",
-          "fx": {
-            "energy": 1,
-            "hp": -3,
-            "gold": 1
-          }
-        },
-        {
-          "id": "b",
-          "label": "Dormi il più possibile",
-          "text": "Ti svegli riposato e con i muscoli sciolti.",
-          "fx": {
-            "block": 12
-          }
-        },
-        {
-          "id": "c",
-          "label": "Rivedi vecchi filmati",
-          "text": "Studi le tue combinazioni migliori.",
+          "label": "Ascolti la sua lezione",
+          "text": "Un consiglio semplice, ma ti rimane in testa.",
           "fx": {
             "draw": 2
           }
-        }
-      ]
-    },
-    {
-      "id": "mercante",
-      "title": "Il mercante ambulante",
-      "text": "Un mercante ti sbarra la strada con un carretto pieno di cianfrusaglie.",
-      "options": [
+        },
         {
-          "id": "a",
-          "label": "Compri un'ampolla protettiva",
-          "text": "Costa cara, ma ti sentirai più al sicuro.",
+          "id": "b",
+          "label": "Gli offri da bere",
+          "text": "Parla per ore e ti regala una vecchia fasciatura.",
           "fx": {
             "gold": -1,
-            "block": 18
-          }
-        },
-        {
-          "id": "b",
-          "label": "Contratti sul prezzo",
-          "text": "Alla fine ci guadagni tu, e impari un trucco.",
-          "fx": {
-            "gold": 1,
-            "draw": 1
+            "energy": 1,
+            "block": 10
           }
         },
         {
           "id": "c",
-          "label": "Gli vendi un ricordo",
-          "text": "Incassi molto, ma ti senti svuotato.",
-          "fx": {
-            "gold": 3.5,
-            "hp": -6
-          }
-        }
-      ]
-    },
-    {
-      "id": "rivale",
-      "title": "Un rivale ti osserva",
-      "text": "Dal fondo della sala un altro combattente non ti toglie gli occhi di dosso.",
-      "options": [
-        {
-          "id": "a",
-          "label": "Gli stringi la mano",
-          "text": "Una stretta sincera: ti senti motivato.",
-          "fx": {
-            "gold": 0.5,
-            "energy": 1
-          }
-        },
-        {
-          "id": "b",
-          "label": "Lo ignori",
-          "text": "Ti concentri sul riscaldamento e ti copri meglio.",
-          "fx": {
-            "block": 12
-          }
-        },
-        {
-          "id": "c",
-          "label": "Gli mostri una finta",
-          "text": "Capisce di cosa sei capace, e lo racconta all'avversario… sbagliando.",
+          "label": "Lo sfidi a braccio di ferro",
+          "text": "Perdi un po' di forza, ma impari come si muove un veterano.",
           "fx": {
             "foeHp": -10,
-            "gold": 0.5
+            "hp": -4,
+            "gold": 1.5
           }
         }
       ]
     },
     {
-      "id": "infortunio",
+      "id": "boxing-infortunio",
+      "region": "boxing",
+      "at": 3,
       "title": "Un vecchio infortunio",
-      "text": "Il ginocchio ti manda una fitta proprio prima di salire sul ring.",
+      "text": "Il ginocchio ti manda una fitta proprio prima di salire sul ring contro il peso massimo.",
       "options": [
         {
           "id": "a",
@@ -1719,42 +1705,46 @@
       ]
     },
     {
-      "id": "pioggia",
-      "title": "Pioggia battente",
-      "text": "Un temporale si abbatte sulla città proprio mentre arrivi.",
+      "id": "boxing-uomo-in-nero",
+      "region": "boxing",
+      "at": 4,
+      "title": "L'uomo in nero",
+      "text": "Nel corridoio del palazzetto pieno, l'uomo in nero con il taccuino si avvicina prima dello scontro con la Leggenda.",
       "options": [
         {
           "id": "a",
-          "label": "Ti ripari sotto un portico",
-          "text": "Aspetti che passi, al caldo e al sicuro.",
+          "label": "Gli lasci il tuo nome",
+          "text": "Annota tutto con un sorriso, e ti fa avere una piccola borsa.",
           "fx": {
-            "block": 12
+            "gold": 1,
+            "draw": 1
           }
         },
         {
           "id": "b",
-          "label": "Corri sotto la pioggia",
-          "text": "Arrivi fradicio ma con il sangue che ribolle.",
+          "label": "Gli chiedi chi lo manda",
+          "text": "Non risponde, ma il suo sguardo ti dà una strana energia.",
           "fx": {
             "energy": 1,
-            "draw": 1,
-            "hp": -4
+            "gold": 0.5
           }
         },
         {
           "id": "c",
-          "label": "Raccogli ciò che porta la tempesta",
-          "text": "Tra le pozzanghere trovi qualche moneta.",
+          "label": "Lo ignori e ti concentri",
+          "text": "Resti sul tuo ritmo, protetto dal rumore.",
           "fx": {
-            "gold": 2.2
+            "block": 12
           }
         }
       ]
     },
     {
-      "id": "specchio",
+      "id": "boxing-specchio",
+      "region": "boxing",
+      "at": 4,
       "title": "Lo specchio dello spogliatoio",
-      "text": "Davanti allo specchio, {nome} si guarda a lungo.",
+      "text": "Prima di affrontare la Leggenda del ring, {nome} si guarda a lungo allo specchio.",
       "options": [
         {
           "id": "a",
@@ -1787,33 +1777,32 @@
       ]
     },
     {
-      "id": "tifoso",
-      "title": "Un giovane tifoso",
-      "text": "Un ragazzino ti aspetta all'uscita con un guanto da boxe troppo grande per lui.",
+      "id": "battlefield-armeria",
+      "region": "battlefield",
+      "at": 0,
+      "title": "L'armeria del campo",
+      "text": "Appena arrivato al campo militare, un tecnico ti indica la baracca dell'armeria.",
       "options": [
         {
           "id": "a",
-          "label": "Firmi il suo guanto",
-          "text": "Ti ringrazia con gli occhi lucidi e con una mancia.",
+          "label": "Prendi in prestito un giubbotto",
+          "text": "È pesante ma ti protegge bene.",
           "fx": {
-            "gold": 1,
-            "block": 6
+            "block": 12
           }
         },
         {
           "id": "b",
-          "label": "Ti alleni con lui",
-          "text": "Un po' di fatica, ma anche una gran carica.",
+          "label": "Baratti munizioni per crediti",
+          "text": "Qualcuno al campo paga bene per quello che non usi.",
           "fx": {
-            "energy": 1,
-            "hp": -2,
-            "block": 6
+            "gold": 2
           }
         },
         {
           "id": "c",
-          "label": "Ti fai portare l'acqua",
-          "text": "Con i riflessi di un bambino, ti tiene al passo.",
+          "label": "Studi il manuale della recluta",
+          "text": "Poche pagine, tanti trucchi.",
           "fx": {
             "draw": 2
           }
@@ -1821,100 +1810,34 @@
       ]
     },
     {
-      "id": "messaggio",
-      "title": "Un messaggio misterioso",
-      "text": "Un biglietto scivola sotto la porta del tuo spogliatoio.",
+      "id": "battlefield-sergente",
+      "region": "battlefield",
+      "at": 0,
+      "title": "Il test del sergente",
+      "text": "Prima di sfidare la recluta cibernetica, un sergente ti sottopone a un test di riflessi.",
       "options": [
         {
           "id": "a",
-          "label": "Lo apri subito",
-          "text": "C'è un indizio sulla tua prossima sfida e una banconota.",
+          "label": "Dai il massimo",
+          "text": "Passi con il massimo dei voti, ma ti stanchi.",
+          "fx": {
+            "energy": 2,
+            "hp": -6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Vai sul sicuro",
+          "text": "Un buon risultato senza rischi, e un piccolo bonus.",
           "fx": {
             "gold": 1,
             "draw": 1
           }
         },
         {
-          "id": "b",
-          "label": "Lo ignori",
-          "text": "Non hai tempo per i misteri: ti prepari con cura.",
-          "fx": {
-            "block": 12
-          }
-        },
-        {
           "id": "c",
-          "label": "Lo mostri al maestro",
-          "text": "Ride, poi ti insegna un piccolo trucco.",
-          "fx": {
-            "energy": 1,
-            "block": 4
-          }
-        }
-      ]
-    },
-    {
-      "id": "palestra",
-      "title": "La palestra vuota",
-      "text": "A quest'ora la palestra è deserta, a parte te.",
-      "options": [
-        {
-          "id": "a",
-          "label": "Ti alleni da solo",
-          "text": "Spingi oltre il limite, ma qualcosa ci rimetti.",
-          "fx": {
-            "energy": 1,
-            "hp": -3,
-            "gold": 1
-          }
-        },
-        {
-          "id": "b",
-          "label": "Aspetti un compagno",
-          "text": "Un po' di sparring leggero ti rimette in moto.",
-          "fx": {
-            "draw": 1,
-            "block": 6
-          }
-        },
-        {
-          "id": "c",
-          "label": "Cerchi attrezzi dimenticati",
-          "text": "Sotto un armadietto trovi qualcosa che vale.",
-          "fx": {
-            "gold": 2
-          }
-        }
-      ]
-    },
-    {
-      "id": "scarpa",
-      "title": "Una scarpa slacciata",
-      "text": "Poco prima di salire sul ring, ti accorgi di avere i lacci sciolti.",
-      "options": [
-        {
-          "id": "a",
-          "label": "Li allacci con calma",
-          "text": "Un gesto semplice che ti rimette in asse.",
-          "fx": {
-            "block": 8,
-            "draw": 1
-          }
-        },
-        {
-          "id": "b",
-          "label": "Combatti così",
-          "text": "Più libero, più rischioso.",
-          "fx": {
-            "energy": 1,
-            "hp": -3,
-            "gold": 1
-          }
-        },
-        {
-          "id": "c",
-          "label": "Chiedi aiuto all'arbitro",
-          "text": "Nel frattempo osservi l'avversario da vicino.",
+          "label": "Chiedi di vedere il test prima",
+          "text": "Ti mostrano la procedura e capisci come reagisce una recluta.",
           "fx": {
             "foeHp": -10,
             "gold": 0.5
@@ -1923,35 +1846,1688 @@
       ]
     },
     {
-      "id": "oste",
-      "title": "Il cibo dell'oste",
-      "text": "All'osteria vicina al ring, l'oste ti serve un piatto fumante.",
+      "id": "battlefield-riparo",
+      "region": "battlefield",
+      "at": 1,
+      "title": "Il riparo",
+      "text": "Un colpo secco sfiora la cresta: il cecchino ti ha già visto.",
       "options": [
         {
           "id": "a",
-          "label": "Mangi abbondante",
-          "text": "Pancia piena e spalle larghe.",
+          "label": "Ti nascondi dietro un relitto",
+          "text": "Il metallo ti fa da scudo.",
           "fx": {
             "block": 12
           }
         },
         {
           "id": "b",
-          "label": "Mangi leggero",
-          "text": "Ti senti scattante e ti avanza qualche soldo.",
+          "label": "Corri a zigzag",
+          "text": "Arrivi in fondo con il fiatone ma con una gran carica.",
+          "fx": {
+            "energy": 1,
+            "draw": 1,
+            "hp": -4,
+            "gold": 0.3
+          }
+        },
+        {
+          "id": "c",
+          "label": "Recuperi un fucile da una cassa",
+          "text": "Non è tuo, ma qualcuno pagherà.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "battlefield-radio",
+      "region": "battlefield",
+      "at": 1,
+      "title": "Il segnale radio",
+      "text": "La tua ricetrasmittente cattura una frequenza sconosciuta: è quella del cecchino.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ascolti i suoi ordini",
+          "text": "Scopri come si muove e dove guarda.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "b",
+          "label": "La ignori e avanzi",
+          "text": "Meglio non distrarsi: ti concentri sul terreno.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "Rivendi la frequenza",
+          "text": "Qualcuno al comando ci tiene molto, ma ti scoprono.",
+          "fx": {
+            "gold": 2.5,
+            "hp": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "battlefield-armaiolo",
+      "region": "battlefield",
+      "at": 2,
+      "title": "L'offerta dell'armaiolo",
+      "text": "Gli armaioli ridono dei tuoi pugni nudi, poi uno di loro ti fa un'offerta.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Compri una piastra aggiuntiva",
+          "text": "Costa cara, ma il petto ringrazia.",
+          "fx": {
+            "gold": -1,
+            "block": 18
+          }
+        },
+        {
+          "id": "b",
+          "label": "Rifiuti: «preferisco le idee»",
+          "text": "Gli armaioli restano di sasso, e tu hai un'idea in più.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "Vendi loro il tuo vecchio paio di guanti",
+          "text": "Li collezionano.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "battlefield-banco",
+      "region": "battlefield",
+      "at": 2,
+      "title": "Il banco di prova",
+      "text": "Nell'officina ti lasciano provare qualche protesi, prima del soldato in esoscheletro.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Provi un'arma pesante",
+          "text": "È potente ma ti stanca in fretta, e qualcuno ti paga la prova.",
+          "fx": {
+            "energy": 1,
+            "hp": -3,
+            "gold": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Guardi gli altri allenarsi",
+          "text": "Impari da chi la usa da anni.",
+          "fx": {
+            "draw": 1,
+            "block": 6
+          }
+        },
+        {
+          "id": "c",
+          "label": "Cerchi il punto debole dell'esoscheletro",
+          "text": "Una vite scoperta, una giuntura mobile.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "battlefield-comando",
+      "region": "battlefield",
+      "at": 3,
+      "title": "Il comando ti osserva",
+      "text": "Il terreno trema e dal comando, in silenzio, valutano se sei degno dei loro segreti.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Mostri disciplina",
+          "text": "Resti immobile, e ti ritrovi un'armatura addosso.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "b",
+          "label": "Offri un rapporto tattico",
+          "text": "Un'idea semplice che il comando apprezza.",
+          "fx": {
+            "gold": 1,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Chiedi l'accesso all'archivio",
+          "text": "Ti pagano per non fare domande, ma il rischio è alto.",
+          "fx": {
+            "gold": 3.5,
+            "hp": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "battlefield-nebbia",
+      "region": "battlefield",
+      "at": 3,
+      "title": "Nebbia sul campo",
+      "text": "Il mech da guerra emerge da una nebbia fittissima.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Avanzi alla cieca",
+          "text": "Corri verso il rumore, e ti carichi di adrenalina.",
+          "fx": {
+            "energy": 2,
+            "hp": -6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Aspetti che si diradi",
+          "text": "Un po' di calma e qualche idea.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Sfrutti la nebbia per studiarlo",
+          "text": "Dalla nebbia vedi i suoi punti ciechi.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "battlefield-armatura",
+      "region": "battlefield",
+      "at": 4,
+      "title": "L'armatura che respira",
+      "text": "Nel cratere dell'ultimo bunker, l'armatura del generale sembra viva.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ne studi i punti deboli",
+          "text": "Ti avvicini troppo, ma impari molto.",
+          "fx": {
+            "foeHp": -15,
+            "hp": -6,
+            "gold": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "La ignori e ti prepari",
+          "text": "Ti concentri sul tuo equipaggiamento.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Cerchi un'altra via",
+          "text": "Un varco secondario con qualcosa di utile.",
+          "fx": {
+            "draw": 1,
+            "gold": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "battlefield-cassa",
+      "region": "battlefield",
+      "at": 4,
+      "title": "La cassa del bunker",
+      "text": "In un angolo del bunker, una cassa chiusa con il sigillo del generale.",
+      "options": [
+        {
+          "id": "a",
+          "label": "La apri con la forza",
+          "text": "Dentro c'è un siero: ti fa bene e ti fa male.",
+          "fx": {
+            "energy": 1,
+            "hp": -3,
+            "gold": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "La scassini con calma",
+          "text": "Dentro ci sono monete di vecchio conio.",
+          "fx": {
+            "gold": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "Usi il contenuto sul posto",
+          "text": "Un composto energetico e una placca.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "desert-borraccia",
+      "region": "desert",
+      "at": 0,
+      "title": "L'ultima borraccia",
+      "text": "L'acqua per due giorni sta finendo, e il predone ti segue ancora.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Bevi tutto subito",
+          "text": "Ti senti rinascere, almeno per un po'.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        },
+        {
+          "id": "b",
+          "label": "Razioni l'acqua",
+          "text": "Un sorso alla volta, e la pelle si indurisce.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "La scambi con un nomade di passaggio",
+          "text": "Ti dà monete e un consiglio.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "desert-orme",
+      "region": "desert",
+      "at": 0,
+      "title": "Orme nella sabbia",
+      "text": "Il vento non ha ancora cancellato le orme del predone.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Le segui",
+          "text": "Capisci come cammina, e dove esita.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "b",
+          "label": "Le cancelli e prosegui",
+          "text": "Ti concentri sul tuo passo.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "Scavi dove finiscono",
+          "text": "Trovi un vecchio deposito, ma ti ferisci.",
+          "fx": {
+            "gold": 2.5,
+            "hp": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "desert-freddo",
+      "region": "desert",
+      "at": 1,
+      "title": "Il freddo della notte",
+      "text": "Il deserto brucia di giorno e gela di notte: lo scorpione gigante si avvicina.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti copri con la sabbia",
+          "text": "Il corpo si adatta al freddo.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "b",
+          "label": "Corri per scaldarti",
+          "text": "Il cuore va a mille, ma i muscoli reagiscono.",
+          "fx": {
+            "energy": 1,
+            "draw": 1,
+            "hp": -4,
+            "gold": 0.3
+          }
+        },
+        {
+          "id": "c",
+          "label": "Accendi un fuoco",
+          "text": "Attira curiosi: uno ti paga per un posto accanto.",
+          "fx": {
+            "gold": 1,
+            "block": 6
+          }
+        }
+      ]
+    },
+    {
+      "id": "desert-nido",
+      "region": "desert",
+      "at": 1,
+      "title": "Un nido vuoto",
+      "text": "Tra le dune, il nido abbandonato dello scorpione.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lo saccheggi",
+          "text": "Tra i gusci, qualche reliquia.",
+          "fx": {
+            "gold": 2
+          }
+        },
+        {
+          "id": "b",
+          "label": "Lo studi",
+          "text": "Impari come si muovono gli scorpioni.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "Lo copri di sabbia per confonderlo",
+          "text": "Quando tornerà non lo riconoscerà.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "desert-sarcofago",
+      "region": "desert",
+      "at": 2,
+      "title": "Il sarcofago",
+      "text": "Nel tempio sepolto, davanti alla mummia guerriera, un sarcofago socchiuso.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Prendi un'offerta votiva",
+          "text": "Ti senti osservato, e un po' meno in forma.",
+          "fx": {
+            "gold": 2.5,
+            "hp": -2
+          }
+        },
+        {
+          "id": "b",
+          "label": "Preghi in silenzio",
+          "text": "Rispetto: la pelle ti sembra più dura.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Leggi i geroglifici",
+          "text": "Una tecnica antica e una nuova idea.",
+          "fx": {
+            "draw": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "desert-bende",
+      "region": "desert",
+      "at": 2,
+      "title": "Le bende rituali",
+      "text": "La guerriera lascia cadere una benda ai tuoi piedi.",
+      "options": [
+        {
+          "id": "a",
+          "label": "La avvolgi alle mani",
+          "text": "Un rito antico: ti senti più resistente.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        },
+        {
+          "id": "b",
+          "label": "Gliela restituisci",
+          "text": "Un gesto che la disarma.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "c",
+          "label": "La vendi",
+          "text": "Qualcuno la paga caro, ma ti senti vuoto.",
+          "fx": {
+            "gold": 3.5,
+            "hp": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "desert-tempesta",
+      "region": "desert",
+      "at": 3,
+      "title": "L'occhio della tempesta",
+      "text": "Il colosso di sabbia si sta formando dalla tempesta.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti ripari nell'occhio",
+          "text": "Un luogo calmo in mezzo al caos.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "b",
+          "label": "Corri attraverso il vento",
+          "text": "La sabbia ti taglia, ma ti dà una spinta.",
+          "fx": {
+            "energy": 2,
+            "hp": -6
+          }
+        },
+        {
+          "id": "c",
+          "label": "Aspetti e osservi",
+          "text": "Impari come si ricompone.",
+          "fx": {
+            "draw": 1,
+            "block": 6
+          }
+        }
+      ]
+    },
+    {
+      "id": "desert-oasi",
+      "region": "desert",
+      "at": 3,
+      "title": "Un'oasi miraggio",
+      "text": "All'orizzonte compare un'oasi: forse è un miraggio.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti ci tuffi",
+          "text": "Era vera: acqua fresca e qualche moneta.",
           "fx": {
             "energy": 1,
             "gold": 0.5
           }
         },
         {
+          "id": "b",
+          "label": "Non ti fidi e prosegui",
+          "text": "Il tuo istinto ti protegge.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
           "id": "c",
-          "label": "Paghi da bere a tutti",
-          "text": "Costa caro, ma la serata ti insegna parecchio.",
+          "label": "Raccogli solo i datteri",
+          "text": "Un ottimo affare.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "desert-scalinata",
+      "region": "desert",
+      "at": 4,
+      "title": "La scalinata dorata",
+      "text": "Verso la piramide del Faraone solare, la scalinata brilla.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Sali di corsa",
+          "text": "Arrivi senza fiato ma carico.",
+          "fx": {
+            "energy": 1,
+            "draw": 1,
+            "hp": -4,
+            "gold": 0.3
+          }
+        },
+        {
+          "id": "b",
+          "label": "Sali piano",
+          "text": "Un passo dopo l'altro: la pelle regge.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Prendi un'offerta dai gradini",
+          "text": "Il Faraone non sembra badarci.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "desert-sguardo",
+      "region": "desert",
+      "at": 4,
+      "title": "Lo sguardo del Faraone",
+      "text": "Sul trono, il Faraone ti scruta in silenzio.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lo sfidi con lo sguardo",
+          "text": "Lo disorienti, ma il sole ti brucia.",
+          "fx": {
+            "foeHp": -15,
+            "hp": -6,
+            "gold": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Abbassi il capo",
+          "text": "Rispetto, e un attimo per pensare.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Offri un tributo",
+          "text": "Costa caro, ma ti protegge.",
           "fx": {
             "gold": -1,
-            "draw": 2,
+            "block": 18
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean-molo",
+      "region": "ocean",
+      "at": 0,
+      "title": "Il molo che crolla",
+      "text": "Il porto è un mosaico di relitti e uno squalo corazzato taglia la corrente.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Corri senza guardare",
+          "text": "Le assi cedono dietro di te e ti senti leggero.",
+          "fx": {
+            "energy": 1,
+            "hp": -3,
+            "gold": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Salti da relitto a relitto",
+          "text": "Vedi la strada come una sequenza di idee.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "Ripari sotto una vela",
+          "text": "Il vento ti avvolge come un mantello.",
+          "fx": {
+            "block": 12
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean-tesoro",
+      "region": "ocean",
+      "at": 0,
+      "title": "Il tesoro nel relitto",
+      "text": "Sul fondo di una cabina intravedi qualcosa che brilla.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti tuffi a prenderlo",
+          "text": "Trovi molto, ma l'acqua è gelida.",
+          "fx": {
+            "gold": 3.5,
+            "hp": -6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Lo osservi dall'alto",
+          "text": "Studi le correnti.",
+          "fx": {
+            "draw": 1,
             "block": 6
+          }
+        },
+        {
+          "id": "c",
+          "label": "Prendi solo ciò che luccica in superficie",
+          "text": "Quanto basta.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean-tappi",
+      "region": "ocean",
+      "at": 1,
+      "title": "Tappi per le orecchie",
+      "text": "Il canto della sirena sonica si sente già in lontananza.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Li metti",
+          "text": "Il silenzio ti protegge.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "b",
+          "label": "Ascolti il canto",
+          "text": "Ti vibrano le ossa, ma ti senti vivo.",
+          "fx": {
+            "energy": 2,
+            "hp": -6
+          }
+        },
+        {
+          "id": "c",
+          "label": "Impari il ritmo",
+          "text": "Ogni nota è un'indicazione.",
+          "fx": {
+            "draw": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean-eco",
+      "region": "ocean",
+      "at": 1,
+      "title": "L'eco",
+      "text": "Il suono rimbalza sulle onde e ti torna indietro cambiato.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Rispondi all'eco",
+          "text": "Scopri dove vibra la sirena.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "b",
+          "label": "Fai silenzio",
+          "text": "Ti concentri sul respiro.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Registri il suono e lo vendi",
+          "text": "A qualcuno interessa.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean-fiala",
+      "region": "ocean",
+      "at": 2,
+      "title": "Una fiala di tempesta",
+      "text": "Sul ponte della nave volante, una fiala di energia pura ruota nel vuoto.",
+      "options": [
+        {
+          "id": "a",
+          "label": "La bevi",
+          "text": "Elettricità nelle vene, e qualche ustione.",
+          "fx": {
+            "energy": 1,
+            "draw": 1,
+            "hp": -4,
+            "gold": 0.3
+          }
+        },
+        {
+          "id": "b",
+          "label": "La scambi",
+          "text": "Il pirata fa finta di non vedere.",
+          "fx": {
+            "gold": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "La neutralizzi prima che la usi",
+          "text": "Lo guardi stupito: non ne ha un'altra.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean-rete",
+      "region": "ocean",
+      "at": 2,
+      "title": "La rete di bordo",
+      "text": "Una rete pende dalla nave: puoi arrampicarti.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti arrampichi di corsa",
+          "text": "Arrivi in cima con le braccia che bruciano.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        },
+        {
+          "id": "b",
+          "label": "Aspetti e osservi",
+          "text": "Impari dal modo in cui il pirata si muove.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "Ti fai issare a bordo",
+          "text": "Gli uomini del pirata ti coprono.",
+          "fx": {
+            "block": 12
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean-varco",
+      "region": "ocean",
+      "at": 3,
+      "title": "Una rotta tra i tentacoli",
+      "text": "Il kraken afferra la nave: il varco è stretto.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti lanci nel varco",
+          "text": "Una scarica di adrenalina, qualche graffio.",
+          "fx": {
+            "energy": 2,
+            "hp": -6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Aspetti il momento giusto",
+          "text": "Calma e un po' di scudo.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Cerchi un'altra rotta",
+          "text": "Pensi in tre dimensioni.",
+          "fx": {
+            "draw": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean-inchiostro",
+      "region": "ocean",
+      "at": 3,
+      "title": "L'inchiostro",
+      "text": "Una nube di inchiostro si spande sull'acqua.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lo raccogli",
+          "text": "Un prezioso pigmento, ma ti sporchi.",
+          "fx": {
+            "gold": 2.5,
+            "hp": -2
+          }
+        },
+        {
+          "id": "b",
+          "label": "Lo eviti",
+          "text": "Ti tieni lontano.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Lo usi per camuffarti",
+          "text": "Il kraken ti perde di vista.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean-marea",
+      "region": "ocean",
+      "at": 4,
+      "title": "La marea che si ritira",
+      "text": "Il mare si ritira attorno al Leviatano: il fondale è scoperto.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Segui la marea",
+          "text": "Sali con l'onda e ne cavalchi l'energia.",
+          "fx": {
+            "energy": 1,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "b",
+          "label": "Resti a terra",
+          "text": "Aspetti di vedere cosa torna.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Raccogli ciò che lascia",
+          "text": "Il mare restituisce tesori.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean-profondita",
+      "region": "ocean",
+      "at": 4,
+      "title": "Sotto la superficie",
+      "text": "Qualcosa respira come una montagna sotto di te.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti immergi",
+          "text": "Troppo vicino, ma capisci come si muove.",
+          "fx": {
+            "foeHp": -15,
+            "hp": -6,
+            "gold": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Ascolti il suo respiro",
+          "text": "Impari il suo ritmo.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "Offri un canto di pace",
+          "text": "Il mare si calma per un attimo.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "forest-orme-lupo",
+      "region": "forest",
+      "at": 0,
+      "title": "Orme intelligenti",
+      "text": "Il lupo mutante non lascia orme a caso: ti osserva.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Le segui",
+          "text": "Capisci come ragiona.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "b",
+          "label": "Le eviti",
+          "text": "Resti nei sentieri sicuri.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Lasci un'esca",
+          "text": "Il lupo la annusa, perplesso.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "forest-ruscello",
+      "region": "forest",
+      "at": 0,
+      "title": "Il ruscello dei sensi",
+      "text": "Un ruscello limpido scorre ai margini della foresta.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ci bevi",
+          "text": "Un brivido: i sensi si affinano.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        },
+        {
+          "id": "b",
+          "label": "Annusi l'aria",
+          "text": "Sai cosa c'è dietro gli alberi.",
+          "fx": {
+            "draw": 1,
+            "block": 6
+          }
+        },
+        {
+          "id": "c",
+          "label": "Raccogli bacche rare",
+          "text": "Molto richieste nei villaggi.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "forest-voce",
+      "region": "forest",
+      "at": 1,
+      "title": "La voce tra i tronchi",
+      "text": "Una voce che ti conosce sussurra tra gli alberi.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Rispondi",
+          "text": "Ti mostra una versione di te.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "b",
+          "label": "La ignori",
+          "text": "Ti concentri sul sentiero.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Le chiedi un dono",
+          "text": "Ti dà molto, ma ti chiede qualcosa in cambio.",
+          "fx": {
+            "gold": 3.5,
+            "hp": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "forest-fiore",
+      "region": "forest",
+      "at": 1,
+      "title": "Un fiore che si chiude",
+      "text": "Un fiore luminoso si richiude quando ti avvicini.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lo tocchi",
+          "text": "Un calore dolce e una piccola spinta.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        },
+        {
+          "id": "b",
+          "label": "Lo annaffi",
+          "text": "Si apre, e un insetto ti lascia un regalo.",
+          "fx": {
+            "gold": 1,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Lo raccogli",
+          "text": "Brilla tra le dita, ma si spegne subito.",
+          "fx": {
+            "gold": 2.5,
+            "hp": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "forest-radici",
+      "region": "forest",
+      "at": 2,
+      "title": "Radici sotto i piedi",
+      "text": "Il treant antico si sta alzando e le radici si muovono.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Le segui",
+          "text": "Ti portano verso un varco, ma stringono.",
+          "fx": {
+            "energy": 1,
+            "hp": -3,
+            "gold": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Ti fermi",
+          "text": "Aspetti con pazienza.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Le sposti con cura",
+          "text": "Il treant non capisce, e rallenta.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "forest-linfa",
+      "region": "forest",
+      "at": 2,
+      "title": "La linfa",
+      "text": "Dal tronco del treant cola una linfa dorata.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ne bevi",
+          "text": "Sa di miele e di fuoco.",
+          "fx": {
+            "energy": 2,
+            "hp": -6
+          }
+        },
+        {
+          "id": "b",
+          "label": "La raccogli",
+          "text": "Un prezioso unguento.",
+          "fx": {
+            "gold": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "La offri all'albero",
+          "text": "Si ammorbidisce.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "forest-tracce",
+      "region": "forest",
+      "at": 3,
+      "title": "Tracce di un inseguitore",
+      "text": "Qualcuno ti segue da giorni, il cacciatore del frutto.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Tendi una trappola",
+          "text": "Funziona in parte, ma ti sbucci.",
+          "fx": {
+            "foeHp": -15,
+            "hp": -6,
+            "gold": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "Cancelli le tracce",
+          "text": "Ti muovi nell'ombra.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Le segui al contrario",
+          "text": "Capisci dove ti aspetta.",
+          "fx": {
+            "draw": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "forest-frutto",
+      "region": "forest",
+      "at": 3,
+      "title": "Il frutto proibito",
+      "text": "Un frutto simile a quello che ti ha cambiato pende da un ramo basso.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ne senti il profumo",
+          "text": "Basta un'inalazione per sentirti più vivo.",
+          "fx": {
+            "energy": 1,
+            "draw": 1,
+            "hp": -4,
+            "gold": 0.3
+          }
+        },
+        {
+          "id": "b",
+          "label": "Lo nascondi",
+          "text": "Così nessuno lo troverà.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Lo scambi",
+          "text": "Un mercante di erbe lo paga bene.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "forest-occhi",
+      "region": "forest",
+      "at": 4,
+      "title": "Mille occhi di foglia",
+      "text": "L'Albero del mondo ti osserva con mille foglie-occhio.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ricambi lo sguardo",
+          "text": "Senti che ti capisce.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "b",
+          "label": "Chiudi gli occhi",
+          "text": "Ti affidi all'istinto.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Raccogli le foglie cadute",
+          "text": "Brillano di luce propria.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "forest-cuore-foresta",
+      "region": "forest",
+      "at": 4,
+      "title": "Il cuore della foresta",
+      "text": "Al centro, radici grandi come fiumi pulsano piano.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Poggi la mano",
+          "text": "Il battito si fonde col tuo.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        },
+        {
+          "id": "b",
+          "label": "Resti in ascolto",
+          "text": "Un respiro profondo e qualche idea.",
+          "fx": {
+            "draw": 1,
+            "block": 6
+          }
+        },
+        {
+          "id": "c",
+          "label": "Prendi una radice",
+          "text": "Preziosa ma dolorosa da strappare.",
+          "fx": {
+            "gold": 3.5,
+            "hp": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "volcano-aria",
+      "region": "volcano",
+      "at": 0,
+      "title": "L'aria che brucia",
+      "text": "L'aria è così calda che il tuo respiro prende fuoco.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Respiri a fondo",
+          "text": "La tua aura risponde.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        },
+        {
+          "id": "b",
+          "label": "Trattieni il fiato",
+          "text": "Aspetti di abituarti.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Raccogli le braci",
+          "text": "Ancora calde e preziose.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "volcano-danza",
+      "region": "volcano",
+      "at": 0,
+      "title": "La danza nella lava",
+      "text": "La salamandra celeste danza sulla lava.",
+      "options": [
+        {
+          "id": "a",
+          "label": "La imiti",
+          "text": "Impari i suoi passi.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "b",
+          "label": "La osservi",
+          "text": "Restano impressi.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Ti tuffi nella danza",
+          "text": "Troppo vicino, ma pieno di energia.",
+          "fx": {
+            "energy": 2,
+            "hp": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "volcano-crepe",
+      "region": "volcano",
+      "at": 1,
+      "title": "Le crepe del suolo",
+      "text": "Ogni passo del golem di lava lascia una crepa.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Le segui",
+          "text": "Capisci dove cede.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "b",
+          "label": "Le eviti",
+          "text": "Resti in equilibrio.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Raccogli le pietre calde",
+          "text": "Si vendono bene.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "volcano-passo",
+      "region": "volcano",
+      "at": 1,
+      "title": "Il passo stanco",
+      "text": "Il golem di lava è stanco del mondo.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lo ascolti",
+          "text": "Ti racconta cose antiche.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "b",
+          "label": "Lo accompagni",
+          "text": "Un tratto di strada insieme.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Lo sfidi a correre",
+          "text": "Ti sorpassa, e ti guadagni qualcosa.",
+          "fx": {
+            "energy": 1,
+            "hp": -3,
+            "gold": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "volcano-sei-quello",
+      "region": "volcano",
+      "at": 2,
+      "title": "«Sei quello che sale»",
+      "text": "Il demone ardente ti riconosce e non vuole fermarti.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Accetti il patto",
+          "text": "Il suo fuoco ti riempie, e ti consuma.",
+          "fx": {
+            "energy": 2,
+            "hp": -6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Rifiuti",
+          "text": "Resti con la tua aura.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Gli chiedi un consiglio",
+          "text": "Ti guarda perplesso, poi parla.",
+          "fx": {
+            "draw": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "volcano-contratto",
+      "region": "volcano",
+      "at": 2,
+      "title": "Un contratto di cenere",
+      "text": "Il demone ti porge un foglio che si sgretola.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lo firmi",
+          "text": "Un guadagno immediato, a caro prezzo.",
+          "fx": {
+            "gold": 3.5,
+            "hp": -6
+          }
+        },
+        {
+          "id": "b",
+          "label": "Lo bruci",
+          "text": "Un gesto che lo lascia di sasso.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        },
+        {
+          "id": "c",
+          "label": "Lo leggi con attenzione",
+          "text": "Trovi una clausola che lo indebolisce.",
+          "fx": {
+            "foeHp": -10,
+            "gold": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "volcano-cenere",
+      "region": "volcano",
+      "at": 3,
+      "title": "Cenere dal cielo",
+      "text": "Il cielo si oscura mentre il drago cataclismico apre le ali.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Ti copri",
+          "text": "La cenere si posa su di te come un mantello.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "b",
+          "label": "Corri tra le ceneri",
+          "text": "Ti brucia i polmoni ma ti scuote.",
+          "fx": {
+            "energy": 1,
+            "draw": 1,
+            "hp": -4,
+            "gold": 0.3
+          }
+        },
+        {
+          "id": "c",
+          "label": "Raccogli la cenere preziosa",
+          "text": "Vale più dell'oro.",
+          "fx": {
+            "gold": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "volcano-ombra",
+      "region": "volcano",
+      "at": 3,
+      "title": "L'ombra delle ali",
+      "text": "L'ombra del drago scivola sul cratere.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Resti all'ombra",
+          "text": "Un po' di calma.",
+          "fx": {
+            "block": 6,
+            "draw": 1
+          }
+        },
+        {
+          "id": "b",
+          "label": "La segui",
+          "text": "Capisci dove va.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "c",
+          "label": "La sfidi",
+          "text": "Il drago ti nota, e si innervosisce.",
+          "fx": {
+            "foeHp": -15,
+            "hp": -6,
+            "gold": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "volcano-volti",
+      "region": "volcano",
+      "at": 4,
+      "title": "I volti incontrati",
+      "text": "In cima al cratere, ripensi a tutti i volti incontrati.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Li ricordi uno a uno",
+          "text": "Ognuno ti ha insegnato qualcosa.",
+          "fx": {
+            "draw": 2
+          }
+        },
+        {
+          "id": "b",
+          "label": "Li saluti",
+          "text": "Ti senti protetto.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Ti fai forza con loro",
+          "text": "Una scintilla in più.",
+          "fx": {
+            "energy": 1,
+            "block": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "volcano-cuore-mondo",
+      "region": "volcano",
+      "at": 4,
+      "title": "Il cuore del mondo",
+      "text": "Il Titano del magma è nato dal cuore del mondo: lo senti battere.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Lo ascolti battere",
+          "text": "Il suo ritmo ti dà energia.",
+          "fx": {
+            "energy": 1,
+            "gold": 0.5
+          }
+        },
+        {
+          "id": "b",
+          "label": "Ti prepari al colpo",
+          "text": "Ti concentri sulla difesa.",
+          "fx": {
+            "block": 12
+          }
+        },
+        {
+          "id": "c",
+          "label": "Prendi un frammento",
+          "text": "Dolorosamente prezioso.",
+          "fx": {
+            "gold": 3.5,
+            "hp": -6
           }
         }
       ]

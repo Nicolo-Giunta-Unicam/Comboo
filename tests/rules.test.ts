@@ -198,7 +198,7 @@ test('Scudo d\'assalto: danno pari agli scudi attivi, aggiornato dalle difese gi
   assert.equal(playCard(r, 'base:guard:6'), null); const sh2 = c.field.def.reduce((s, p) => s + p.block, 0); assert.ok(sh2 > sh1); assert.equal(c.field.off[0].dmg, sh2);
 });
 
-import { pendingChoice, makeChoice, chapterKey, goldUnit, choiceGold, resolveOutcome } from '../src/engine'; import { CHOICES } from '../src/data';
+import { pendingChoice, makeChoice, chapterKey, goldUnit, choiceGold, resolveOutcome, scaledFx } from '../src/engine'; import { CHOICES } from '../src/data';
 test('scelte di capitolo: nessuna prima della mappa, una per capitolo, effetti applicati e consumati nel duello', () => {
   const r = newRun(5); assert.equal(pendingChoice(r), null); assert.equal(chooseRegion(r, 'boxing'), null);
   const p = pendingChoice(r)!; assert.ok(p); assert.equal(p.options.length, 3); assert.equal(chapterKey(r), 'boxing:0');
@@ -214,10 +214,14 @@ test('scelte di capitolo: ricompense e malus', () => {
   assert.equal(c.field.def.reduce((s, x) => s + x.block, 0), 6); assert.ok(c.enemy.hp < enemyFor(r.arena, 'boxing', 0).maxHp);
   resolveOutcome(r, 'flee'); assert.equal(pendingChoice(r), null);
 });
-test('scelte di capitolo: evento diverso a ogni capitolo, deterministico, e bilanciato (nessuna opzione migliore delle altre)', () => {
-  const r = newRun(11); chooseRegion(r, 'boxing'); const seen = new Set<string>();
-  for (let i = 0; i < CHOICES.length; i++) { const p = pendingChoice(r)!; assert.ok(!seen.has(p.ev.id)); seen.add(p.ev.id); assert.deepEqual(pendingChoice(r)!.options.map(x => x.id), p.options.map(x => x.id)); r.chapters = { ...r.chapters, [`x${i}`]: { ev: p.ev.id, opt: 'a', gold: 0 } }; r.progress = { boxing: i + 1 }; if (i + 1 >= CONFIG.matchesPerIsland) break; }
+test('scelte di capitolo: ogni capitolo di ogni isola ha eventi suoi, coerenti col livello, deterministici e bilanciati', () => {
+  for (const rg of Object.keys(REGIONS)) for (let at = 0; at < CONFIG.matchesPerIsland; at++) assert.ok(CHOICES.filter(e => e.region === rg && e.at === at).length >= 2, `${rg}:${at}`);
+  const r = newRun(11); chooseRegion(r, 'boxing'); r.region = 'desert'; r.arena = 7; const p = pendingChoice(r)!; assert.equal(p.ev.region, 'desert'); assert.equal(p.ev.at, 0);
+  assert.deepEqual(pendingChoice(r)!.options.map(x => x.id), p.options.map(x => x.id)); assert.equal(pendingChoice(r)!.ev.id, p.ev.id);
+  // l'incontro successivo dell'isola pesca un evento del capitolo 2, diverso dal primo
+  makeChoice(r, p.options[0].id); r.progress = { ...r.progress, desert: 1 }; const q = pendingChoice(r)!; assert.equal(q.ev.at, 1); assert.notEqual(q.ev.id, p.ev.id);
   const W: Record<string, number> = { gold: 1, block: 1 / 6, energy: 1.5, draw: 1, foeHp: -0.15, hp: 0.2 };
   for (const e of CHOICES) { assert.equal(e.options.length, 3); const pts = e.options.map(o => Object.entries(o.fx).reduce((s, [k, v]) => s + W[k] * (v as number), 0)); assert.ok(Math.min(...pts) >= 1.6 && Math.max(...pts) <= 2.5 && Math.max(...pts) - Math.min(...pts) <= 0.6, `${e.id}: ${pts}`); }
-  const u = goldUnit(newRun(1)); assert.ok(u >= 1);
+  // il livello conta: oro, scudo e malus crescono con l'arena
+  const a = newRun(1), b = newRun(1); b.arena = 20; assert.ok(goldUnit(b) > goldUnit(a)); assert.ok(scaledFx(b, { block: 12 }).block! > scaledFx(a, { block: 12 }).block!); assert.ok(scaledFx(b, { hp: -4 }).hp! < scaledFx(a, { hp: -4 }).hp!);
 });
