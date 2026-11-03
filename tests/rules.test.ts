@@ -221,7 +221,7 @@ test('scelte di capitolo: ogni capitolo di ogni isola ha eventi suoi, coerenti c
   // l'incontro successivo dell'isola pesca un evento del capitolo 2, diverso dal primo
   makeChoice(r, p.options[0].id); r.progress = { ...r.progress, desert: 1 }; const q = pendingChoice(r)!; assert.equal(q.ev.at, 1); assert.notEqual(q.ev.id, p.ev.id);
   const W: Record<string, number> = { gold: 1, block: 1 / 6, energy: 1.5, draw: 1, foeHp: -0.15, hp: 0.2 };
-  for (const e of CHOICES) { assert.equal(e.options.length, 3); const pts = e.options.map(o => Object.entries(o.fx).reduce((s, [k, v]) => s + W[k] * (v as number), 0)); assert.ok(Math.min(...pts) >= 1.6 && Math.max(...pts) <= 2.5 && Math.max(...pts) - Math.min(...pts) <= 0.6, `${e.id}: ${pts}`); }
+  for (const e of CHOICES) { assert.equal(e.options.length, 3); const pts = e.options.map(o => Object.entries(o.fx).reduce((s, [k, v]) => s + W[k] * (v as number), 0)); assert.ok(Math.min(...pts) >= 1.1 && Math.max(...pts) <= 1.9 && Math.max(...pts) - Math.min(...pts) <= 0.5, `${e.id}: ${pts}`); for (const o of e.options) assert.ok(Object.values(o.fx).filter(Boolean).length <= 2, `${e.id}/${o.id}: più di 2 effetti`); }
   // il livello conta: oro, scudo e malus crescono con l'arena
   const a = newRun(1), b = newRun(1); b.arena = 20; assert.ok(goldUnit(b) > goldUnit(a)); assert.ok(scaledFx(b, { block: 12 }).block! > scaledFx(a, { block: 12 }).block!); assert.ok(scaledFx(b, { hp: -4 }).hp! < scaledFx(a, { hp: -4 }).hp!);
 });
@@ -239,4 +239,14 @@ test('regole di bilanciamento: PV per arena, mano rifornita a inizio turno, tett
   beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 100000; c.hand = ['base:jab:0']; c.enemy.atk = 1e6; endTurn(r); for (let g = 0; g < 300 && r.phase === 'combat' && c.phase !== 'player'; g++) enemyStep(r);
   assert.equal(r.phase, 'combat'); assert.ok(r.hp >= Math.floor(maxHp(r) * (1 - CONFIG.enemy.burstCap)) - 1, `PV ${r.hp}: il tetto ai danni per turno non regge`);
   assert.equal(c.hand.length, Math.max(1 + CONFIG.drawPerTurn, CONFIG.handTarget)); // 1 carta in mano: si rifornisce fino a handTarget
+});
+
+test('combo: pescaggio fisso di 2 carte, +1 al turno dopo se nel turno hai fatto almeno una combo', () => {
+  const run = (combo: boolean) => { const r = rich(); beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 100000; c.energy = 9; c.hand = ['base:jab:0', 'base:jab:1', 'base:guard:5']; c.draw = ['base:jab:2', 'base:jab:3', 'base:jab:4', 'base:guard:6', 'base:guard:7']; c.discard = [];
+    assert.equal(playCard(r, 'base:jab:0'), null); if (combo) assert.equal(playCard(r, 'base:jab:1'), null); else assert.equal(playCard(r, 'base:guard:5'), null);
+    assert.equal(combo, (c.mods?.combos ?? 0) > 0); const before = c.hand.length; endTurn(r); for (let g = 0; g < 300 && r.phase === 'combat' && c.phase !== 'player'; g++) enemyStep(r); return c.hand.length - before; };
+  assert.equal(run(false), CONFIG.drawPerTurn); assert.equal(run(true), CONFIG.drawPerTurn + CONFIG.comboDraw); assert.equal(CONFIG.drawPerTurn, 2);
+});
+test('nemici: ognuno ha un moveset riconoscibile e diverso dagli altri', () => {
+  const sets = new Set<string>(); let n = 0; for (const rg of Object.values(REGIONS)) for (const e of rg.enemies) { assert.ok(e.moves && e.moves.length >= 3, e.name); sets.add([...new Set(e.moves)].sort().join(',')); n++; } assert.equal(sets.size, n);
 });

@@ -212,7 +212,7 @@ function absorb(c: Combat, sh: Placed[], d: number) {
   for (const s of sh) { if (d <= 0) break; const a = Math.min(s.block, d); s.block -= a; d -= a; }
   sh.splice(0, sh.length, ...sh.filter(s => { if (s.block > 0) return true; if (s.uid) c.discard.push(s.uid); return false; })); return d;
 }
-function startTurn(r: Run) { const c = r.combat!; c.turn++; c.field.def = decay(c, c.field.def); c.block = 0; c.combo = ''; c.played = {}; c.prev = null; c.mods = { off: 0, bypass: false, freeNext: false, dupNext: false, combos: 0 }; c.cardCost = {}; delete c.lastUid; c.pick = null; c.lastBy = { off: null, def: null }; c.runs = { off: 0, def: 0 }; c.chains = { off: 0, def: 0 }; c.ev = null; c.energy = maxEnergy(r); c.phase = 'player'; c.foeDealt = 0; drawCards(c, r, c.turn === 1 ? CONFIG.startHand : Math.max(CONFIG.drawPerTurn, CONFIG.handTarget - c.hand.length)); }
+function startTurn(r: Run) { const c = r.combat!; c.turn++; const comboBonus = (c.mods?.combos ?? 0) > 0 ? CONFIG.comboDraw : 0; /* almeno una combo nel turno concluso: +carte in questo */ c.field.def = decay(c, c.field.def); c.block = 0; c.combo = ''; c.played = {}; c.prev = null; c.mods = { off: 0, bypass: false, freeNext: false, dupNext: false, combos: 0 }; c.cardCost = {}; delete c.lastUid; c.pick = null; c.lastBy = { off: null, def: null }; c.runs = { off: 0, def: 0 }; c.chains = { off: 0, def: 0 }; c.ev = null; c.energy = maxEnergy(r); c.phase = 'player'; c.foeDealt = 0; drawCards(c, r, c.turn === 1 ? CONFIG.startHand : Math.max(CONFIG.drawPerTurn, CONFIG.handTarget - c.hand.length) + comboBonus); }
 /** Scudi attivi del giocatore: guardia delle carte offensive del turno + difese schierate. */
 export const shieldsOf = (c: Combat) => c.block + c.field.def.reduce((s, p) => s + p.block, 0);
 /** Le carte "Scudo d'assalto" già schierate seguono gli scudi attivi (se ne giochi altri dopo, il loro danno cresce). */
@@ -284,7 +284,8 @@ export function endTurn(r: Run): Err {
 }
 function prepareEnemy(r: Run, c: Combat) {
   c.foeField.def = decay(c, c.foeField.def);
-  const pool = (REGIONS[r.region ?? '']?.enemyMoves ?? []).map(id => ENEMY_MOVES.find(m => m.id === id)).filter(Boolean) as typeof ENEMY_MOVES; if (!pool.length) pool.push(...ENEMY_MOVES);
+  const rgn = REGIONS[r.region ?? ''], def = rgn?.enemies.find(x => x.id && x.id === c.enemy.id), ids = def?.moves?.length ? def.moves : rgn?.enemyMoves ?? [];
+  const pool = ids.map(id => ENEMY_MOVES.find(m => m.id === id)).filter(Boolean) as typeof ENEMY_MOVES; if (!pool.length) pool.push(...ENEMY_MOVES);
   const E = CONFIG.enemy, n = Math.min(E.playsMax, E.playsBase + Math.floor((r.arena - 1) / E.playsEvery)), base = c.enemy.atk * E.cardMult;
   const avg = pool.reduce((s, m) => s + (m.dmg ?? 0) * (m.hits ?? 1), 0) / pool.length, norm = E.normalize && avg > 0 ? E.normalize / avg : 1; // normalizza: ogni isola infligge in media gli stessi danni per carta, a prescindere dal suo mazzo di mosse
   const k = (x?: number) => x ? Math.max(1, Math.round(base * x)) : 0, kd = (x?: number) => x ? Math.max(1, Math.round(base * norm * x)) : 0, gb = (c.enemy.gear ?? []).reduce((s, g) => s + (EQUIPMENT[g].bonus.dmg ?? 0), 0);
@@ -304,7 +305,7 @@ export function enemyStep(r: Run): Err {
   if (x) {
     c.last = x; c.enemy.hp = Math.min(c.enemy.maxHp, c.enemy.hp + x.heal);
     const p: Placed = { id: ++c.seq, fx: x.heal ? `✚${x.heal}` : '', uid: '', name: x.name, icon: x.icon, src: 'enemy:' + (x.id ?? ''), dmg: x.dmg, hits: x.hits, block: x.block, ttl: x.dur === 0 ? -1 : x.dur };
-    if (x.dmg) c.foeField.off.push({ ...p, block: 0, ttl: 1 }); else if (x.block) c.foeField.def.push({ ...p, dmg: 0, hits: 1 });
+    if (x.dmg) c.foeField.off.push({ ...p, block: 0, ttl: 1 }); if (x.block) c.foeField.def.push({ ...p, id: x.dmg ? ++c.seq : p.id, dmg: 0, hits: 1 });
     c.fresh = p.id!; c.ev = null; c.log.push(`${x.name} schierata dal nemico.`); return null;
   }
   const a = c.foeField.off.shift();

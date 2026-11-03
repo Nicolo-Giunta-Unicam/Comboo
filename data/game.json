@@ -68,8 +68,9 @@
     },
     "maxScars": 6,
     "hpPerArena": 3,
-    "handTarget": 5,
-    "discardDrawCards": 1
+    "handTarget": 0,
+    "discardDrawCards": 1,
+    "comboDraw": 1
   },
   "baseMoves": [
     {
@@ -1158,6 +1159,63 @@
       "name": "Colpo cataclismico",
       "icon": "💢",
       "dmg": 2.6
+    },
+    {
+      "id": "jab2",
+      "name": "Doppio colpo",
+      "icon": "👊",
+      "dmg": 0.9,
+      "hits": 2
+    },
+    {
+      "id": "volley",
+      "name": "Salva",
+      "icon": "🔫",
+      "dmg": 0.45,
+      "hits": 5
+    },
+    {
+      "id": "counter",
+      "name": "Contrattacco",
+      "icon": "↩️",
+      "dmg": 0.7,
+      "block": 1.0,
+      "dur": 1
+    },
+    {
+      "id": "bulwark",
+      "name": "Fortezza",
+      "icon": "🏰",
+      "block": 2.5,
+      "dur": 3
+    },
+    {
+      "id": "mend",
+      "name": "Riparazione",
+      "icon": "🔧",
+      "heal": 1.0,
+      "block": 1.0,
+      "dur": 2
+    },
+    {
+      "id": "bite",
+      "name": "Morso vampirico",
+      "icon": "🦷",
+      "dmg": 1.1,
+      "heal": 0.7
+    },
+    {
+      "id": "crush",
+      "name": "Schianto",
+      "icon": "🔨",
+      "dmg": 3.2
+    },
+    {
+      "id": "sting",
+      "name": "Pungiglione",
+      "icon": "🦂",
+      "dmg": 1.2,
+      "hits": 2
     }
   ],
   "regions": [
@@ -1176,37 +1234,66 @@
           "name": "Sparring partner",
           "story": "La palestra di Gorin odora di sudore e linimento. «Prima di sognare, {nome}, impara a restare in piedi», borbotta il vecchio, e ti mette davanti lo sparring partner che ha fatto sputare sangue a tutti i suoi allievi.",
           "id": "boxing-1",
-          "hpMul": 0.82,
-          "atkMul": 0.83
+          "hpMul": 0.79,
+          "atkMul": 0.89,
+          "moves": [
+            "direct",
+            "direct",
+            "guard"
+          ]
         },
         {
           "name": "Pugile di strada",
           "story": "Dopo il primo round il tuo nome gira nei vicoli. Un pugile di strada, senza guanti né regole, ti aspetta dietro il locale: qui non esiste un gong che ti salvi.",
           "id": "boxing-2",
-          "hpMul": 0.89,
-          "atkMul": 0.88
+          "hpMul": 1.0,
+          "atkMul": 1.0,
+          "moves": [
+            "flurry",
+            "jab2",
+            "direct"
+          ]
         },
         {
           "name": "Campione regionale",
           "story": "Le cinture regionali si scoprono avare. Il campione in carica ti guarda dall'alto: per lui sei solo un ragazzino con troppa fame, e vuole farti pentire di essere salito sul ring.",
           "id": "boxing-3",
-          "hpMul": 0.98,
-          "atkMul": 0.91
+          "hpMul": 0.86,
+          "atkMul": 0.93,
+          "moves": [
+            "heavy",
+            "guard",
+            "direct",
+            "counter"
+          ]
         },
         {
           "name": "Peso massimo",
           "story": "Ogni vittoria alza la posta. Il peso massimo entra scortato dal brusio del pubblico, mentre Gorin ti stringe le fasce in silenzio: «Non accettare il suo ritmo. Imponi il tuo».",
           "id": "boxing-4",
-          "hpMul": 1.1,
-          "atkMul": 0.96
+          "hpMul": 1.0,
+          "atkMul": 1.0,
+          "moves": [
+            "heavy",
+            "heavy",
+            "crush",
+            "guard"
+          ]
         },
         {
           "name": "Leggenda del ring",
-          "hpMul": 1.43,
-          "atkMul": 1.2,
+          "hpMul": 1.03,
+          "atkMul": 1.03,
           "lore": "Un campione imbattuto da vent'anni: la sua guardia non ha mai ceduto.",
           "story": "Il palazzetto è pieno fino al soffitto. La Leggenda non perde da vent'anni, e Gorin lo sa: «Se la superi, {nome}, qualcuno ti noterà». Dalle gradinate, un uomo in nero annota il tuo nome su un taccuino.",
-          "id": "boxing-5"
+          "id": "boxing-5",
+          "moves": [
+            "counter",
+            "jab2",
+            "heavy",
+            "bulwark",
+            "direct"
+          ]
         }
       ],
       "enemyMoves": [
@@ -1232,37 +1319,67 @@
           "name": "Recluta cibernetica",
           "story": "L'uomo in nero ti porta oltre il mare, dove i pugni da soli non bastano. Un campo militare ti accoglie con il rumore dei motori, e la prima prova è una recluta con le braccia ancora fumanti d'officina.",
           "id": "battlefield-1",
-          "hpMul": 1.35,
-          "atkMul": 1.1
+          "hpMul": 1.0,
+          "atkMul": 1.0,
+          "moves": [
+            "volley",
+            "direct",
+            "guard"
+          ]
         },
         {
           "name": "Cecchino",
           "story": "Colpi secchi dalla cresta: il cecchino non si vede mai, ma tu sì. Capisci in fretta che qui sopravvive chi si muove prima del suono.",
           "id": "battlefield-2",
-          "hpMul": 1.54,
-          "atkMul": 1.17
+          "hpMul": 1.07,
+          "atkMul": 1.03,
+          "moves": [
+            "rocket",
+            "rocket",
+            "direct",
+            "guard"
+          ]
         },
         {
           "name": "Soldato in esoscheletro",
           "story": "Gli armaioli ridono dei tuoi pugni nudi, poi smettono. Il soldato in esoscheletro avanza come una porta blindata, e ti costringe a scegliere: nuovi mezzi, o nuove idee.",
           "id": "battlefield-3",
-          "hpMul": 1.45,
-          "atkMul": 1.19
+          "hpMul": 0.92,
+          "atkMul": 0.96,
+          "moves": [
+            "heavy",
+            "bulwark",
+            "direct",
+            "volley"
+          ]
         },
         {
           "name": "Mech da guerra",
           "story": "Il terreno trema. Un mech da guerra emerge dalla nebbia, guidato da qualcuno che ha smesso di sentire il dolore. Dal comando, in silenzio, valutano se sei degno dei loro segreti.",
           "id": "battlefield-4",
-          "hpMul": 1.5,
-          "atkMul": 1.21
+          "hpMul": 1.01,
+          "atkMul": 1.01,
+          "moves": [
+            "volley",
+            "volley",
+            "rocket",
+            "mend"
+          ]
         },
         {
           "name": "Generale corazzato",
-          "hpMul": 1.82,
-          "atkMul": 1.35,
+          "hpMul": 1.26,
+          "atkMul": 1.13,
           "lore": "Comanda l'esercito dall'interno di un'armatura meccanica: non conosce la resa.",
           "story": "Il generale ti aspetta nel cratere dell'ultimo bunker, chiuso in un'armatura che sembra respirare. «Hai imparato a usare gli strumenti, {nome}. Ora scopriamo se ne sei il padrone o lo schiavo».",
-          "id": "battlefield-5"
+          "id": "battlefield-5",
+          "moves": [
+            "rocket",
+            "counter",
+            "bulwark",
+            "volley",
+            "heavy"
+          ]
         }
       ],
       "enemyMoves": [
@@ -1289,37 +1406,67 @@
           "name": "Predone",
           "story": "Il deserto non perdona: acqua per due giorni e nemmeno una mappa. Un predone ti segue da ore, certo che la sete farà il lavoro per lui. Si sbaglia.",
           "id": "desert-1",
-          "hpMul": 1.06,
-          "atkMul": 1.03
+          "hpMul": 0.82,
+          "atkMul": 0.91,
+          "moves": [
+            "direct",
+            "sting",
+            "flurry"
+          ]
         },
         {
           "name": "Scorpione gigante",
           "story": "Di notte la sabbia si muove. Lo scorpione gigante esce dalle dune e il tuo corpo risponde prima della mente, con una forza che non ricordavi di avere.",
           "id": "desert-2",
-          "hpMul": 0.99,
-          "atkMul": 1.0
+          "hpMul": 0.7,
+          "atkMul": 0.84,
+          "moves": [
+            "sting",
+            "sting",
+            "bite",
+            "guard"
+          ]
         },
         {
           "name": "Mummia guerriera",
           "story": "Tra le rovine di un tempio sepolto, una guerriera avvolta in bende secolari ti sfida a un duello rituale. Ogni colpo che incassi ti rende più duro, e lei lo sa.",
           "id": "desert-3",
-          "hpMul": 1.23,
-          "atkMul": 1.1
+          "hpMul": 0.67,
+          "atkMul": 0.83,
+          "moves": [
+            "drain",
+            "heavy",
+            "mend",
+            "guard"
+          ]
         },
         {
           "name": "Colosso di sabbia",
           "story": "La tempesta prende la forma di un gigante. Resistere non serve: il colosso crolla e si ricompone, e solo un colpo capace di spezzare la roccia può fermarlo.",
           "id": "desert-4",
-          "hpMul": 1.35,
-          "atkMul": 1.15
+          "hpMul": 0.8,
+          "atkMul": 0.9,
+          "moves": [
+            "crush",
+            "bulwark",
+            "heavy",
+            "regen"
+          ]
         },
         {
           "name": "Faraone solare",
-          "hpMul": 1.66,
-          "atkMul": 1.29,
+          "hpMul": 1.0,
+          "atkMul": 1.02,
           "lore": "Il sole stesso sembra inchinarsi a lui; la sabbia obbedisce a ogni suo gesto.",
           "story": "All'orizzonte una piramide brilla come un secondo sole. Il Faraone ti attende sul trono: «Hai attraversato il mio regno senza inchinarti. Mostrami di cosa è fatto il tuo corpo».",
-          "id": "desert-5"
+          "id": "desert-5",
+          "moves": [
+            "rocket",
+            "bite",
+            "mend",
+            "sting",
+            "bulwark"
+          ]
         }
       ],
       "enemyMoves": [
@@ -1345,37 +1492,66 @@
           "name": "Squalo corazzato",
           "story": "Il porto è un mosaico di relitti. Corri sulle assi galleggianti mentre uno squalo corazzato taglia la corrente: ormai sai che l'acqua non ti rallenta, ti ascolta.",
           "id": "ocean-1",
-          "hpMul": 1.09,
-          "atkMul": 1.04
+          "hpMul": 0.87,
+          "atkMul": 0.94,
+          "moves": [
+            "bite",
+            "heavy",
+            "bulwark"
+          ]
         },
         {
           "name": "Sirena sonica",
           "story": "Il suo canto spezza i vetri e ti fa vibrare le ossa. La sirena sonica ti sfida a inseguire un suono più veloce di te, e per la prima volta il tuo corpo ci riesce.",
           "id": "ocean-2",
-          "hpMul": 1.46,
-          "atkMul": 1.2
+          "hpMul": 1.06,
+          "atkMul": 1.03,
+          "moves": [
+            "shock",
+            "shock",
+            "drain",
+            "guard"
+          ]
         },
         {
           "name": "Pirata dell'energia",
           "story": "Sul ponte di una nave volante, un pirata accumula tempesta nei pugni e ride: «Quelli come noi non combattono, scatenano». Capire il campo di battaglia è l'unico modo per stargli dietro.",
           "id": "ocean-3",
-          "hpMul": 1.49,
-          "atkMul": 1.21
+          "hpMul": 1.03,
+          "atkMul": 1.01,
+          "moves": [
+            "rocket",
+            "volley",
+            "counter"
+          ]
         },
         {
           "name": "Kraken",
           "story": "Le onde diventano braccia. Il kraken afferra la nave e, per respirare, devi trovare un varco tra i tentacoli: pensare in tre dimensioni, muoverti senza nessun appoggio.",
           "id": "ocean-4",
-          "hpMul": 1.42,
-          "atkMul": 1.18
+          "hpMul": 0.9,
+          "atkMul": 0.95,
+          "moves": [
+            "flurry",
+            "crush",
+            "bulwark",
+            "regen"
+          ]
         },
         {
           "name": "Leviatano",
-          "hpMul": 1.53,
-          "atkMul": 1.24,
+          "hpMul": 0.98,
+          "atkMul": 1.01,
           "lore": "Una creatura antica che solleva maremoti con un solo battito di coda.",
           "story": "Sotto la superficie qualcosa respira come una montagna. Il Leviatano si solleva e il mare si piega attorno a lui: se lo fermi, la rotta verso la foresta sarà aperta.",
-          "id": "ocean-5"
+          "id": "ocean-5",
+          "moves": [
+            "crush",
+            "shock",
+            "mend",
+            "bulwark",
+            "heavy"
+          ]
         }
       ],
       "enemyMoves": [
@@ -1401,37 +1577,67 @@
           "name": "Lupo mutante",
           "story": "Oltre la riva la foresta ti osserva. Il lupo mutante esce dagli alberi con occhi troppo intelligenti: non cerca cibo, vuole capire se sei una preda o un simile.",
           "id": "forest-1",
-          "hpMul": 0.94,
-          "atkMul": 0.97
+          "hpMul": 0.62,
+          "atkMul": 0.8,
+          "moves": [
+            "bite",
+            "jab2",
+            "flurry"
+          ]
         },
         {
           "name": "Spirito della foresta",
           "story": "Tra i tronchi sussurra una voce che ti conosce. Lo spirito ti mostra ciò che potresti diventare, e le tue ferite iniziano a chiudersi da sole.",
           "id": "forest-2",
-          "hpMul": 0.99,
-          "atkMul": 1.0
+          "hpMul": 0.64,
+          "atkMul": 0.81,
+          "moves": [
+            "regen",
+            "drain",
+            "shock",
+            "guard"
+          ]
         },
         {
           "name": "Treant antico",
           "story": "Un albero si alza e cammina. Il treant antico non ha rabbia, solo una pazienza millenaria: ogni tuo colpo lo risveglia un po' di più, ogni tua ferita ti cambia.",
           "id": "forest-3",
-          "hpMul": 0.94,
-          "atkMul": 0.97
+          "hpMul": 0.6,
+          "atkMul": 0.79,
+          "moves": [
+            "crush",
+            "regen",
+            "bulwark"
+          ]
         },
         {
           "name": "Cacciatore del frutto",
           "story": "Qualcuno ti segue da giorni: vuole il potere che porti dentro, nato da un frutto assaggiato per curiosità. Affrontare il cacciatore significa decidere che cosa sei diventato.",
           "id": "forest-4",
-          "hpMul": 0.98,
-          "atkMul": 0.99
+          "hpMul": 0.75,
+          "atkMul": 0.87,
+          "moves": [
+            "sting",
+            "rocket",
+            "volley",
+            "counter"
+          ]
         },
         {
           "name": "Albero del mondo",
-          "hpMul": 1.16,
-          "atkMul": 1.09,
+          "hpMul": 0.86,
+          "atkMul": 0.95,
           "lore": "Radici che attraversano l'isola: ogni foglia è un occhio, ogni ramo un colpo.",
           "story": "Al cuore della foresta, radici grandi come fiumi stringono l'isola. L'Albero del mondo non parla: ti osserva con mille foglie-occhio, e capisci che solo un'evoluzione completa può attraversarlo.",
-          "id": "forest-5"
+          "id": "forest-5",
+          "moves": [
+            "regen",
+            "mend",
+            "crush",
+            "shock",
+            "bulwark",
+            "drain"
+          ]
         }
       ],
       "enemyMoves": [
@@ -1458,37 +1664,67 @@
           "name": "Salamandra celeste",
           "story": "Il vulcano non è una montagna ma una bocca. Una salamandra celeste danza nella lava e l'aria si fa così calda che il tuo respiro prende fuoco: la tua aura comincia a rispondere.",
           "id": "volcano-1",
-          "hpMul": 0.86,
-          "atkMul": 0.93
+          "hpMul": 0.61,
+          "atkMul": 0.79,
+          "moves": [
+            "shock",
+            "flurry",
+            "bite",
+            "direct"
+          ]
         },
         {
           "name": "Golem di lava",
           "story": "La roccia si stacca dal pendio e cammina. Il golem di lava è stanco del mondo, e ogni suo passo lascia una crepa. Lo affronti sapendo che ormai i tuoi colpi spaccano il suolo.",
           "id": "volcano-2",
-          "hpMul": 0.84,
-          "atkMul": 0.92
+          "hpMul": 0.7,
+          "atkMul": 0.85,
+          "moves": [
+            "crush",
+            "bulwark",
+            "heavy"
+          ]
         },
         {
           "name": "Demone ardente",
           "story": "Un demone ardente ti riconosce: «Sei quello che sale». Non vuole fermarti, vuole sapere fino a dove puoi spingerti prima di bruciare.",
           "id": "volcano-3",
-          "hpMul": 1.07,
-          "atkMul": 1.03
+          "hpMul": 1.0,
+          "atkMul": 1.0,
+          "moves": [
+            "cata",
+            "drain",
+            "bite",
+            "counter"
+          ]
         },
         {
           "name": "Drago cataclismico",
           "story": "Il cielo si oscura. Il drago cataclismico apre le ali e la cenere cade come pioggia: davanti a un essere così, o diventi qualcosa di più, o ti arrendi.",
           "id": "volcano-4",
-          "hpMul": 0.95,
-          "atkMul": 0.98
+          "hpMul": 0.86,
+          "atkMul": 0.93,
+          "moves": [
+            "cata",
+            "rocket",
+            "shock",
+            "volley"
+          ]
         },
         {
           "name": "Titano del magma",
-          "hpMul": 1.03,
-          "atkMul": 1.03,
+          "hpMul": 0.82,
+          "atkMul": 0.92,
           "lore": "Un gigante nato dal cuore del vulcano: ogni suo passo fa tremare il mondo.",
           "story": "In cima al cratere il Titano ti aspetta, nato dal cuore del mondo. Alle tue spalle, il mare e tutti i volti incontrati. «Il tuo viaggio finisce qui, {nome}, o inizia davvero», dice.",
-          "id": "volcano-5"
+          "id": "volcano-5",
+          "moves": [
+            "cata",
+            "crush",
+            "mend",
+            "bulwark",
+            "heavy"
+          ]
         }
       ],
       "enemyMoves": [
@@ -1517,7 +1753,7 @@
         "jab",
         "guard",
         "guard",
-        "guard",
+        "focus",
         "focus"
       ]
     },
@@ -1571,7 +1807,7 @@
           "label": "La apri e ti prendi il contenuto",
           "text": "Dentro ci sono delle banconote: le tieni.",
           "fx": {
-            "gold": 2
+            "gold": 1.5
           }
         },
         {
@@ -1579,8 +1815,8 @@
           "label": "La riporti al proprietario",
           "text": "Il proprietario è grato e ti dà un consiglio prezioso.",
           "fx": {
-            "gold": 1,
-            "draw": 1
+            "draw": 1,
+            "foeHp": -3
           }
         },
         {
@@ -1589,7 +1825,7 @@
           "text": "Un'ora di colpi al sacco ti scalda i muscoli.",
           "fx": {
             "energy": 1,
-            "block": 4
+            "hp": -1
           }
         }
       ]
@@ -1607,8 +1843,7 @@
           "text": "Sei stanco ma carico, e trovi una banconota per strada.",
           "fx": {
             "energy": 1,
-            "hp": -3,
-            "gold": 1
+            "hp": -1
           }
         },
         {
@@ -1616,7 +1851,8 @@
           "label": "Dormi il più possibile",
           "text": "Ti svegli riposato e con i muscoli sciolti.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -1624,7 +1860,8 @@
           "label": "Rivedi le lezioni di Gorin",
           "text": "Ripassi le combinazioni una a una.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "gold": 0.5
           }
         }
       ]
@@ -1641,8 +1878,7 @@
           "label": "Punti su di te",
           "text": "Se vinci incassi bene, ma il pugile sembra più tosto del previsto.",
           "fx": {
-            "gold": 3.5,
-            "foeHp": 10
+            "gold": 1.5
           }
         },
         {
@@ -1650,7 +1886,7 @@
           "label": "Rifiuti e lo osservi da lontano",
           "text": "Guardi come si muove e trovi un punto debole.",
           "fx": {
-            "foeHp": -10,
+            "foeHp": -6,
             "gold": 0.5
           }
         },
@@ -1659,8 +1895,6 @@
           "label": "Punti contro di te",
           "text": "Soldi facili, ma l'orgoglio fa un po' male.",
           "fx": {
-            "gold": 1.5,
-            "hp": -5,
             "energy": 1
           }
         }
@@ -1678,8 +1912,8 @@
           "label": "Firmi il suo guanto",
           "text": "Ti ringrazia con gli occhi lucidi e con una mancia.",
           "fx": {
-            "gold": 1,
-            "block": 6
+            "block": 6,
+            "gold": 0.5
           }
         },
         {
@@ -1687,9 +1921,7 @@
           "label": "Ti alleni con lui",
           "text": "Un po' di fatica, ma anche una gran carica.",
           "fx": {
-            "energy": 1,
-            "hp": -2,
-            "block": 6
+            "energy": 1
           }
         },
         {
@@ -1697,7 +1929,8 @@
           "label": "Ti fai portare l'acqua",
           "text": "Con i riflessi di un bambino, ti tiene al passo.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "gold": 0.5
           }
         }
       ]
@@ -1714,8 +1947,8 @@
           "label": "Saluti la folla",
           "text": "Il boato ti carica.",
           "fx": {
-            "gold": 1,
-            "block": 6
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -1723,10 +1956,7 @@
           "label": "Ti isoli e respiri",
           "text": "Il rumore svanisce, restate solo tu e il tuo respiro.",
           "fx": {
-            "energy": 1,
-            "draw": 1,
-            "hp": -4,
-            "gold": 0.3
+            "energy": 1
           }
         },
         {
@@ -1734,9 +1964,7 @@
           "label": "Provochi il campione",
           "text": "Perde la calma, ma anche tu rischi di più.",
           "fx": {
-            "foeHp": -15,
-            "hp": -6,
-            "gold": 1
+            "foeHp": -10
           }
         }
       ]
@@ -1753,7 +1981,8 @@
           "label": "Ti fai fasciare bene",
           "text": "Ti stringe le bende fino a farti sentire invincibile.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -1761,10 +1990,7 @@
           "label": "Prendi uno stimolante",
           "text": "Il cuore va a mille, ma ti senti pronto a tutto.",
           "fx": {
-            "energy": 1,
-            "draw": 1,
-            "hp": -5,
-            "gold": 0.5
+            "energy": 1
           }
         },
         {
@@ -1772,8 +1998,7 @@
           "label": "Rifiuti le cure e vendi le bende",
           "text": "Ti pagano volentieri, ma parti un po' ammaccato.",
           "fx": {
-            "gold": 2.5,
-            "hp": -2
+            "gold": 1.5
           }
         }
       ]
@@ -1790,7 +2015,8 @@
           "label": "Ascolti la sua lezione",
           "text": "Un consiglio semplice, ma ti rimane in testa.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "block": 3
           }
         },
         {
@@ -1798,9 +2024,8 @@
           "label": "Gli offri da bere",
           "text": "Parla per ore e ti regala una vecchia fasciatura.",
           "fx": {
-            "gold": -1,
             "energy": 1,
-            "block": 10
+            "hp": -1
           }
         },
         {
@@ -1808,9 +2033,8 @@
           "label": "Lo sfidi a braccio di ferro",
           "text": "Perdi un po' di forza, ma impari come si muove un veterano.",
           "fx": {
-            "foeHp": -10,
-            "hp": -4,
-            "gold": 1.5
+            "gold": 1,
+            "block": 3
           }
         }
       ]
@@ -1827,8 +2051,8 @@
           "label": "Stringi i denti",
           "text": "Il dolore ti sveglia: i riflessi sono al massimo.",
           "fx": {
-            "energy": 2,
-            "hp": -6
+            "energy": 1,
+            "hp": -1
           }
         },
         {
@@ -1837,7 +2061,7 @@
           "text": "Meno scatto, più attenzione.",
           "fx": {
             "block": 6,
-            "draw": 1
+            "gold": 0.5
           }
         },
         {
@@ -1845,7 +2069,8 @@
           "label": "Ti fai pagare un test medico",
           "text": "Una clinica cerca volontari: ti danno un compenso.",
           "fx": {
-            "gold": 2
+            "gold": 2.5,
+            "hp": -5
           }
         }
       ]
@@ -1862,8 +2087,8 @@
           "label": "Gli lasci il tuo nome",
           "text": "Annota tutto con un sorriso, e ti fa avere una piccola borsa.",
           "fx": {
-            "gold": 1,
-            "draw": 1
+            "draw": 1,
+            "foeHp": -3
           }
         },
         {
@@ -1871,8 +2096,7 @@
           "label": "Gli chiedi chi lo manda",
           "text": "Non risponde, ma il suo sguardo ti dà una strana energia.",
           "fx": {
-            "energy": 1,
-            "gold": 0.5
+            "energy": 1
           }
         },
         {
@@ -1880,7 +2104,8 @@
           "label": "Lo ignori e ti concentri",
           "text": "Resti sul tuo ritmo, protetto dal rumore.",
           "fx": {
-            "block": 12
+            "block": 6,
+            "gold": 0.5
           }
         }
       ]
@@ -1897,8 +2122,7 @@
           "label": "Ti guardi negli occhi",
           "text": "Ritrovi la calma e le tue combinazioni.",
           "fx": {
-            "draw": 1,
-            "block": 6
+            "block": 8
           }
         },
         {
@@ -1906,9 +2130,8 @@
           "label": "Colpisci il tuo riflesso",
           "text": "Ti fai male, ma sfoghi la tensione e trovi un vecchio portafoglio.",
           "fx": {
-            "foeHp": -10,
-            "hp": -3,
-            "gold": 1
+            "foeHp": -8,
+            "block": 2
           }
         },
         {
@@ -1917,7 +2140,7 @@
           "text": "Respiri, ricarichi le energie e metti da parte qualcosa.",
           "fx": {
             "energy": 1,
-            "gold": 0.5
+            "hp": -1
           }
         }
       ]
@@ -1934,7 +2157,7 @@
           "label": "Prendi in prestito un giubbotto",
           "text": "È pesante ma ti protegge bene.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -1942,7 +2165,8 @@
           "label": "Baratti munizioni per crediti",
           "text": "Qualcuno al campo paga bene per quello che non usi.",
           "fx": {
-            "gold": 2
+            "gold": 2,
+            "hp": -2
           }
         },
         {
@@ -1950,7 +2174,8 @@
           "label": "Studi il manuale della recluta",
           "text": "Poche pagine, tanti trucchi.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "foeHp": -3
           }
         }
       ]
@@ -1967,8 +2192,8 @@
           "label": "Dai il massimo",
           "text": "Passi con il massimo dei voti, ma ti stanchi.",
           "fx": {
-            "energy": 2,
-            "hp": -6
+            "energy": 1,
+            "hp": -1
           }
         },
         {
@@ -1976,8 +2201,8 @@
           "label": "Vai sul sicuro",
           "text": "Un buon risultato senza rischi, e un piccolo bonus.",
           "fx": {
-            "gold": 1,
-            "draw": 1
+            "draw": 1,
+            "block": 3
           }
         },
         {
@@ -1985,8 +2210,8 @@
           "label": "Chiedi di vedere il test prima",
           "text": "Ti mostrano la procedura e capisci come reagisce una recluta.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -8,
+            "block": 2
           }
         }
       ]
@@ -2003,7 +2228,7 @@
           "label": "Ti nascondi dietro un relitto",
           "text": "Il metallo ti fa da scudo.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -2012,9 +2237,7 @@
           "text": "Arrivi in fondo con il fiatone ma con una gran carica.",
           "fx": {
             "energy": 1,
-            "draw": 1,
-            "hp": -4,
-            "gold": 0.3
+            "hp": -1
           }
         },
         {
@@ -2022,7 +2245,8 @@
           "label": "Recuperi un fucile da una cassa",
           "text": "Non è tuo, ma qualcuno pagherà.",
           "fx": {
-            "gold": 2
+            "gold": 2.5,
+            "hp": -5
           }
         }
       ]
@@ -2039,8 +2263,7 @@
           "label": "Ascolti i suoi ordini",
           "text": "Scopri come si muove e dove guarda.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -10
           }
         },
         {
@@ -2048,7 +2271,8 @@
           "label": "La ignori e avanzi",
           "text": "Meglio non distrarsi: ti concentri sul terreno.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "gold": 0.5
           }
         },
         {
@@ -2056,7 +2280,7 @@
           "label": "Rivendi la frequenza",
           "text": "Qualcuno al comando ci tiene molto, ma ti scoprono.",
           "fx": {
-            "gold": 2.5,
+            "gold": 2,
             "hp": -2
           }
         }
@@ -2074,8 +2298,8 @@
           "label": "Compri una piastra aggiuntiva",
           "text": "Costa cara, ma il petto ringrazia.",
           "fx": {
-            "gold": -1,
-            "block": 18
+            "block": 6,
+            "gold": 0.5
           }
         },
         {
@@ -2083,7 +2307,8 @@
           "label": "Rifiuti: «preferisco le idee»",
           "text": "Gli armaioli restano di sasso, e tu hai un'idea in più.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "block": 3
           }
         },
         {
@@ -2091,7 +2316,8 @@
           "label": "Vendi loro il tuo vecchio paio di guanti",
           "text": "Li collezionano.",
           "fx": {
-            "gold": 2
+            "gold": 2,
+            "hp": -2
           }
         }
       ]
@@ -2108,9 +2334,7 @@
           "label": "Provi un'arma pesante",
           "text": "È potente ma ti stanca in fretta, e qualcuno ti paga la prova.",
           "fx": {
-            "energy": 1,
-            "hp": -3,
-            "gold": 1
+            "energy": 1
           }
         },
         {
@@ -2118,8 +2342,8 @@
           "label": "Guardi gli altri allenarsi",
           "text": "Impari da chi la usa da anni.",
           "fx": {
-            "draw": 1,
-            "block": 6
+            "block": 6,
+            "gold": 0.5
           }
         },
         {
@@ -2127,8 +2351,7 @@
           "label": "Cerchi il punto debole dell'esoscheletro",
           "text": "Una vite scoperta, una giuntura mobile.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -10
           }
         }
       ]
@@ -2145,7 +2368,7 @@
           "label": "Mostri disciplina",
           "text": "Resti immobile, e ti ritrovi un'armatura addosso.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -2153,8 +2376,8 @@
           "label": "Offri un rapporto tattico",
           "text": "Un'idea semplice che il comando apprezza.",
           "fx": {
-            "gold": 1,
-            "draw": 1
+            "draw": 1,
+            "gold": 0.5
           }
         },
         {
@@ -2162,8 +2385,8 @@
           "label": "Chiedi l'accesso all'archivio",
           "text": "Ti pagano per non fare domande, ma il rischio è alto.",
           "fx": {
-            "gold": 3.5,
-            "hp": -6
+            "gold": 2.5,
+            "hp": -5
           }
         }
       ]
@@ -2180,8 +2403,8 @@
           "label": "Avanzi alla cieca",
           "text": "Corri verso il rumore, e ti carichi di adrenalina.",
           "fx": {
-            "energy": 2,
-            "hp": -6
+            "energy": 1,
+            "hp": -1
           }
         },
         {
@@ -2190,7 +2413,7 @@
           "text": "Un po' di calma e qualche idea.",
           "fx": {
             "block": 6,
-            "draw": 1
+            "gold": 0.5
           }
         },
         {
@@ -2198,7 +2421,7 @@
           "label": "Sfrutti la nebbia per studiarlo",
           "text": "Dalla nebbia vedi i suoi punti ciechi.",
           "fx": {
-            "foeHp": -10,
+            "foeHp": -6,
             "gold": 0.5
           }
         }
@@ -2216,9 +2439,8 @@
           "label": "Ne studi i punti deboli",
           "text": "Ti avvicini troppo, ma impari molto.",
           "fx": {
-            "foeHp": -15,
-            "hp": -6,
-            "gold": 1
+            "foeHp": -6,
+            "gold": 0.5
           }
         },
         {
@@ -2226,7 +2448,7 @@
           "label": "La ignori e ti prepari",
           "text": "Ti concentri sul tuo equipaggiamento.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -2235,7 +2457,7 @@
           "text": "Un varco secondario con qualcosa di utile.",
           "fx": {
             "draw": 1,
-            "gold": 1
+            "gold": 0.5
           }
         }
       ]
@@ -2253,8 +2475,7 @@
           "text": "Dentro c'è un siero: ti fa bene e ti fa male.",
           "fx": {
             "energy": 1,
-            "hp": -3,
-            "gold": 1
+            "hp": -1
           }
         },
         {
@@ -2262,7 +2483,8 @@
           "label": "La scassini con calma",
           "text": "Dentro ci sono monete di vecchio conio.",
           "fx": {
-            "gold": 2
+            "gold": 1,
+            "block": 3
           }
         },
         {
@@ -2270,8 +2492,7 @@
           "label": "Usi il contenuto sul posto",
           "text": "Un composto energetico e una placca.",
           "fx": {
-            "energy": 1,
-            "block": 4
+            "foeHp": -10
           }
         }
       ]
@@ -2288,8 +2509,7 @@
           "label": "Bevi tutto subito",
           "text": "Ti senti rinascere, almeno per un po'.",
           "fx": {
-            "energy": 1,
-            "block": 4
+            "energy": 1
           }
         },
         {
@@ -2297,7 +2517,7 @@
           "label": "Razioni l'acqua",
           "text": "Un sorso alla volta, e la pelle si indurisce.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -2305,7 +2525,8 @@
           "label": "La scambi con un nomade di passaggio",
           "text": "Ti dà monete e un consiglio.",
           "fx": {
-            "gold": 2
+            "gold": 1,
+            "block": 3
           }
         }
       ]
@@ -2322,8 +2543,8 @@
           "label": "Le segui",
           "text": "Capisci come cammina, e dove esita.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -8,
+            "block": 2
           }
         },
         {
@@ -2331,7 +2552,8 @@
           "label": "Le cancelli e prosegui",
           "text": "Ti concentri sul tuo passo.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "foeHp": -3
           }
         },
         {
@@ -2339,8 +2561,8 @@
           "label": "Scavi dove finiscono",
           "text": "Trovi un vecchio deposito, ma ti ferisci.",
           "fx": {
-            "gold": 2.5,
-            "hp": -2
+            "gold": 1,
+            "block": 3
           }
         }
       ]
@@ -2357,7 +2579,8 @@
           "label": "Ti copri con la sabbia",
           "text": "Il corpo si adatta al freddo.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -2366,9 +2589,7 @@
           "text": "Il cuore va a mille, ma i muscoli reagiscono.",
           "fx": {
             "energy": 1,
-            "draw": 1,
-            "hp": -4,
-            "gold": 0.3
+            "hp": -1
           }
         },
         {
@@ -2376,8 +2597,8 @@
           "label": "Accendi un fuoco",
           "text": "Attira curiosi: uno ti paga per un posto accanto.",
           "fx": {
-            "gold": 1,
-            "block": 6
+            "foeHp": -8,
+            "block": 2
           }
         }
       ]
@@ -2394,7 +2615,7 @@
           "label": "Lo saccheggi",
           "text": "Tra i gusci, qualche reliquia.",
           "fx": {
-            "gold": 2
+            "gold": 1.5
           }
         },
         {
@@ -2402,7 +2623,8 @@
           "label": "Lo studi",
           "text": "Impari come si muovono gli scorpioni.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "block": 3
           }
         },
         {
@@ -2410,8 +2632,7 @@
           "label": "Lo copri di sabbia per confonderlo",
           "text": "Quando tornerà non lo riconoscerà.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -10
           }
         }
       ]
@@ -2429,7 +2650,7 @@
           "text": "Ti senti osservato, e un po' meno in forma.",
           "fx": {
             "gold": 2.5,
-            "hp": -2
+            "hp": -5
           }
         },
         {
@@ -2437,7 +2658,8 @@
           "label": "Preghi in silenzio",
           "text": "Rispetto: la pelle ti sembra più dura.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -2445,7 +2667,8 @@
           "label": "Leggi i geroglifici",
           "text": "Una tecnica antica e una nuova idea.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "block": 3
           }
         }
       ]
@@ -2462,8 +2685,7 @@
           "label": "La avvolgi alle mani",
           "text": "Un rito antico: ti senti più resistente.",
           "fx": {
-            "energy": 1,
-            "block": 4
+            "energy": 1
           }
         },
         {
@@ -2471,8 +2693,8 @@
           "label": "Gliela restituisci",
           "text": "Un gesto che la disarma.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -8,
+            "block": 2
           }
         },
         {
@@ -2480,8 +2702,8 @@
           "label": "La vendi",
           "text": "Qualcuno la paga caro, ma ti senti vuoto.",
           "fx": {
-            "gold": 3.5,
-            "hp": -6
+            "gold": 2,
+            "hp": -2
           }
         }
       ]
@@ -2498,7 +2720,8 @@
           "label": "Ti ripari nell'occhio",
           "text": "Un luogo calmo in mezzo al caos.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -2506,8 +2729,8 @@
           "label": "Corri attraverso il vento",
           "text": "La sabbia ti taglia, ma ti dà una spinta.",
           "fx": {
-            "energy": 2,
-            "hp": -6
+            "energy": 1,
+            "hp": -1
           }
         },
         {
@@ -2515,8 +2738,8 @@
           "label": "Aspetti e osservi",
           "text": "Impari come si ricompone.",
           "fx": {
-            "draw": 1,
-            "block": 6
+            "foeHp": -6,
+            "gold": 0.5
           }
         }
       ]
@@ -2533,8 +2756,7 @@
           "label": "Ti ci tuffi",
           "text": "Era vera: acqua fresca e qualche moneta.",
           "fx": {
-            "energy": 1,
-            "gold": 0.5
+            "energy": 1
           }
         },
         {
@@ -2542,7 +2764,8 @@
           "label": "Non ti fidi e prosegui",
           "text": "Il tuo istinto ti protegge.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "block": 3
           }
         },
         {
@@ -2550,7 +2773,7 @@
           "label": "Raccogli solo i datteri",
           "text": "Un ottimo affare.",
           "fx": {
-            "gold": 2
+            "gold": 1.5
           }
         }
       ]
@@ -2567,10 +2790,7 @@
           "label": "Sali di corsa",
           "text": "Arrivi senza fiato ma carico.",
           "fx": {
-            "energy": 1,
-            "draw": 1,
-            "hp": -4,
-            "gold": 0.3
+            "energy": 1
           }
         },
         {
@@ -2578,7 +2798,7 @@
           "label": "Sali piano",
           "text": "Un passo dopo l'altro: la pelle regge.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -2586,7 +2806,8 @@
           "label": "Prendi un'offerta dai gradini",
           "text": "Il Faraone non sembra badarci.",
           "fx": {
-            "gold": 2
+            "gold": 2.5,
+            "hp": -5
           }
         }
       ]
@@ -2603,9 +2824,7 @@
           "label": "Lo sfidi con lo sguardo",
           "text": "Lo disorienti, ma il sole ti brucia.",
           "fx": {
-            "foeHp": -15,
-            "hp": -6,
-            "gold": 1
+            "foeHp": -10
           }
         },
         {
@@ -2613,8 +2832,8 @@
           "label": "Abbassi il capo",
           "text": "Rispetto, e un attimo per pensare.",
           "fx": {
-            "block": 6,
-            "draw": 1
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -2622,8 +2841,8 @@
           "label": "Offri un tributo",
           "text": "Costa caro, ma ti protegge.",
           "fx": {
-            "gold": -1,
-            "block": 18
+            "draw": 1,
+            "gold": 0.5
           }
         }
       ]
@@ -2641,8 +2860,7 @@
           "text": "Le assi cedono dietro di te e ti senti leggero.",
           "fx": {
             "energy": 1,
-            "hp": -3,
-            "gold": 1
+            "hp": -1
           }
         },
         {
@@ -2650,7 +2868,8 @@
           "label": "Salti da relitto a relitto",
           "text": "Vedi la strada come una sequenza di idee.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "block": 3
           }
         },
         {
@@ -2658,7 +2877,7 @@
           "label": "Ripari sotto una vela",
           "text": "Il vento ti avvolge come un mantello.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         }
       ]
@@ -2675,8 +2894,8 @@
           "label": "Ti tuffi a prenderlo",
           "text": "Trovi molto, ma l'acqua è gelida.",
           "fx": {
-            "gold": 3.5,
-            "hp": -6
+            "gold": 1,
+            "block": 3
           }
         },
         {
@@ -2684,8 +2903,8 @@
           "label": "Lo osservi dall'alto",
           "text": "Studi le correnti.",
           "fx": {
-            "draw": 1,
-            "block": 6
+            "block": 6,
+            "gold": 0.5
           }
         },
         {
@@ -2693,7 +2912,8 @@
           "label": "Prendi solo ciò che luccica in superficie",
           "text": "Quanto basta.",
           "fx": {
-            "gold": 2
+            "foeHp": -8,
+            "block": 2
           }
         }
       ]
@@ -2710,7 +2930,7 @@
           "label": "Li metti",
           "text": "Il silenzio ti protegge.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -2718,8 +2938,7 @@
           "label": "Ascolti il canto",
           "text": "Ti vibrano le ossa, ma ti senti vivo.",
           "fx": {
-            "energy": 2,
-            "hp": -6
+            "energy": 1
           }
         },
         {
@@ -2727,7 +2946,8 @@
           "label": "Impari il ritmo",
           "text": "Ogni nota è un'indicazione.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "block": 3
           }
         }
       ]
@@ -2744,8 +2964,7 @@
           "label": "Rispondi all'eco",
           "text": "Scopri dove vibra la sirena.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -10
           }
         },
         {
@@ -2753,8 +2972,7 @@
           "label": "Fai silenzio",
           "text": "Ti concentri sul respiro.",
           "fx": {
-            "block": 6,
-            "draw": 1
+            "block": 8
           }
         },
         {
@@ -2762,7 +2980,8 @@
           "label": "Registri il suono e lo vendi",
           "text": "A qualcuno interessa.",
           "fx": {
-            "gold": 2
+            "gold": 2,
+            "hp": -2
           }
         }
       ]
@@ -2779,10 +2998,7 @@
           "label": "La bevi",
           "text": "Elettricità nelle vene, e qualche ustione.",
           "fx": {
-            "energy": 1,
-            "draw": 1,
-            "hp": -4,
-            "gold": 0.3
+            "energy": 1
           }
         },
         {
@@ -2790,7 +3006,8 @@
           "label": "La scambi",
           "text": "Il pirata fa finta di non vedere.",
           "fx": {
-            "gold": 2
+            "gold": 2.5,
+            "hp": -5
           }
         },
         {
@@ -2798,7 +3015,7 @@
           "label": "La neutralizzi prima che la usi",
           "text": "Lo guardi stupito: non ne ha un'altra.",
           "fx": {
-            "foeHp": -10,
+            "foeHp": -6,
             "gold": 0.5
           }
         }
@@ -2817,7 +3034,7 @@
           "text": "Arrivi in cima con le braccia che bruciano.",
           "fx": {
             "energy": 1,
-            "block": 4
+            "hp": -1
           }
         },
         {
@@ -2825,7 +3042,8 @@
           "label": "Aspetti e osservi",
           "text": "Impari dal modo in cui il pirata si muove.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "foeHp": -3
           }
         },
         {
@@ -2833,7 +3051,8 @@
           "label": "Ti fai issare a bordo",
           "text": "Gli uomini del pirata ti coprono.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         }
       ]
@@ -2850,8 +3069,8 @@
           "label": "Ti lanci nel varco",
           "text": "Una scarica di adrenalina, qualche graffio.",
           "fx": {
-            "energy": 2,
-            "hp": -6
+            "energy": 1,
+            "hp": -1
           }
         },
         {
@@ -2859,8 +3078,8 @@
           "label": "Aspetti il momento giusto",
           "text": "Calma e un po' di scudo.",
           "fx": {
-            "block": 6,
-            "draw": 1
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -2868,7 +3087,8 @@
           "label": "Cerchi un'altra rotta",
           "text": "Pensi in tre dimensioni.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "block": 3
           }
         }
       ]
@@ -2885,8 +3105,7 @@
           "label": "Lo raccogli",
           "text": "Un prezioso pigmento, ma ti sporchi.",
           "fx": {
-            "gold": 2.5,
-            "hp": -2
+            "gold": 1.5
           }
         },
         {
@@ -2894,7 +3113,8 @@
           "label": "Lo eviti",
           "text": "Ti tieni lontano.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -2902,7 +3122,7 @@
           "label": "Lo usi per camuffarti",
           "text": "Il kraken ti perde di vista.",
           "fx": {
-            "foeHp": -10,
+            "foeHp": -6,
             "gold": 0.5
           }
         }
@@ -2921,7 +3141,7 @@
           "text": "Sali con l'onda e ne cavalchi l'energia.",
           "fx": {
             "energy": 1,
-            "gold": 0.5
+            "hp": -1
           }
         },
         {
@@ -2929,7 +3149,7 @@
           "label": "Resti a terra",
           "text": "Aspetti di vedere cosa torna.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -2937,7 +3157,7 @@
           "label": "Raccogli ciò che lascia",
           "text": "Il mare restituisce tesori.",
           "fx": {
-            "gold": 2
+            "gold": 1.5
           }
         }
       ]
@@ -2954,9 +3174,7 @@
           "label": "Ti immergi",
           "text": "Troppo vicino, ma capisci come si muove.",
           "fx": {
-            "foeHp": -15,
-            "hp": -6,
-            "gold": 1
+            "foeHp": -10
           }
         },
         {
@@ -2964,7 +3182,8 @@
           "label": "Ascolti il suo respiro",
           "text": "Impari il suo ritmo.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "foeHp": -3
           }
         },
         {
@@ -2973,7 +3192,7 @@
           "text": "Il mare si calma per un attimo.",
           "fx": {
             "block": 6,
-            "draw": 1
+            "gold": 0.5
           }
         }
       ]
@@ -2990,7 +3209,8 @@
           "label": "Le segui",
           "text": "Capisci come ragiona.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "foeHp": -3
           }
         },
         {
@@ -2998,7 +3218,8 @@
           "label": "Le eviti",
           "text": "Resti nei sentieri sicuri.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -3006,8 +3227,7 @@
           "label": "Lasci un'esca",
           "text": "Il lupo la annusa, perplesso.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -10
           }
         }
       ]
@@ -3025,7 +3245,7 @@
           "text": "Un brivido: i sensi si affinano.",
           "fx": {
             "energy": 1,
-            "block": 4
+            "hp": -1
           }
         },
         {
@@ -3033,8 +3253,7 @@
           "label": "Annusi l'aria",
           "text": "Sai cosa c'è dietro gli alberi.",
           "fx": {
-            "draw": 1,
-            "block": 6
+            "block": 8
           }
         },
         {
@@ -3042,7 +3261,8 @@
           "label": "Raccogli bacche rare",
           "text": "Molto richieste nei villaggi.",
           "fx": {
-            "gold": 2
+            "gold": 2,
+            "hp": -2
           }
         }
       ]
@@ -3059,7 +3279,8 @@
           "label": "Rispondi",
           "text": "Ti mostra una versione di te.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "foeHp": -3
           }
         },
         {
@@ -3067,7 +3288,8 @@
           "label": "La ignori",
           "text": "Ti concentri sul sentiero.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -3075,8 +3297,8 @@
           "label": "Le chiedi un dono",
           "text": "Ti dà molto, ma ti chiede qualcosa in cambio.",
           "fx": {
-            "gold": 3.5,
-            "hp": -6
+            "gold": 1,
+            "block": 3
           }
         }
       ]
@@ -3094,7 +3316,7 @@
           "text": "Un calore dolce e una piccola spinta.",
           "fx": {
             "energy": 1,
-            "block": 4
+            "hp": -1
           }
         },
         {
@@ -3102,8 +3324,8 @@
           "label": "Lo annaffi",
           "text": "Si apre, e un insetto ti lascia un regalo.",
           "fx": {
-            "gold": 1,
-            "draw": 1
+            "draw": 1,
+            "gold": 0.5
           }
         },
         {
@@ -3111,8 +3333,7 @@
           "label": "Lo raccogli",
           "text": "Brilla tra le dita, ma si spegne subito.",
           "fx": {
-            "gold": 2.5,
-            "hp": -2
+            "gold": 1.5
           }
         }
       ]
@@ -3130,8 +3351,7 @@
           "text": "Ti portano verso un varco, ma stringono.",
           "fx": {
             "energy": 1,
-            "hp": -3,
-            "gold": 1
+            "hp": -1
           }
         },
         {
@@ -3139,7 +3359,8 @@
           "label": "Ti fermi",
           "text": "Aspetti con pazienza.",
           "fx": {
-            "block": 12
+            "block": 6,
+            "gold": 0.5
           }
         },
         {
@@ -3147,8 +3368,7 @@
           "label": "Le sposti con cura",
           "text": "Il treant non capisce, e rallenta.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -10
           }
         }
       ]
@@ -3165,8 +3385,8 @@
           "label": "Ne bevi",
           "text": "Sa di miele e di fuoco.",
           "fx": {
-            "energy": 2,
-            "hp": -6
+            "energy": 1,
+            "hp": -1
           }
         },
         {
@@ -3174,7 +3394,8 @@
           "label": "La raccogli",
           "text": "Un prezioso unguento.",
           "fx": {
-            "gold": 2
+            "gold": 2,
+            "hp": -2
           }
         },
         {
@@ -3182,8 +3403,7 @@
           "label": "La offri all'albero",
           "text": "Si ammorbidisce.",
           "fx": {
-            "block": 6,
-            "draw": 1
+            "block": 8
           }
         }
       ]
@@ -3200,9 +3420,8 @@
           "label": "Tendi una trappola",
           "text": "Funziona in parte, ma ti sbucci.",
           "fx": {
-            "foeHp": -15,
-            "hp": -6,
-            "gold": 1
+            "foeHp": -8,
+            "block": 2
           }
         },
         {
@@ -3210,7 +3429,7 @@
           "label": "Cancelli le tracce",
           "text": "Ti muovi nell'ombra.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -3218,7 +3437,8 @@
           "label": "Le segui al contrario",
           "text": "Capisci dove ti aspetta.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "gold": 0.5
           }
         }
       ]
@@ -3236,9 +3456,7 @@
           "text": "Basta un'inalazione per sentirti più vivo.",
           "fx": {
             "energy": 1,
-            "draw": 1,
-            "hp": -4,
-            "gold": 0.3
+            "hp": -1
           }
         },
         {
@@ -3246,7 +3464,8 @@
           "label": "Lo nascondi",
           "text": "Così nessuno lo troverà.",
           "fx": {
-            "block": 12
+            "block": 6,
+            "gold": 0.5
           }
         },
         {
@@ -3254,7 +3473,7 @@
           "label": "Lo scambi",
           "text": "Un mercante di erbe lo paga bene.",
           "fx": {
-            "gold": 2
+            "gold": 1.5
           }
         }
       ]
@@ -3271,7 +3490,8 @@
           "label": "Ricambi lo sguardo",
           "text": "Senti che ti capisce.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "gold": 0.5
           }
         },
         {
@@ -3279,7 +3499,8 @@
           "label": "Chiudi gli occhi",
           "text": "Ti affidi all'istinto.",
           "fx": {
-            "block": 12
+            "block": 6,
+            "gold": 0.5
           }
         },
         {
@@ -3287,7 +3508,8 @@
           "label": "Raccogli le foglie cadute",
           "text": "Brillano di luce propria.",
           "fx": {
-            "gold": 2
+            "gold": 1,
+            "block": 3
           }
         }
       ]
@@ -3305,7 +3527,7 @@
           "text": "Il battito si fonde col tuo.",
           "fx": {
             "energy": 1,
-            "block": 4
+            "hp": -1
           }
         },
         {
@@ -3313,8 +3535,8 @@
           "label": "Resti in ascolto",
           "text": "Un respiro profondo e qualche idea.",
           "fx": {
-            "draw": 1,
-            "block": 6
+            "block": 6,
+            "gold": 0.5
           }
         },
         {
@@ -3322,8 +3544,7 @@
           "label": "Prendi una radice",
           "text": "Preziosa ma dolorosa da strappare.",
           "fx": {
-            "gold": 3.5,
-            "hp": -6
+            "gold": 1.5
           }
         }
       ]
@@ -3340,8 +3561,7 @@
           "label": "Respiri a fondo",
           "text": "La tua aura risponde.",
           "fx": {
-            "energy": 1,
-            "block": 4
+            "energy": 1
           }
         },
         {
@@ -3349,7 +3569,8 @@
           "label": "Trattieni il fiato",
           "text": "Aspetti di abituarti.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -3357,7 +3578,8 @@
           "label": "Raccogli le braci",
           "text": "Ancora calde e preziose.",
           "fx": {
-            "gold": 2
+            "gold": 2,
+            "hp": -2
           }
         }
       ]
@@ -3374,7 +3596,8 @@
           "label": "La imiti",
           "text": "Impari i suoi passi.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "gold": 0.5
           }
         },
         {
@@ -3382,8 +3605,8 @@
           "label": "La osservi",
           "text": "Restano impressi.",
           "fx": {
-            "block": 6,
-            "draw": 1
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -3391,8 +3614,8 @@
           "label": "Ti tuffi nella danza",
           "text": "Troppo vicino, ma pieno di energia.",
           "fx": {
-            "energy": 2,
-            "hp": -6
+            "energy": 1,
+            "hp": -1
           }
         }
       ]
@@ -3409,8 +3632,7 @@
           "label": "Le segui",
           "text": "Capisci dove cede.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -10
           }
         },
         {
@@ -3418,7 +3640,8 @@
           "label": "Le eviti",
           "text": "Resti in equilibrio.",
           "fx": {
-            "block": 12
+            "block": 4,
+            "gold": 1
           }
         },
         {
@@ -3426,7 +3649,8 @@
           "label": "Raccogli le pietre calde",
           "text": "Si vendono bene.",
           "fx": {
-            "gold": 2
+            "gold": 2.5,
+            "hp": -5
           }
         }
       ]
@@ -3443,7 +3667,8 @@
           "label": "Lo ascolti",
           "text": "Ti racconta cose antiche.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "foeHp": -3
           }
         },
         {
@@ -3452,7 +3677,7 @@
           "text": "Un tratto di strada insieme.",
           "fx": {
             "block": 6,
-            "draw": 1
+            "gold": 0.5
           }
         },
         {
@@ -3460,9 +3685,7 @@
           "label": "Lo sfidi a correre",
           "text": "Ti sorpassa, e ti guadagni qualcosa.",
           "fx": {
-            "energy": 1,
-            "hp": -3,
-            "gold": 1
+            "energy": 1
           }
         }
       ]
@@ -3479,8 +3702,7 @@
           "label": "Accetti il patto",
           "text": "Il suo fuoco ti riempie, e ti consuma.",
           "fx": {
-            "energy": 2,
-            "hp": -6
+            "energy": 1
           }
         },
         {
@@ -3488,7 +3710,7 @@
           "label": "Rifiuti",
           "text": "Resti con la tua aura.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -3496,7 +3718,8 @@
           "label": "Gli chiedi un consiglio",
           "text": "Ti guarda perplesso, poi parla.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "foeHp": -3
           }
         }
       ]
@@ -3513,8 +3736,8 @@
           "label": "Lo firmi",
           "text": "Un guadagno immediato, a caro prezzo.",
           "fx": {
-            "gold": 3.5,
-            "hp": -6
+            "gold": 1,
+            "block": 3
           }
         },
         {
@@ -3523,7 +3746,7 @@
           "text": "Un gesto che lo lascia di sasso.",
           "fx": {
             "block": 6,
-            "draw": 1
+            "gold": 0.5
           }
         },
         {
@@ -3531,8 +3754,7 @@
           "label": "Lo leggi con attenzione",
           "text": "Trovi una clausola che lo indebolisce.",
           "fx": {
-            "foeHp": -10,
-            "gold": 0.5
+            "foeHp": -10
           }
         }
       ]
@@ -3549,7 +3771,7 @@
           "label": "Ti copri",
           "text": "La cenere si posa su di te come un mantello.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -3558,9 +3780,7 @@
           "text": "Ti brucia i polmoni ma ti scuote.",
           "fx": {
             "energy": 1,
-            "draw": 1,
-            "hp": -4,
-            "gold": 0.3
+            "hp": -1
           }
         },
         {
@@ -3568,7 +3788,7 @@
           "label": "Raccogli la cenere preziosa",
           "text": "Vale più dell'oro.",
           "fx": {
-            "gold": 2
+            "gold": 1.5
           }
         }
       ]
@@ -3586,7 +3806,7 @@
           "text": "Un po' di calma.",
           "fx": {
             "block": 6,
-            "draw": 1
+            "gold": 0.5
           }
         },
         {
@@ -3594,7 +3814,8 @@
           "label": "La segui",
           "text": "Capisci dove va.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "foeHp": -3
           }
         },
         {
@@ -3602,9 +3823,7 @@
           "label": "La sfidi",
           "text": "Il drago ti nota, e si innervosisce.",
           "fx": {
-            "foeHp": -15,
-            "hp": -6,
-            "gold": 1
+            "foeHp": -10
           }
         }
       ]
@@ -3621,7 +3840,8 @@
           "label": "Li ricordi uno a uno",
           "text": "Ognuno ti ha insegnato qualcosa.",
           "fx": {
-            "draw": 2
+            "draw": 1,
+            "block": 3
           }
         },
         {
@@ -3629,7 +3849,8 @@
           "label": "Li saluti",
           "text": "Ti senti protetto.",
           "fx": {
-            "block": 12
+            "block": 6,
+            "gold": 0.5
           }
         },
         {
@@ -3637,8 +3858,7 @@
           "label": "Ti fai forza con loro",
           "text": "Una scintilla in più.",
           "fx": {
-            "energy": 1,
-            "block": 4
+            "energy": 1
           }
         }
       ]
@@ -3656,7 +3876,7 @@
           "text": "Il suo ritmo ti dà energia.",
           "fx": {
             "energy": 1,
-            "gold": 0.5
+            "hp": -1
           }
         },
         {
@@ -3664,7 +3884,7 @@
           "label": "Ti prepari al colpo",
           "text": "Ti concentri sulla difesa.",
           "fx": {
-            "block": 12
+            "block": 8
           }
         },
         {
@@ -3672,8 +3892,7 @@
           "label": "Prendi un frammento",
           "text": "Dolorosamente prezioso.",
           "fx": {
-            "gold": 3.5,
-            "hp": -6
+            "gold": 1.5
           }
         }
       ]
@@ -4385,7 +4604,15 @@
       "move.hide_a1.name": "Rock skin",
       "move.regen_a1.name": "Rapid regeneration",
       "move.rift_a1.name": "Dimensional tear",
-      "move.aura_a1.name": "Ki explosion"
+      "move.aura_a1.name": "Ki explosion",
+      "enemyMove.jab2.name": "Double strike",
+      "enemyMove.volley.name": "Volley",
+      "enemyMove.counter.name": "Counterattack",
+      "enemyMove.bulwark.name": "Fortress",
+      "enemyMove.mend.name": "Repair",
+      "enemyMove.bite.name": "Vampiric bite",
+      "enemyMove.crush.name": "Crush",
+      "enemyMove.sting.name": "Stinger"
     }
   }
 }

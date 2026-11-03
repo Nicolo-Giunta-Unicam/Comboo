@@ -14,7 +14,7 @@ interface Duel { first: boolean; eLeft: number; hLeft: number; eq: number; en: n
 const usage: Record<string, number> = {}, duels: Duel[] = [], runs: { arena: number; won: boolean; killer: string; gold: number }[] = [];
 
 function expectedIncoming(r: any, c: any) {
-  const pool = (REGION_LIST.find(g => g.id === r.region)?.enemyMoves ?? []).map((id: string) => ENEMY_MOVES.find(m => m.id === id)).filter(Boolean) as any[];
+  const rg0 = REGION_LIST.find(g => g.id === r.region), def0 = rg0?.enemies.find((x: any) => x.id === c.enemy.id), pool = (def0?.moves?.length ? def0.moves : rg0?.enemyMoves ?? []).map((id: string) => ENEMY_MOVES.find(m => m.id === id)).filter(Boolean) as any[];
   const Ec = CONFIG.enemy, n = Math.min(Ec.playsMax, Ec.playsBase + Math.floor((r.arena - 1) / Ec.playsEvery)), base = c.enemy.atk * Ec.cardMult;
   const gb = (c.enemy.gear ?? []).reduce((s: number, g: string) => s + (EQUIPMENT[g].bonus.dmg ?? 0), 0);
   const nm = Ec.normalize ? Ec.normalize / (pool.reduce((s: number, m: any) => s + (m.dmg ?? 0) * (m.hits ?? 1), 0) / (pool.length || 1) || 1) : 1, avg = pool.reduce((s, m) => s + (m.dmg ? Math.max(1, Math.round(base * nm * m.dmg)) * (m.hits ?? 1) + gb * (m.hits ?? 1) : 0), 0) / (pool.length || 1);

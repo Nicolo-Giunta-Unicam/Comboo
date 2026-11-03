@@ -5,8 +5,9 @@ export const SYN_KINDS = ['adrenaline', 'bypass', 'freeNext', 'flow', 'shieldAtk
 export const EQ_KINDS = ['gear', 'implant', 'body', 'style', 'arcane'];
 export const THEME_PRESETS = ['boxing', 'battle', 'desert', 'ocean', 'forest', 'ember'];
 export const CHOICE_FX = ['gold', 'block', 'energy', 'draw', 'foeHp', 'hp'] as const;
-/** Pesi di bilanciamento delle scelte di capitolo: ogni opzione dovrebbe valere ~2 punti. */
+/** Pesi di bilanciamento delle scelte di capitolo: ogni opzione dovrebbe valere ~1,5 punti e avere al massimo 2 effetti. */
 export const CHOICE_W: Record<string, number> = { gold: 1, block: 1 / 6, energy: 1.5, draw: 1, foeHp: -0.15, hp: 0.2 };
+export const CHOICE_RANGE = [1.1, 1.9] as const, CHOICE_MAX_FX = 2;
 export const choicePts = (fx: Record<string, number> = {}) => Object.entries(fx).reduce((s, [k, v]) => s + (CHOICE_W[k] ?? 0) * (v || 0), 0);
 /** Elementi usati dal tutorial: rinominarli o eliminarli lo rende inutilizzabile. */
 export const TUTORIAL_IDS: Record<string, string[]> = { move: ['jab', 'guard', 'focus', 'wraps_a1'], equipment: ['wraps'], region: ['boxing'] };
@@ -60,7 +61,7 @@ export function renameId(d: D, kind: RenameKind, from: string, to: string): stri
   else if (kind === 'region') { const r = d.regions.find((x: D) => x.id === from); r.id = to; for (const e of d.equipment) if (e.island === from) e.island = to; for (const c of d.choices) if (c.region === from) c.region = to; for (const e of r.enemies) if (e.id?.startsWith(from + '-')) { const ni = to + e.id.slice(from.length); if (!d.regions.some((x: D) => x.enemies.some((y: D) => y.id === ni))) { moveI18n(d, 'enemy', e.id, ni); e.id = ni; } } }
   else if (kind === 'enemy') { for (const r of d.regions) for (const e of r.enemies) if (e.id === from) e.id = to; }
   else if (kind === 'style') d.styles.find((x: D) => x.id === from).id = to;
-  else if (kind === 'enemyMove') { d.enemyMoves.find((x: D) => x.id === from).id = to; for (const r of d.regions) r.enemyMoves = (r.enemyMoves ?? []).map((x: string) => x === from ? to : x); }
+  else if (kind === 'enemyMove') { d.enemyMoves.find((x: D) => x.id === from).id = to; for (const r of d.regions) { r.enemyMoves = (r.enemyMoves ?? []).map((x: string) => x === from ? to : x); for (const e of r.enemies) if (e.moves) e.moves = e.moves.map((x: string) => x === from ? to : x); } }
   else d.choices.find((x: D) => x.id === from).id = to;
   moveI18n(d, kind, from, to); return null;
 }
@@ -105,7 +106,8 @@ export function validate(d: D): Issue[] {
   for (const s of d.styles ?? []) { const dk = s.deck ?? []; if (dk.length < (d.config?.minDeck ?? 10)) w(`Stile ${s.id}: il mazzo ha ${dk.length} carte (minimo ${d.config?.minDeck ?? 10}).`); for (const c of dk) if (!d.baseMoves.some((m: D) => m.id === c)) e(`Stile ${s.id}: la carta "${c}" non è una mossa base.`); }
   if (!(d.regions ?? []).length) e('Serve almeno un\'isola.');
   for (const r of d.regions ?? []) { if ((r.enemies ?? []).length !== n) w(`Isola ${r.id}: ${(r.enemies ?? []).length} capitoli, il gioco ne prevede ${n} (config.matchesPerIsland).`); for (const m of r.enemyMoves ?? []) if (!emids.has(m)) e(`Isola ${r.id}: mossa nemica "${m}" inesistente.`); if (!(r.enemyMoves ?? []).length) w(`Isola ${r.id}: nessuna mossa nemica.`); if (!(d.equipment ?? []).some((x: D) => x.island === r.id)) w(`Isola ${r.id}: nessun equipaggiamento disponibile nello store.`); }
-  for (const c of d.choices ?? []) { if (!rids.has(c.region)) e(`Scelta ${c.id}: isola "${c.region}" inesistente.`); if ((c.options ?? []).length !== 3) w(`Scelta ${c.id}: dovrebbe avere 3 opzioni.`); (c.options ?? []).forEach((x: D) => { const p = choicePts(x.fx); if (p < 1.6 || p > 2.5) w(`Scelta ${c.id}/${x.id}: valore ${p.toFixed(2)} fuori dall'intervallo bilanciato 1.6–2.5.`); }); }
+  for (const c of d.choices ?? []) { if (!rids.has(c.region)) e(`Scelta ${c.id}: isola "${c.region}" inesistente.`); if ((c.options ?? []).length !== 3) w(`Scelta ${c.id}: dovrebbe avere 3 opzioni.`); (c.options ?? []).forEach((x: D) => { const p = choicePts(x.fx); if (p < CHOICE_RANGE[0] || p > CHOICE_RANGE[1]) w(`Scelta ${c.id}/${x.id}: valore ${p.toFixed(2)} fuori dall'intervallo bilanciato ${CHOICE_RANGE[0]}–${CHOICE_RANGE[1]}.`); if (Object.values(x.fx ?? {}).filter(Boolean).length > CHOICE_MAX_FX) w(`Scelta ${c.id}/${x.id}: più di ${CHOICE_MAX_FX} effetti.`); }); }
+  const seen = new Map<string, string>(); for (const r of d.regions ?? []) for (const en of r.enemies ?? []) { for (const m of en.moves ?? []) if (!emids.has(m)) e(`Nemico ${en.id}: mossa nemica "${m}" inesistente.`); if (en.moves?.length) { const key = [...new Set(en.moves as string[])].sort().join(','); if (seen.has(key)) w(`Nemici ${seen.get(key)} e ${en.id}: stesso moveset (dovrebbe essere riconoscibile e diverso per ogni nemico).`); else seen.set(key, en.id); } else w(`Nemico ${en.id}: nessun moveset proprio (usa quello dell'isola).`); }
   for (const r of d.regions ?? []) for (let a = 0; a < n; a++) if (!(d.choices ?? []).some((c: D) => c.region === r.id && c.at === a)) w(`Isola ${r.id}, capitolo ${a + 1}: nessuna scelta di storia.`);
   return o;
 }
