@@ -226,5 +226,36 @@ body.editing #app{max-width:1180px;width:100%;padding:8px}
 .edissues{display:flex;flex-direction:column;gap:3px;max-height:260px;overflow:auto;border:1px solid #ffffff22;border-radius:8px;padding:8px}.edissues .err{color:#ff9aa8}.edissues .warn{color:#ffd77a;border:0}.edsm{margin-bottom:4px}
 @media(max-width:760px){.edbody{grid-template-columns:1fr;grid-template-rows:200px 1fr}.edcols{grid-template-columns:1fr}.ed{height:auto}}
 .cbd{font-size:11px;font-weight:800;color:var(--gold);border:1px solid var(--gold);border-radius:999px;padding:1px 10px;margin:4px auto 0;width:fit-content;background:#ffc85722;animation:cbdIn .5s cubic-bezier(.2,1.6,.3,1)}@keyframes cbdIn{0%{transform:scale(.3);opacity:0}100%{transform:none;opacity:1}}
+
+/* chip combo: sopra il mazzo (in basso a destra), senza spostare energia e pulsanti */
+.cbd{position:absolute;right:8px;bottom:calc(var(--cw)*.992 + 20px);margin:0;width:max-content;max-width:42vw;z-index:3;pointer-events:none;text-align:center;line-height:1.2}
+.cbd::after{content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:10px;margin-left:-5px;background:#3b2c14;border-right:1px solid var(--gold);border-bottom:1px solid var(--gold);transform:rotate(45deg)}
+.cbd{background:#3b2c14}
+/* menu principale */
+.menu{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;position:relative;overflow:hidden;padding:12px 10px}
+.menu::before{content:"";position:absolute;inset:-25%;background:radial-gradient(circle at 50% 28%,#ff7a4538,transparent 52%),radial-gradient(circle at 15% 85%,#7a5cff38,transparent 48%),radial-gradient(circle at 88% 70%,#46e0a022,transparent 45%);animation:mbg 14s ease-in-out infinite alternate;pointer-events:none}
+@keyframes mbg{0%{transform:translate(-3%,-2%) scale(1)}100%{transform:translate(3%,2%) scale(1.12)}}
+.menu>*{position:relative}.mfx{position:absolute!important;inset:0;pointer-events:none;overflow:hidden}
+.mfx i{position:absolute;left:var(--x);bottom:-14px;width:calc(var(--s)*7px);height:calc(var(--s)*7px);border-radius:50%;background:radial-gradient(circle,#ffe29a,#ff7a45 55%,transparent 72%);opacity:0;animation:ember var(--d) linear var(--w) infinite}
+@keyframes ember{0%{transform:translate(0,0) scale(1);opacity:0}8%{opacity:.95}100%{transform:translate(34px,-108vh) scale(.3);opacity:0}}
+.mcards{height:110px;width:100%;max-width:360px}.mcards span{position:absolute;left:50%;top:6px;width:66px;height:94px;margin-left:-33px;border-radius:12px;border:2px solid var(--gold);background:repeating-linear-gradient(45deg,#3a2468 0 6px,#4a2f86 6px 12px);display:grid;place-items:center;font-size:32px;box-shadow:0 8px 20px #000a,0 0 18px #ffc85733;transform:translate(var(--x),var(--y,0)) rotate(var(--r));animation:mfloat 4.2s ease-in-out infinite}
+.mcards span:nth-child(2){animation-delay:-1.4s}.mcards span:nth-child(3){animation-delay:-2.8s}
+@keyframes mfloat{0%,100%{transform:translate(var(--x),var(--y,0)) rotate(var(--r))}50%{transform:translate(var(--x),calc(var(--y,0px) - 10px)) rotate(calc(var(--r) + 3deg))}}
+.mlogo{font-size:clamp(64px,17vw,110px);font-weight:900;letter-spacing:3px;line-height:1;text-align:center;margin:0 0 16px;background:linear-gradient(100deg,#ffe29a,#ff7a45 35%,#ffe29a 55%,#ff7a45 80%,#ffe29a);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 24px #ff7a4577);animation:mshine 6s linear infinite,mpulse 3.4s ease-in-out infinite}
+.mlogo .inf{font-size:1.18em;vertical-align:-.1em}
+@keyframes mshine{to{background-position:220% 0}}@keyframes mpulse{0%,100%{filter:drop-shadow(0 6px 22px #ff7a4566)}50%{filter:drop-shadow(0 8px 40px #ffb35ccc)}}
+.mcustom{margin:0 0 6px}.mbtns{display:flex;flex-direction:column;align-items:center;width:100%;gap:12px}
+.mbtn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:14px;width:min(92vw,400px);padding:17px 26px;font-size:21px;font-weight:800;letter-spacing:.3px;border-radius:18px;animation:mIn .6s cubic-bezier(.2,1.2,.3,1) both;animation-delay:calc(var(--i)*90ms + 250ms);transition:transform .18s,box-shadow .18s,filter .18s}
+.mbtn .mi{font-size:1.3em;line-height:1}.mbtn::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,#ffffff44 50%,transparent 65%);transform:translateX(-130%);transition:transform .7s}
+.mbtn:hover{transform:translateY(-3px) scale(1.03);filter:brightness(1.12);box-shadow:0 10px 26px #000a,0 0 22px #ffc85755}.mbtn:hover::before{transform:translateX(130%)}.mbtn:active{transform:scale(.98)}
+.mbtn.pri{animation:mIn .6s cubic-bezier(.2,1.2,.3,1) both,mglow 2.6s ease-in-out 1s infinite;animation-delay:calc(var(--i)*90ms + 250ms),0s}
+@keyframes mIn{from{opacity:0;transform:translateY(22px) scale(.94)}to{opacity:1;transform:none}}@keyframes mglow{0%,100%{box-shadow:0 6px 18px #0008,0 0 0 0 #ffc85766}50%{box-shadow:0 6px 18px #0008,0 0 26px 5px #ffc85766}}
+.menu .langrow{margin-top:16px;gap:8px}.menu .langrow button{padding:6px 18px;font-size:13px;border-radius:999px}
+@media(max-height:640px){.mcards{display:none}.mlogo{margin-bottom:8px}.mbtns{gap:8px}.mbtn{padding:12px 20px;font-size:18px}}
+@media(prefers-reduced-motion:reduce){.menu *,.menu::before{animation:none!important}}
+
+.menu{overflow:visible}.menu::before{position:fixed;inset:-10%;z-index:-1}.mfx{position:fixed!important;inset:0;z-index:-1}
+.cbd{font-size:13px;padding:3px 12px;border:1px solid var(--gold);border-radius:999px;color:#ffe29a;box-shadow:0 0 14px #ffc85766;animation:cbdIn .5s cubic-bezier(.2,1.6,.3,1),cbdGlow 1.8s ease-in-out .5s infinite}@keyframes cbdGlow{0%,100%{box-shadow:0 0 8px #ffc85744}50%{box-shadow:0 0 18px #ffc857aa}}
+.menu{min-height:calc(100dvh - 24px);padding-top:max(18px,env(safe-area-inset-top))}
 </style></head>
 <body><div id="app"></div><script src="dist/game.js"></script></body></html>
