@@ -257,5 +257,104 @@ body.editing #app{max-width:1180px;width:100%;padding:8px}
 .menu{overflow:visible}.menu::before{position:fixed;inset:-10%;z-index:-1}.mfx{position:fixed!important;inset:0;z-index:-1}
 .cbd{font-size:13px;padding:3px 12px;border:1px solid var(--gold);border-radius:999px;color:#ffe29a;box-shadow:0 0 14px #ffc85766;animation:cbdIn .5s cubic-bezier(.2,1.6,.3,1),cbdGlow 1.8s ease-in-out .5s infinite}@keyframes cbdGlow{0%,100%{box-shadow:0 0 8px #ffc85744}50%{box-shadow:0 0 18px #ffc857aa}}
 .menu{min-height:calc(100dvh - 24px);padding-top:max(18px,env(safe-area-inset-top))}
+
+/* ===== rifinitura delle schermate: creazione, Storia, Store, Mazzo, mappa, finestre — stessa atmosfera del menu principale (L'Editor resta com'è) ===== */
+#amb{display:none}body:not(.fs):not(.editing):not(.inmenu) #amb{display:block}
+#amb::before{content:"";position:absolute;inset:-25%;background:radial-gradient(circle at 50% 20%,var(--glowa),transparent 54%),radial-gradient(circle at 12% 90%,#7a5cff30,transparent 48%),radial-gradient(circle at 90% 72%,#46e0a01c,transparent 45%);animation:mbg 14s ease-in-out infinite alternate}
+#amb i{background:radial-gradient(circle,var(--ac1),var(--ac2) 55%,transparent 72%)}
+body.th-classic #amb::before{background:radial-gradient(circle at 50% 28%,#ff7a4538,transparent 52%),radial-gradient(circle at 15% 85%,#7a5cff38,transparent 48%),radial-gradient(circle at 88% 70%,#46e0a022,transparent 45%)}
+body.th-classic #amb i{background:radial-gradient(circle,#ffe29a,#ff7a45 55%,transparent 72%)}
+@keyframes aglow{0%,100%{box-shadow:0 5px 16px #0008,0 0 0 0 var(--glowa)}50%{box-shadow:0 5px 16px #0008,0 0 24px 5px var(--glowa)}}
+@keyframes tsweep{0%,70%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+@keyframes cfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes mfade{from{opacity:0}to{opacity:1}}
+@keyframes mpop{from{opacity:0;transform:translateY(18px) scale(.93)}to{opacity:1;transform:none}}
+@keyframes bossPulse{0%,100%{box-shadow:0 0 14px #ff546844}50%{box-shadow:0 0 30px 3px #ff546888}}
+/* barra delle risorse e notifiche */
+body:not(.fs) .top{position:relative;overflow:hidden;justify-content:center;align-items:center;gap:6px;border-radius:16px;box-shadow:0 6px 20px #000a,0 0 22px var(--glowa)}
+body:not(.fs) .top::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,#ffffff1c 50%,transparent 65%);transform:translateX(-130%);animation:tsweep 8s ease-in-out 1.5s infinite;pointer-events:none}
+body:not(.fs) .top>span{background:#0005;border:1px solid #ffffff1a;border-radius:999px;padding:3px 11px;white-space:nowrap;box-shadow:inset 0 1px 4px #0009}
+body:not(.fs) .top .gear{position:relative;margin-left:auto;border-radius:999px;transition:transform .35s,filter .1s}body:not(.fs) .top .gear:hover{transform:rotate(70deg)}
+body:not(.fs) .toast{border-radius:12px;border:1px solid #ff546877;box-shadow:0 4px 16px #0007;animation:mIn .35s cubic-bezier(.2,1.2,.3,1) backwards}body:not(.fs) .toast.ok{border-color:#46e0a077}
+/* schede Storia / Store / Mazzo */
+.tabs{padding:4px;gap:6px;border-radius:18px;background:#0005;border:1px solid var(--bd2);box-shadow:inset 0 2px 8px #000a}
+.tabs button{border:1px solid transparent;border-radius:14px;background:transparent;box-shadow:none;font-weight:800;letter-spacing:.3px;transition:transform .18s,background .18s,box-shadow .18s}
+.tabs button:hover:not(.on):not([data-locked]){background:#ffffff14;transform:translateY(-1px)}
+.tabs button.on{border-color:#ffffff66;box-shadow:0 4px 16px var(--glowa),inset 0 1px 0 #ffffff88}
+.tabs button[data-locked]{opacity:.4;filter:grayscale(.6)}
+/* animazione d'ingresso: parte solo al cambio schermata */
+.pane.enter>*,.mapscr.enter>*{animation:mIn .5s cubic-bezier(.2,1.1,.3,1) backwards}
+.pane.enter .offer,.pane.enter .storywrap .story>*{animation:mIn .5s cubic-bezier(.2,1.2,.3,1) backwards}
+.pane.enter .offer:nth-child(2),.pane.enter .storywrap .story>:nth-child(2){animation-delay:.09s}.pane.enter .offer:nth-child(3),.pane.enter .storywrap .story>:nth-child(3){animation-delay:.18s}.pane.enter .storywrap .story>:nth-child(4){animation-delay:.27s}
+.mapscr.enter>:nth-child(2){animation-delay:.1s}.mapscr.enter>:nth-child(3){animation-delay:.2s}
+/* Storia */
+.sbook{position:relative;overflow:hidden;flex:none;border-radius:18px;background:linear-gradient(160deg,#ffffff12,#0000 42%),linear-gradient(var(--pn1),var(--pn2));box-shadow:0 8px 24px #0008,0 0 26px var(--glowa),inset 0 1px 0 #ffffff22}
+.sbook::after{content:"";position:absolute;right:-34px;top:-34px;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,var(--glowa),transparent 70%);pointer-events:none}
+.sbook .chap{display:inline-block;background:#0005;border:1px solid var(--bd2);border-radius:999px;padding:3px 12px;font-size:11px}
+.sbook h3{position:relative;font-size:23px;font-weight:900;letter-spacing:.03em;background:linear-gradient(100deg,#fff,var(--ac1) 70%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 10px var(--glowa))}
+.sbook h3::after{content:"";display:block;height:2px;margin-top:8px;border-radius:2px;background:linear-gradient(90deg,var(--gold),transparent);-webkit-text-fill-color:initial}
+.hfig{background:radial-gradient(ellipse at 50% 36%,var(--fld1),var(--fld2) 80%);box-shadow:inset 0 0 40px #000a,0 6px 20px #000a,0 0 26px var(--glowa)}
+.hfig::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 62% 48% at 50% 0,#ffffff30,transparent 72%),radial-gradient(ellipse 56% 9% at 50% 93%,var(--glow),transparent 78%)}
+.hname{background:linear-gradient(#000b,#000e);border-top:1px solid var(--gold);letter-spacing:.06em;text-transform:uppercase;font-size:11px}
+.sbox.foe{border-radius:16px;background:linear-gradient(135deg,#6a2fa036,transparent 62%),linear-gradient(var(--pn1),var(--pn2));box-shadow:0 6px 18px #0007,inset 0 1px 0 #ffffff1a}
+.sface{box-shadow:0 0 16px var(--glowa),inset 0 0 12px #0008}
+.sbox.boss{border-color:var(--r);animation:bossPulse 2.4s ease-in-out infinite}.sbox.boss .sface{border-color:var(--r);box-shadow:0 0 22px #ff546899,inset 0 0 12px #0008}.sbox.boss b{color:#ffb3bd}
+.chbox{border-radius:18px;animation:aglow 2.8s ease-in-out infinite}.chbox.done{animation:none}
+.chopt{position:relative;overflow:hidden;border-radius:14px;transition:transform .18s,box-shadow .18s,filter .18s}
+.chopt::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,#ffffff33 50%,transparent 65%);transform:translateX(-130%);transition:transform .7s;pointer-events:none}
+.chopt:hover{transform:translateY(-2px) scale(1.015);box-shadow:0 8px 20px #000a,0 0 18px var(--glowa)}.chopt:hover::before{transform:translateX(130%)}
+.chpop{box-shadow:0 20px 60px #000d,0 0 50px #ffc85744;border-color:var(--gold)}
+/* Store */
+.og{padding:8px 10px 10px;border-radius:18px;background:linear-gradient(#ffffff0d,#0000 50%),#0004;border:1px solid var(--bd2);box-shadow:0 6px 18px #0006,inset 0 1px 0 #ffffff14}.og+.og{border-left:1px solid var(--bd2);padding-left:10px}.og6{gap:10px}
+.lbl{color:var(--gold);background:#0006;border:1px solid var(--bd2);border-radius:999px;padding:2px 12px;letter-spacing:.14em;text-transform:uppercase;font-size:10.5px}
+.ptag{border:1px solid #fff9;font-size:13px;padding:2px 12px}
+.offers .card:hover,.eqrow .card:hover{filter:drop-shadow(0 0 10px var(--glow))}
+.soldx{background:repeating-linear-gradient(135deg,#ffffff0a 0 8px,transparent 8px 16px),#0004;border:2px dashed var(--bd2);text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--m);text-align:center;padding:4px}
+.zone{background:linear-gradient(#ffffff08,#0003);box-shadow:inset 0 0 26px #0006;transition:border-color .2s,box-shadow .2s,background .2s}
+.sellz{border-color:#e0a020;background:linear-gradient(#ffc85718,#3a2a0a66);box-shadow:inset 0 0 22px #0006,0 0 16px #e0a02033}
+.ph{background:repeating-linear-gradient(135deg,#ffffff07 0 8px,transparent 8px 16px),#0003;border-color:var(--bd2);align-content:center;gap:0}.ph::before{content:"＋";font-size:28px;line-height:1;opacity:.3;color:var(--gold)}
+.energyrow{border-radius:16px;box-shadow:0 4px 16px #0007,0 0 18px var(--glowa)}.tick{box-shadow:inset 0 2px 5px #000a}.ebtn{transition:transform .15s,filter .15s}.ebtn:hover{transform:scale(1.06)}
+/* barra azioni (Avanti / Mappa) e pulsanti principali */
+.actbar button,.crow button{position:relative;overflow:hidden;border-radius:16px;font-size:17px;font-weight:800;letter-spacing:.3px;transition:transform .18s,box-shadow .18s,filter .18s}
+.actbar button::before,.crow button::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,#ffffff44 50%,transparent 65%);transform:translateX(-130%);transition:transform .7s;pointer-events:none}
+.actbar button:hover:not(:disabled):not([data-locked]),.crow button:hover:not(:disabled){transform:translateY(-2px) scale(1.02);box-shadow:0 10px 24px #000a,0 0 20px var(--glowa)}
+.actbar button:hover:not([data-locked])::before,.crow button:hover::before{transform:translateX(130%)}
+.actbar .pri:not([data-locked]),.crow .pri{animation:aglow 2.6s ease-in-out infinite}
+/* Mazzo */
+.pane>h3{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}.pane>h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--bd),transparent)}
+.zone[data-zone=in]{border-style:solid;border-color:var(--bd);background:linear-gradient(#ffffff0a,#0003);box-shadow:inset 0 0 30px #0007,0 0 20px var(--glowa)}
+/* creazione del combattente */
+.creat{gap:14px;padding-top:10px}
+.creat h2{margin:4px 0 0;text-align:center;font-size:clamp(22px,6vw,30px);font-weight:900;letter-spacing:.06em;background:linear-gradient(100deg,#ffe29a,#ff7a45 35%,#ffe29a 55%,#ff7a45 80%,#ffe29a);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 16px #ff7a4566);animation:mshine 6s linear infinite}
+.cface{box-shadow:0 0 0 6px #0005,0 0 0 8px var(--bd2),0 0 44px var(--glowa),0 14px 30px #000a;animation:cfloat 4.4s ease-in-out infinite}
+.nameplate.big{box-shadow:0 4px 14px #000a,0 0 18px var(--glowa)}
+.nmin{background:linear-gradient(#0006,#0003);transition:border-color .2s,box-shadow .2s}.nmin:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--glowa),0 0 22px var(--glowa)}
+.avb{transition:transform .15s,box-shadow .15s,filter .1s}.avb:hover{transform:translateY(-3px)}.avb.on{outline:3px solid var(--gold);box-shadow:0 0 18px #ffc85777;transform:scale(1.08)}
+.stb{position:relative;overflow:hidden;border-radius:16px;background:linear-gradient(160deg,#ffffff12,#0000 55%),linear-gradient(var(--pn1),var(--pn2));transition:transform .18s,box-shadow .18s,border-color .18s}
+.stb::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,#ffffff33 50%,transparent 65%);transform:translateX(-130%);transition:transform .7s;pointer-events:none}
+.stb:hover{transform:translateY(-3px);box-shadow:0 10px 22px #000a,0 0 18px var(--glowa)}.stb:hover::before{transform:translateX(130%)}
+.stb.on{outline:none;border-color:var(--gold);background:linear-gradient(160deg,#ffc8572e,#0003 70%),linear-gradient(var(--pn1),var(--pn2));box-shadow:0 0 22px #ffc85766}
+.stlore{padding:8px 16px;border-radius:12px;background:#0004;border:1px solid var(--bd2)}
+.crow{gap:12px}.crow button{min-width:130px;padding:12px 22px}
+.creat.enter>*{animation:mIn .55s cubic-bezier(.2,1.2,.3,1) backwards}.creat.enter>.cprev{animation-name:mIn}
+.creat.enter>:nth-child(2){animation-delay:.08s}.creat.enter>:nth-child(3){animation-delay:.16s}.creat.enter>:nth-child(4){animation-delay:.24s}.creat.enter>:nth-child(5){animation-delay:.32s}.creat.enter>:nth-child(6){animation-delay:.4s}.creat.enter>:nth-child(7){animation-delay:.48s}
+/* mappa */
+.maptitle{font-size:20px;font-weight:900;letter-spacing:.05em;background:linear-gradient(100deg,#ffe29a,var(--ac2) 40%,#ffe29a 60%,var(--ac2));background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 12px var(--glowa));animation:mshine 6s linear infinite}
+.mapinfo{margin:0 auto;padding:8px 16px;border-radius:16px;background:linear-gradient(var(--pn1),var(--pn2));border:1px solid var(--bd);box-shadow:0 6px 18px #0007,0 0 20px var(--glowa)}
+.ilabel{background:linear-gradient(#000c,#000a);border:1px solid #ffffff2a;border-radius:999px;padding:1px 10px;box-shadow:0 2px 8px #0008}
+/* finestre (impostazioni, esiti) e schermata di sconfitta */
+.modal{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:mfade .25s both}
+.mbox{position:relative;border-radius:22px;background:linear-gradient(160deg,#ffffff12,#0000 36%),linear-gradient(var(--pn1),var(--pn2));box-shadow:0 20px 60px #000d,0 0 40px var(--glowa),inset 0 1px 0 #ffffff22}
+.mbox:not(.chpop){animation:mpop .35s cubic-bezier(.2,1.3,.3,1) backwards}
+.mbox h2{margin:0;text-align:center;font-weight:900;letter-spacing:.05em;background:linear-gradient(100deg,#ffe29a,#ff7a45 50%,#ffe29a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.mbox button{border-radius:14px}.mbox .seg button{border-radius:12px}
+.slotov{backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.overscr{max-width:420px;margin:0 auto;text-align:center}.overscr .logo{margin-top:56px;background:linear-gradient(#ffc2cb,var(--r));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 24px #ff546888)}
+.overscr .item{margin-top:14px;padding:18px;border-radius:20px;background:linear-gradient(160deg,#ffffff10,#0000 40%),linear-gradient(var(--pn1),var(--pn2));border-color:var(--bd);box-shadow:0 10px 30px #000a,0 0 30px #ff546833}.overscr .item .big{animation:cfloat 3.6s ease-in-out infinite}
+.overscr button{position:relative;overflow:hidden;border-radius:16px;font-size:18px;font-weight:800;transition:transform .18s,box-shadow .18s}.overscr button:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 10px 24px #000a,0 0 20px var(--glowa)}.overscr .pri{animation:aglow 2.6s ease-in-out infinite}
+/* compattezza: lo Store deve restare leggibile senza tagli */
+@media(min-aspect-ratio:5/4){.og{padding:3px 8px 5px}.og6{gap:8px}.tabs{padding:3px}.tabs button{padding:6px 2px;min-height:38px}.eqleft .sellz{padding:8px 10px;min-height:44px}body:not(.fs) .top{padding:5px 12px}}
+@media(max-aspect-ratio:5/4){.offers .card .ef,.offers .card .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.offers .card .efs{overflow:hidden}}
+@media(prefers-reduced-motion:reduce){#amb *,#amb::before,body:not(.fs) .top::before,.creat *,.pane *,.mapscr *,.modal,.mbox,.actbar *,.maptitle,.chbox,.sbox.boss,.overscr *{animation:none!important}}
 </style></head>
 <body><div id="app"></div><script src="dist/game.js"></script></body></html>
