@@ -264,14 +264,14 @@ body.editing #app{max-width:1180px;width:100%;padding:8px}
 #amb i{background:radial-gradient(circle,var(--ac1),var(--ac2) 55%,transparent 72%)}
 body.th-classic #amb::before{background:radial-gradient(circle at 50% 28%,#ff7a4538,transparent 52%),radial-gradient(circle at 15% 85%,#7a5cff38,transparent 48%),radial-gradient(circle at 88% 70%,#46e0a022,transparent 45%)}
 body.th-classic #amb i{background:radial-gradient(circle,#ffe29a,#ff7a45 55%,transparent 72%)}
-@keyframes aglow{0%,100%{box-shadow:0 5px 16px #0008,0 0 0 0 var(--glowa)}50%{box-shadow:0 5px 16px #0008,0 0 24px 5px var(--glowa)}}
+@keyframes aglow{0%,100%{box-shadow:0 4px 12px #0008,0 0 0 0 var(--glowa)}50%{box-shadow:0 4px 12px #0008,0 0 14px 2px var(--glowa)}}
 @keyframes tsweep{0%,70%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
 @keyframes cfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @keyframes mfade{from{opacity:0}to{opacity:1}}
 @keyframes mpop{from{opacity:0;transform:translateY(18px) scale(.93)}to{opacity:1;transform:none}}
-@keyframes bossPulse{0%,100%{box-shadow:0 0 14px #ff546844}50%{box-shadow:0 0 30px 3px #ff546888}}
+@keyframes bossPulse{0%,100%{box-shadow:0 0 8px #ff546844}50%{box-shadow:0 0 16px 2px #ff546888}}
 /* barra delle risorse e notifiche */
-body:not(.fs) .top{position:relative;overflow:hidden;justify-content:center;align-items:center;gap:6px;border-radius:16px;box-shadow:0 6px 20px #000a,0 0 22px var(--glowa)}
+body:not(.fs) .top{position:relative;overflow:hidden;justify-content:center;align-items:center;gap:6px;border-radius:16px;box-shadow:0 5px 14px #000a,0 0 8px var(--glowa)}
 body:not(.fs) .top::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,#ffffff1c 50%,transparent 65%);transform:translateX(-130%);animation:tsweep 8s ease-in-out 1.5s infinite;pointer-events:none}
 body:not(.fs) .top>span{background:#0005;border:1px solid #ffffff1a;border-radius:999px;padding:3px 11px;white-space:nowrap;box-shadow:inset 0 1px 4px #0009}
 body:not(.fs) .top .gear{position:relative;margin-left:auto;border-radius:999px;transition:transform .35s,filter .1s}body:not(.fs) .top .gear:hover{transform:rotate(70deg)}
@@ -352,9 +352,33 @@ body:not(.fs) .toast{border-radius:12px;border:1px solid #ff546877;box-shadow:0 
 .overscr{max-width:420px;margin:0 auto;text-align:center}.overscr .logo{margin-top:56px;background:linear-gradient(#ffc2cb,var(--r));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 24px #ff546888)}
 .overscr .item{margin-top:14px;padding:18px;border-radius:20px;background:linear-gradient(160deg,#ffffff10,#0000 40%),linear-gradient(var(--pn1),var(--pn2));border-color:var(--bd);box-shadow:0 10px 30px #000a,0 0 30px #ff546833}.overscr .item .big{animation:cfloat 3.6s ease-in-out infinite}
 .overscr button{position:relative;overflow:hidden;border-radius:16px;font-size:18px;font-weight:800;transition:transform .18s,box-shadow .18s}.overscr button:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 10px 24px #000a,0 0 20px var(--glowa)}.overscr .pri{animation:aglow 2.6s ease-in-out infinite}
+/* margini interni: i bagliori non vengono più tagliati ai bordi dei contenitori a scorrimento */
+.creat{padding:16px 22px 30px}
+.pane{padding:12px 14px 12px}
+.hfig{box-shadow:inset 0 0 40px #000a,0 6px 14px #000a,0 0 12px var(--glowa)}
+.sbook{box-shadow:0 6px 16px #0008,0 0 12px var(--glowa),inset 0 1px 0 #ffffff22}
+.og,.energyrow{box-shadow:0 4px 12px #0006,inset 0 1px 0 #ffffff14}
+.cface{box-shadow:0 0 0 6px #0005,0 0 0 8px var(--bd2),0 0 24px var(--glowa),0 10px 20px #000a}
+/* vita bassa: personaggio e nemici (anche eroe nella Storia e cuore nella barra) */
+@keyframes heartbeat{0%,100%{transform:scale(1)}14%{transform:scale(1.07)}28%{transform:scale(1)}42%{transform:scale(1.04)}70%{transform:scale(1)}}
+@keyframes critglow{0%,100%{box-shadow:0 0 8px #ff3b5c88,inset 0 0 12px #ff3b5c66}50%{box-shadow:0 0 18px 2px #ff3b5ccc,inset 0 0 26px #ff1f4aaa}}
+@keyframes critvig{0%,100%{opacity:.3}50%{opacity:.8}}
+.side.crit{border-color:#ff3b5c99}
+.side.crit .face{position:relative;border-color:#ff3b5c;box-shadow:0 0 16px #ff3b5ccc,inset 0 0 18px #ff3b5c99;animation:critglow 1s ease-in-out infinite,heartbeat 1s ease-in-out infinite}
+.side.crit .face::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle,transparent 42%,#ff1f4acc 100%);pointer-events:none;animation:critvig 1s ease-in-out infinite}
+.side.crit b{color:#ff7a8e;text-shadow:0 0 8px #ff3b5c}
+.hfig.crit{border-color:#ff3b5c;animation:critglow 1.2s ease-in-out infinite}
+.hfig.crit::before{background:radial-gradient(ellipse 62% 48% at 50% 0,#ffffff30,transparent 72%),radial-gradient(ellipse 56% 9% at 50% 93%,#ff3b5c,transparent 78%),radial-gradient(ellipse at 50% 50%,transparent 45%,#ff1f4a88 100%);animation:critvig 1.2s ease-in-out infinite}
+body:not(.fs) .top>span.lowhp{border-color:#ff3b5c;color:#ff8a9a;background:#3a0a1488;animation:critglow 1s ease-in-out infinite}
+/* schermi piccoli: le finestre restano utilizzabili (Chiudi sempre visibile, margini ridotti, due colonne in orizzontale) */
+.mbox:not(.chpop) [data-a=closeSet]{position:sticky;bottom:0;z-index:3;box-shadow:0 -12px 14px var(--pn2),0 4px 12px #0008}
+@media(max-height:760px),(max-width:380px){.mbox:not(.chpop){padding:12px;gap:6px;max-height:96dvh}.mbox:not(.chpop)>*{flex-shrink:0}.mbox:not(.chpop) h2{font-size:18px;margin:0}.mbox:not(.chpop) button{padding:7px 10px;font-size:14px;min-height:0}.mbox:not(.chpop) .arow{gap:6px}.mbox:not(.chpop) .arow .tgl{width:38px;height:38px;font-size:18px}.mbox:not(.chpop)>b{font-size:13px}.mbox:not(.chpop) .seg3 button{font-size:11px;padding:6px 2px}.mbox:not(.chpop) small{font-size:10px}}
+@media(max-height:480px) and (orientation:landscape){.mbox:not(.chpop){width:min(94vw,720px);display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;align-content:start;align-items:center}.mbox:not(.chpop)>h2,.mbox:not(.chpop)>small,.mbox:not(.chpop) [data-a=closeSet]{grid-column:1/-1}.mbox:not(.chpop) .seg3{grid-column:1/-1}}
+.avgrid{grid-template-columns:repeat(7,minmax(0,1fr))}.avb{min-width:0;overflow:hidden}.stb{min-width:0}
+@media(max-width:380px){.creat{padding:12px 14px 26px}.avb{font-size:17px;padding:2px}.stb b{font-size:14px}.stb small,.stb span{font-size:11px}.creat .stylerow,.creat .avgrid{gap:6px}.stb{padding:8px 4px}.pane{padding:10px 10px 10px}.top>span{font-size:13px;padding:2px 8px}}
 /* compattezza: lo Store deve restare leggibile senza tagli */
 @media(min-aspect-ratio:5/4){.og{padding:3px 8px 5px}.og6{gap:8px}.tabs{padding:3px}.tabs button{padding:6px 2px;min-height:38px}.eqleft .sellz{padding:8px 10px;min-height:44px}body:not(.fs) .top{padding:5px 12px}}
 @media(max-aspect-ratio:5/4){.offers .card .ef,.offers .card .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.offers .card .efs{overflow:hidden}}
-@media(prefers-reduced-motion:reduce){#amb *,#amb::before,body:not(.fs) .top::before,.creat *,.pane *,.mapscr *,.modal,.mbox,.actbar *,.maptitle,.chbox,.sbox.boss,.overscr *{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.crit,.crit .face,.crit .face::after,.hfig.crit::before,.top>span.lowhp,#amb *,#amb::before,body:not(.fs) .top::before,.creat *,.pane *,.mapscr *,.modal,.mbox,.actbar *,.maptitle,.chbox,.sbox.boss,.overscr *{animation:none!important}}
 </style></head>
 <body><div id="app"></div><script src="dist/game.js"></script></body></html>
