@@ -13,8 +13,10 @@ import { config as audioCfg, setMode, sfx, unlock } from './audio';
 import { clearRun, loadRun, saveRun } from './save';
 const app = document.getElementById('app')!;
 // Sfondo ambientale (bagliori + braci) dietro alle schermate non di combattimento: stessa atmosfera del menu principale, nei colori dell'isola
-const amb = document.createElement('div'); amb.id = 'amb'; amb.className = 'mfx'; amb.setAttribute('aria-hidden', 'true');
-amb.innerHTML = Array.from({ length: 28 }, () => `<i style="--x:${Math.round(Math.random() * 100)}%;--s:${(0.5 + Math.random() * 1.4).toFixed(2)};--d:${(7 + Math.random() * 9).toFixed(1)}s;--w:-${(Math.random() * 16).toFixed(1)}s"></i>`).join(''); document.body.prepend(amb);
+const amb = document.createElement('div'); amb.id = 'amb'; amb.className = 'mfx'; amb.setAttribute('aria-hidden', 'true'); document.body.prepend(amb);
+// le braci stanno SOPRA i pannelli (non cliccabili), così si vedono anche dietro/accanto ai menu pieni di contenuto
+const ambf = document.createElement('div'); ambf.id = 'ambf'; ambf.className = 'mfx'; ambf.setAttribute('aria-hidden', 'true');
+ambf.innerHTML = Array.from({ length: 26 }, () => `<i style="--x:${Math.round(Math.random() * 100)}%;--s:${(0.5 + Math.random() * 1.4).toFixed(2)};--d:${(7 + Math.random() * 9).toFixed(1)}s;--w:-${(Math.random() * 16).toFixed(1)}s"></i>`).join(''); document.body.append(ambf);
 let lastScr = ''; // l'animazione d'ingresso parte solo quando cambia schermata (non a ogni ridisegno) e mai nel tutorial
 const enter = (k: string) => { const f = lastScr !== k && !tutActive(); lastScr = k; return f ? ' enter' : ''; };
 const ICON = new Proxy({} as Record<string, string>, { get: (_t, k: string) => EQUIPMENT[k] ? eqIcon(k, EQUIPMENT[k].kind) : undefined }); // icona dell'equipaggiamento (non per le carte base)
