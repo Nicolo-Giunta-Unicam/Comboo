@@ -1,5 +1,5 @@
 import { CONFIG } from './config';
-import { CHOICES, ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, effectLines, moveOf, type ChoiceFx, type Move } from './data';
+import { CAT_INFO, CHOICES, ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, catLabel, effectLines, moveOf, passiveLines, type ChoiceFx, type Move } from './data';
 import { makeChoice, pendingChoice, choiceGold, chapterKey, scaledFx, beginArena, buyEnergy, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, cardValue, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
 import { applyPalette } from './theme';
 import { LANG, LANGS, setLang, startLocalizer, tr } from './i18n';
@@ -27,11 +27,13 @@ if (!(settings.speed in DELAYS)) settings.speed = 0; if (![0, 1, 2].includes(set
 audioCfg(settings.music, settings.sfx, settings.mv, settings.sv); addEventListener('pointerdown', () => unlock());
 let settingsOpen = false, sure = false, pileView: 'draw' | 'discard' | null = null;
 let run = loadRun(localStorage), tab: 'sto' | 'st' | 'me' = 'sto', note = '', started = !!run && run.phase === 'combat', pop = { e: 0, p: 0 };
-const kind = (m: Move) => m.effect.syn ? 'syn' : m.effect.dmg ? 'atk' : m.effect.block ? 'def' : 'utl';
-const cardArt = (m: Move) => customImg('card-' + m.id) ?? ICON[m.source] ?? (m.effect.dmg ? ART.kind.atk : m.effect.block ? ART.kind.def : ART.kind.utl); // immagine della carta: card-<id> > icona equipaggiamento > tipo
+const kind = (m: Move) => m.effect.syn ? 'syn' : (m.effect.dmg || m.effect.scale?.dmg) ? 'atk' : m.effect.block ? 'def' : 'utl';
+/** Pallino della categoria (Corpo a corpo, Lame, Armi da fuoco, Magia) in alto a destra della carta. */
+const catBadge = (m: Move) => m.cat && CAT_INFO[m.cat] ? `<span class="catb ${m.cat}" title="${catLabel(m.cat)}">${CAT_INFO[m.cat].icon}</span>` : '';
+const cardArt = (m: Move) => customImg('card-' + m.id) ?? ICON[m.source] ?? ((m.effect.dmg || m.effect.scale?.dmg) ? ART.kind.atk : m.effect.block ? ART.kind.def : ART.kind.utl); // immagine della carta: card-<id> > icona equipaggiamento > tipo
 function card(uid: string, o: { cls?: string; attr?: string; price?: number; badge?: string; cost?: number; sell?: number } = {}) {
   const m = MOVES[moveOf(uid)], e = m.effect;
-  return `<div class="card ${kind(m)} ${o.cls ?? ''}" ${o.attr ?? ''}><span class="cost ${o.cost !== undefined && o.cost < m.cost ? 'disc' : ''}">${o.cost ?? m.cost}</span>${o.badge ? `<span class="bdg">${o.badge}</span>` : ''}<div class="nm">${m.name}</div><div class="art">${cardArt(m)}</div><div class="efs">${effectLines(e).map(l => `<div class="ef">${l}</div>`).join('')}</div>${o.sell !== undefined ? `<div class="sellv">💵 Vendita: +${o.sell}</div>` : ''}<div class="src">${m.effect.syn ? '✨ Sinergia · ' : ''}${m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name}${o.price ? ` · 💰${o.price}` : ''}</div></div>`;
+  return `<div class="card ${kind(m)} ${o.cls ?? ''}" ${o.attr ?? ''}><span class="cost ${o.cost !== undefined && o.cost < m.cost ? 'disc' : ''}">${o.cost ?? m.cost}</span>${catBadge(m)}${o.badge ? `<span class="bdg">${o.badge}</span>` : ''}<div class="nm">${m.name}</div><div class="art">${cardArt(m)}</div><div class="efs">${effectLines(e).map(l => `<div class="ef">${l}</div>`).join('')}</div>${o.sell !== undefined ? `<div class="sellv">💵 Vendita: +${o.sell}</div>` : ''}<div class="src">${m.effect.syn ? '✨ Sinergia · ' : ''}${m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name}${o.price ? ` · 💰${o.price}` : ''}</div></div>`;
 }
 const bar = (v: number, mx: number, c = '') => `<div class="bar ${c}"><i style="width:${Math.max(0, v / mx * 100)}%"></i><b>${v}/${mx}</b></div>`;
 const head = (r: Run) => `<div class="top"><span>⚔ ${REGIONS[r.region ?? '']?.name ?? 'Arena'} ${r.region ? Math.min(wins(r, r.region), CONFIG.matchesPerIsland) + '/' + CONFIG.matchesPerIsland : r.arena}</span><span>💰 ${r.god ? '∞' : r.gold}</span><span class="${(r.phase === 'combat' ? r.hp : startHp(r)) / maxHp(r) < CONFIG.woundedBelow ? 'lowhp' : ''}">❤ ${r.phase === 'combat' ? r.hp : startHp(r)}/${maxHp(r)}</span><span>🎴 ${r.deck.length}/${CONFIG.maxDeck}</span><span>⚡ ${maxEnergy(r)}/${CONFIG.maxEnergy}</span><span>🔧 ${r.equipped.length}/${r.slots}</span><button class="gear" data-a="set">⚙</button></div>`;
@@ -154,7 +156,7 @@ function draw() {
       const m = p.mv ? MOVES[p.mv] : null;
       const rest = m ? effectLines(m.effect).filter(l => !/^(⚔️|⏳)/.test(l) && !(k === 'def' && l.startsWith('🛡️'))) : [p.fx ?? ''];
       const lines = [k === 'off' ? `⚔️ Danni ${p.dmg}${p.hits > 1 ? '×' + p.hits : ''}` : `🛡️ Guardia ${p.block}`, k === 'def' ? `⏳ ${p.ttl < 0 ? 'Finché abbattuta' : (p.ttl > 1 ? `${p.ttl} turni` : '1 turno')}` : '', ...rest, p.tag ?? ''].filter(Boolean);
-      return `<div class="card ${m ? kind(m) : k === 'off' ? 'atk' : 'def'} ${m ? '' : 'foe'} ${extra} ${p.id === c.fresh ? 'new' : ''}">${m ? `<span class="cost">${m.cost}</span>` : ''}<div class="nm">${p.name}</div><div class="art">${ico(p)}</div><div class="efs">${lines.map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${m ? (m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name) : 'Nemico'}</div></div>`;
+      return `<div class="card ${m ? kind(m) : k === 'off' ? 'atk' : 'def'} ${m ? '' : 'foe'} ${extra} ${p.id === c.fresh ? 'new' : ''}" title="${[p.name, ...lines].join('\n').replace(/"/g, '&quot;')}">${m ? `<span class="cost">${m.cost}</span>${catBadge(m)}` : ''}${p.trg ? '<span class="trgb">🔔</span>' : ''}<div class="nm">${p.name}</div><div class="art">${ico(p)}</div><div class="efs">${lines.map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${m ? (m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name) : 'Nemico'}</div></div>`;
     };
     const rw = (a: Placed[], k: 'off' | 'def', fl = false) => `<div class="rowf ${k} ${a.length > 3 ? 'rt' : ''} ${fl ? 'flash' : ''}"><i>${k === 'off' ? 'OFFESA' : 'DIFESA'}</i>${a.map(p => pcard(p, k)).join('')}</div>`;
     const sh = (a: Placed[]) => a.reduce((s, p) => s + p.block, 0);
@@ -192,7 +194,7 @@ function draw() {
   }
   if (r.phase === 'store' && r.needsMap) { drawMap(r); return; }
   const own = ownedCards(r); let body = '';
-  const eqCard = (id: string, i: number) => { const e = EQUIPMENT[id], bn = [e.bonus.maxHp && `❤ +${e.bonus.maxHp} PV max`, e.bonus.dmg && `⚔️ +${e.bonus.dmg} danni`].filter(Boolean) as string[]; return `<div class="card eqc" data-eq="${id}" ${i >= 0 ? `data-drag="offer:eq:${i}"` : `data-drag="eqs:${id}"`}><div class="nm">${e.name}</div><div class="art">${ICON[id]}</div><div class="efs">${[...bn, ...e.moves.map(m => '🎴 ' + MOVES[m].name)].map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${i >= 0 ? 'Potenziamento · 1 slot' : '✔ Installato'}</div></div>`; };
+  const eqCard = (id: string, i: number) => { const e = EQUIPMENT[id], bn = [e.bonus.maxHp && `❤ +${e.bonus.maxHp} PV max`, e.bonus.dmg && `⚔️ +${e.bonus.dmg} danni`].filter(Boolean) as string[]; return `<div class="card eqc" data-eq="${id}" ${i >= 0 ? `data-drag="offer:eq:${i}"` : `data-drag="eqs:${id}"`}><div class="nm">${e.name}</div><div class="art">${ICON[id]}</div><div class="efs">${[...bn, ...(e.passives.length ? ['🔔 Passiva'] : []), ...e.moves.map(m => '🎴 ' + MOVES[m].name)].map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${i >= 0 ? 'Potenziamento · 1 slot' : '✔ Installato'}</div></div>`; };
   const slot = (x: string | null, f: (id: string, i: number) => string, i: number) => x ? f(x, i) : '<div class="soldx">Esaurita</div>';
   const go = `<button class="pri go" data-a="go" style="width:100%">⚔ Affronta arena ${r.arena}</button>`;
   const offer = (h: string, p: number) => `<div class="offer">${h}<div class="ptag">💰 ${p}</div></div>`;
@@ -231,7 +233,7 @@ function draw() {
   if (tab === 'st') { const en2 = maxEnergy(r); if (prevEn >= 0 && en2 > prevEn) { const tk = app.querySelectorAll<HTMLElement>('.tick')[en2 - 1]; if (tk) { tk.classList.add('gain'); const q = tk.getBoundingClientRect(); burst('combo', q.left + q.width / 2, q.top + q.height / 2); sfx('energy'); } } prevEn = en2; }
 }
 // ---- Slot machine per le carte misteriose: scorrono carte a caso, FERMA rallenta e atterra sulla carta sbloccata ----
-const eqFace = (id: string) => { const e = EQUIPMENT[id], bn = [e.bonus.maxHp && `❤ +${e.bonus.maxHp} PV max`, e.bonus.dmg && `⚔️ +${e.bonus.dmg} danni`].filter(Boolean) as string[]; return `<div class="card eqc"><div class="nm">${e.name}</div><div class="art">${ICON[e.id]}</div><div class="efs">${[...bn, ...e.moves.map(m => '🎴 ' + MOVES[m].name)].map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">Potenziamento</div></div>`; };
+const eqFace = (id: string) => { const e = EQUIPMENT[id], bn = [e.bonus.maxHp && `❤ +${e.bonus.maxHp} PV max`, e.bonus.dmg && `⚔️ +${e.bonus.dmg} danni`].filter(Boolean) as string[]; return `<div class="card eqc"><div class="nm">${e.name}</div><div class="art">${ICON[e.id]}</div><div class="efs">${[...bn, ...(e.passives.length ? ['🔔 Passiva'] : []), ...e.moves.map(m => '🎴 ' + MOVES[m].name)].map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">Potenziamento</div></div>`; };
 type L = (n: string, i: string) => string;
 /** Racconto di come si ottiene una carta: dipende dalla natura dell'oggetto (un oggetto si trova o si costruisce, uno stile si impara, un potenziamento del corpo si risveglia...). */
 const LORE_EQ: Record<string, L[]> = {
@@ -386,7 +388,7 @@ app.addEventListener('pointerup', ev => endDrag(ev, false)); app.addEventListene
 const tip = document.createElement('div'); tip.id = 'tip'; document.body.appendChild(tip);
 const mvLine = (m: string) => { const x = MOVES[m]; return `<div class="tm"><b>${x.name}</b> <span class="tc">⚡${x.cost}</span><br><small>${effectLines(x.effect).join(' · ')}</small></div>`; };
 const eqFull = (id: string) => { const e = EQUIPMENT[id], bn = [e.bonus.maxHp && `❤ +${e.bonus.maxHp} PV max`, e.bonus.dmg && `⚔️ +${e.bonus.dmg} danni a ogni attacco`].filter(Boolean).join('<br>');
-  return `<div class="th">${ICON[id]} <b>${e.name}</b></div><small>${e.desc}</small>${bn ? `<div class="tm">${bn}</div>` : ''}<div class="tl">MOSSE SBLOCCATE</div>${e.moves.map(mvLine).join('')}<div class="tl">MOSSA AVANZATA</div>${e.advanced.map(mvLine).join('')}<div class="tl">PREZZO BASE 💰${e.price}</div>`; };
+  return `<div class="th">${ICON[id]} <b>${e.name}</b></div><small>${e.desc}</small>${bn ? `<div class="tm">${bn}</div>` : ''}${e.passives.length ? `<div class="tl">PASSIVA</div>${e.passives.map(t => `<div class="tm">${passiveLines(t).map(l => `<div>${l}</div>`).join('')}</div>`).join('')}` : ''}<div class="tl">MOSSE SBLOCCATE</div>${e.moves.map(mvLine).join('')}<div class="tl">MOSSA AVANZATA</div>${e.advanced.map(mvLine).join('')}<div class="tl">PREZZO BASE 💰${e.price}</div>`; };
 function showTip(el: HTMLElement) {
   tip.innerHTML = eqFull(el.dataset.eq!); tip.style.display = 'block';
   const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, x = r.left < innerWidth / 2 ? r.right + 8 : r.left - w - 8;

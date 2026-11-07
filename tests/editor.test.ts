@@ -10,7 +10,7 @@ test('rinomina carta: aggiorna equipaggiamenti, collegamenti, mazzi e traduzioni
   assert.ok(renameId(d, 'move', 'guard', 'pugno')); assert.ok(renameId(d, 'move', 'guard', 'no spazi')); assert.deepEqual(validate(d).filter(i => i.level === 'err'), []);
 });
 test('rinomina isola: aggiorna equipaggiamenti, scelte e id dei nemici', () => {
-  const d = fresh(); assert.equal(renameId(d, 'region', 'desert', 'dune'), null); assert.ok(d.equipment.filter((e: any) => e.island === 'dune').length === 2); assert.ok(d.choices.every((c: any) => c.region !== 'desert')); assert.ok((d.regions as any[]).find(r => r.id === 'dune').enemies[0].id.startsWith('dune-'));
+  const d = fresh(); assert.equal(renameId(d, 'region', 'desert', 'dune'), null); assert.ok(d.equipment.filter((e: any) => e.island === 'dune').length === 3); assert.ok(d.choices.every((c: any) => c.region !== 'desert')); assert.ok((d.regions as any[]).find(r => r.id === 'dune').enemies[0].id.startsWith('dune-'));
   assert.deepEqual(validate(d).filter(i => i.level === 'err'), []);
 });
 test('rinominazioni: catene collassate e script', () => {
@@ -38,4 +38,26 @@ import en from '../data/locales/en.json';
 test('inglese: tutti i testi dei contenuti sono tradotti e i segnaposto dell\'interfaccia coincidono', () => {
   const d = fresh(), miss: string[] = []; forEachText(d, (k) => { if (!d.i18n?.en?.[k]) miss.push(k); }); assert.deepEqual(miss, [], 'testi senza traduzione: ' + miss.slice(0, 5));
   const ph = (s: string) => (s.match(/\{\d+\}/g) ?? []).sort().join(); for (const [k, v] of Object.entries(en as Record<string, string>)) if (v) assert.equal(ph(v), ph(k), `segnaposto diversi: ${k}`);
+});
+
+// ---- categorie, per-ogni-carta, trigger e passive ----
+import { CATS } from '../src/editor-data';
+test('editor: ogni carta nuova ha una categoria; senza categoria o con categoria sconosciuta la convalida segnala un errore', () => {
+  const d = fresh(), id = newMove(d, null, 'base'); assert.ok(CATS.includes(findMove(d, id)!.m.cat));
+  findMove(d, 'jab')!.m.cat = undefined; assert.ok(validate(d).some(i => i.level === 'err' && /jab.*categoria/.test(i.msg)));
+  findMove(d, 'jab')!.m.cat = 'laser'; assert.ok(validate(d).some(i => i.level === 'err' && /jab.*categoria/.test(i.msg)));
+});
+test('editor: controlli su "per ogni carta", trigger e passive', () => {
+  const d = fresh(), m = findMove(d, 'jab')!.m; m.effect.scale = { cat: 'plasma', where: 'played', dmg: 1 }; assert.ok(validate(d).some(i => i.level === 'err' && /jab.*per ogni carta/.test(i.msg)));
+  m.effect.scale = { cat: 'melee', where: 'qui', dmg: 1 }; assert.ok(validate(d).some(i => i.level === 'err' && /dove si contano/.test(i.msg)));
+  m.effect.scale = { cat: 'melee', where: 'hand', dmg: 1 }; assert.equal(validate(d).filter(i => i.level === 'err').length, 0);
+  delete m.effect.scale; m.effect.trigger = { on: 'hit', dmg: 2 }; assert.ok(validate(d).some(i => i.level === 'warn' && /jab.*trigger/.test(i.msg))); // carta offensiva: il trigger servirebbe a poco
+  delete m.effect.trigger; const g = findMove(d, 'guard')!.m; g.effect.trigger = { on: 'quando', dmg: 1 }; assert.ok(validate(d).some(i => i.level === 'err' && /momento del trigger/.test(i.msg)));
+  g.effect.trigger = { on: 'hit', dmg: 2 }; assert.equal(validate(d).filter(i => i.level === 'err').length, 0);
+  delete g.effect.trigger; (d.equipment[0] as any).passives = [{ on: 'play', cat: 'plasma', boost: 1 }]; assert.ok(validate(d).some(i => i.level === 'err' && /passiva 1/.test(i.msg)));
+  (d.equipment[0] as any).passives = [{ on: 'hit', boost: 1 }]; assert.ok(validate(d).some(i => i.level === 'warn' && /bonus alla carta giocata/.test(i.msg)));
+});
+test('contenuti nuovi: tutte le carte con trigger sono difese permanenti e ogni passiva è valida', () => {
+  const d = fresh(); for (const r of allMoves(d)) if (r.m.effect.trigger) { assert.ok(r.m.effect.block > 0 && !r.m.effect.dmg, r.m.id); assert.equal(r.m.effect.dur, 0, r.m.id + ': permanente'); }
+  assert.equal(validate(d).filter(i => i.level !== 'err' && /trigger|passiva/.test(i.msg)).length, 0);
 });

@@ -2,6 +2,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type D = any;
 export const SYN_KINDS = ['adrenaline', 'bypass', 'freeNext', 'flow', 'shieldAtk', 'momentum', 'scout', 'dup', 'clone'];
+/** Categorie delle carte e relative etichette; "dove si contano" e "quando scatta" per gli effetti per categoria. */
+export const CATS = ['melee', 'blade', 'firearm', 'magic'];
+export const CAT_NAMES: Record<string, string> = { melee: '🥊 Corpo a corpo', blade: '🗡️ Lame', firearm: '🔫 Armi da fuoco', magic: '✨ Magia' };
+export const WHERES: [string, string][] = [['played', 'giocate nel turno (fin qui)'], ['hand', 'in mano'], ['field', 'sul campo (schierate)'], ['discard', 'negli scarti']];
+export const TRIG_ON: [string, string][] = [['hit', 'quando è colpita (carta) / vieni colpito (equipaggiamento)'], ['play', 'quando giochi una carta'], ['turnStart', 'a inizio turno']];
+/** Controlli di un trigger (di una carta o di un equipaggiamento): restituisce messaggi di errore e avvisi. */
+export function checkTrigger(t: D, who: string, equip: boolean): { err: string[]; warn: string[] } {
+  const err: string[] = [], warn: string[] = [];
+  if (!TRIG_ON.some(x => x[0] === t.on)) err.push(`${who}: momento del trigger sconosciuto "${t.on ?? ''}".`);
+  if (t.on === 'play' && ![...CATS, 'any'].includes(t.cat ?? 'any')) err.push(`${who}: categoria del trigger sconosciuta "${t.cat}".`);
+  if (!t.dmg && !t.block && !t.heal && !t.draw && !t.energy && !t.boost) warn.push(`${who}: il trigger non ha alcun effetto.`);
+  if (t.boost && (!equip || t.on !== 'play')) warn.push(`${who}: il bonus alla carta giocata funziona solo nelle passive degli equipaggiamenti "quando giochi una carta".`);
+  if (t.energy && t.on === 'hit') warn.push(`${who}: l'energia guadagnata quando si viene colpiti va persa (l'energia si azzera a inizio turno).`);
+  return { err, warn };
+}
 export const EQ_KINDS = ['gear', 'implant', 'body', 'style', 'arcane'];
 export const THEME_PRESETS = ['boxing', 'battle', 'desert', 'ocean', 'forest', 'ember'];
 export const CHOICE_FX = ['gold', 'block', 'energy', 'draw', 'foeHp', 'hp'] as const;
@@ -33,7 +48,7 @@ export function moveCard(d: D, id: string, owner: string | null, slot: 'base' | 
   if (slot === 'adv') { m.price ??= 20; (e.advanced ??= []).push(m); } else { delete m.price; (e.moves ??= []).push(m); } return null;
 }
 export function newMove(d: D, owner: string | null, slot: 'base' | 'basic' | 'adv'): string {
-  let n = 1; const ids = new Set(allMoves(d).map(r => r.m.id)); while (ids.has('carta_' + n)) n++; const id = 'carta_' + n, m: D = { id, name: 'Nuova carta', effect: { dmg: 4 } };
+  let n = 1; const ids = new Set(allMoves(d).map(r => r.m.id)); while (ids.has('carta_' + n)) n++; const id = 'carta_' + n, m: D = { id, name: 'Nuova carta', cat: 'melee', effect: { dmg: 4 } };
   if (slot === 'adv') m.price = 20; if (owner === null) d.baseMoves.push(m); else { const e = d.equipment.find((x: D) => x.id === owner); (slot === 'adv' ? (e.advanced ??= []) : (e.moves ??= [])).push(m); } return id;
 }
 export function dupMove(d: D, id: string): string | null {
@@ -101,8 +116,11 @@ export function validate(d: D): Issue[] {
   const moves = allMoves(d), mids = new Set(moves.map(r => r.m.id)), rids = new Set((d.regions ?? []).map((r: D) => r.id)), emids = new Set((d.enemyMoves ?? []).map((m: D) => m.id)), n = d.config?.matchesPerIsland ?? 5;
   dup(moves.map(r => r.m.id), 'carte'); dup((d.equipment ?? []).map((x: D) => x.id), 'equipaggiamenti'); dup((d.regions ?? []).map((x: D) => x.id), 'isole'); dup((d.regions ?? []).flatMap((r: D) => (r.enemies ?? []).map((x: D) => x.id)), 'nemici'); dup((d.styles ?? []).map((x: D) => x.id), 'stili'); dup((d.choices ?? []).map((x: D) => x.id), 'scelte'); dup((d.enemyMoves ?? []).map((x: D) => x.id), 'mosse nemiche');
   for (const [k, ids] of Object.entries(TUTORIAL_IDS)) for (const id of ids) { const ok = k === 'move' ? mids.has(id) : k === 'equipment' ? (d.equipment ?? []).some((x: D) => x.id === id) : rids.has(id); if (!ok) w(`Il tutorial usa "${id}" (${k}), che non esiste più: il tutorial non funzionerà.`); }
-  for (const r of moves) { const m = r.m, fx = m.effect ?? {}; if (!m.name) e(`Carta ${m.id}: manca il nome.`); if (fx.link && !mids.has(fx.link.from)) e(`Carta ${m.id}: il collegamento punta a "${fx.link.from}", che non esiste.`); if (!fx.dmg && !fx.block && !fx.heal && !fx.draw && !fx.energy && !fx.syn && !fx.flee) w(`Carta ${m.id}: non ha alcun effetto.`); if (fx.syn && !SYN_KINDS.includes(fx.syn.k)) e(`Carta ${m.id}: sinergia sconosciuta "${fx.syn.k}".`); }
-  for (const q of d.equipment ?? []) { if ((q.moves ?? []).length !== 3) w(`Equipaggiamento ${q.id}: dovrebbe sbloccare esattamente 3 mosse (ne ha ${(q.moves ?? []).length}).`); if (!rids.has(q.island)) e(`Equipaggiamento ${q.id}: isola "${q.island}" inesistente.`); }
+  for (const r of moves) { const m = r.m, fx = m.effect ?? {}; if (!m.name) e(`Carta ${m.id}: manca il nome.`); if (fx.link && !mids.has(fx.link.from)) e(`Carta ${m.id}: il collegamento punta a "${fx.link.from}", che non esiste.`); if (!fx.dmg && !fx.block && !fx.heal && !fx.draw && !fx.energy && !fx.syn && !fx.flee && !fx.scale && !fx.trigger) w(`Carta ${m.id}: non ha alcun effetto.`);
+    if (!CATS.includes(m.cat)) e(`Carta ${m.id}: categoria mancante o sconosciuta ("${m.cat ?? ''}"): scegli Corpo a corpo, Lame, Armi da fuoco o Magia.`);
+    if (fx.scale) { const sc = fx.scale; if (![...CATS, 'any'].includes(sc.cat)) e(`Carta ${m.id}: categoria dell'effetto "per ogni carta" sconosciuta ("${sc.cat ?? ''}").`); if (!WHERES.some(x => x[0] === sc.where)) e(`Carta ${m.id}: "dove si contano" sconosciuto ("${sc.where ?? ''}").`); if (!sc.dmg && !sc.block && !sc.draw && !sc.energy && !sc.heal) w(`Carta ${m.id}: l'effetto "per ogni carta" non dà alcun valore.`); }
+    if (fx.trigger) { const t = checkTrigger(fx.trigger, `Carta ${m.id}`, false); t.err.forEach(e); t.warn.forEach(w); if (fx.dmg || fx.scale?.dmg) w(`Carta ${m.id}: una carta offensiva lascia il campo a fine turno, il trigger servirebbe a poco: usa una carta difensiva permanente (guardia, durata 0).`); else if (!fx.block) w(`Carta ${m.id}: il trigger funziona solo finché la carta è sul campo: serve una guardia (altrimenti scompare subito).`); } if (fx.syn && !SYN_KINDS.includes(fx.syn.k)) e(`Carta ${m.id}: sinergia sconosciuta "${fx.syn.k}".`); }
+  for (const q of d.equipment ?? []) { (q.passives ?? []).forEach((t: D, i: number) => { const c = checkTrigger(t, `Equipaggiamento ${q.id} (passiva ${i + 1})`, true); c.err.forEach(e); c.warn.forEach(w); }); if ((q.moves ?? []).length !== 3) w(`Equipaggiamento ${q.id}: dovrebbe sbloccare esattamente 3 mosse (ne ha ${(q.moves ?? []).length}).`); if (!rids.has(q.island)) e(`Equipaggiamento ${q.id}: isola "${q.island}" inesistente.`); }
   for (const s of d.styles ?? []) { const dk = s.deck ?? []; if (dk.length < (d.config?.minDeck ?? 10)) w(`Stile ${s.id}: il mazzo ha ${dk.length} carte (minimo ${d.config?.minDeck ?? 10}).`); for (const c of dk) if (!d.baseMoves.some((m: D) => m.id === c)) e(`Stile ${s.id}: la carta "${c}" non è una mossa base.`); }
   if (!(d.regions ?? []).length) e('Serve almeno un\'isola.');
   for (const r of d.regions ?? []) { if ((r.enemies ?? []).length !== n) w(`Isola ${r.id}: ${(r.enemies ?? []).length} capitoli, il gioco ne prevede ${n} (config.matchesPerIsland).`); for (const m of r.enemyMoves ?? []) if (!emids.has(m)) e(`Isola ${r.id}: mossa nemica "${m}" inesistente.`); if (!(r.enemyMoves ?? []).length) w(`Isola ${r.id}: nessuna mossa nemica.`); if (!(d.equipment ?? []).some((x: D) => x.island === r.id)) w(`Isola ${r.id}: nessun equipaggiamento disponibile nello store.`); }

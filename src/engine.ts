@@ -1,11 +1,11 @@
 import { CONFIG } from './config';
-import { CHOICES, ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, moveOf, type ChoiceEv, type ChoiceFx, type ChoiceOpt } from './data';
+import { CHOICES, ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, moveOf, type Cat, type CatOrAny, type ChoiceEv, type ChoiceFx, type ChoiceOpt, type Scale, type TrigOn, type Trigger } from './data';
 import { REGION_LIST, REGIONS } from './regions';
 import { defeatOutcome, movesRetainedAfterRemoval } from './policies';
 export type Phase = 'store' | 'combat' | 'over';
 export type Err = string | null;
 export interface Enemy { name: string; tier: string; hp: number; maxHp: number; block: number; gear: string[]; art?: string; id?: string; atk: number }
-export interface Combat { foeDealt?: number; enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; lastBy?: Rec2<string | null>; mods?: { off: number; bypass: boolean; freeNext: boolean; dupNext: boolean; combos: number }; cardCost?: Record<string, number>; lastUid?: string; pick?: string[] | null; syn?: { n: number; text: string }; runs?: Rec2<number>; chains?: Rec2<number>; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
+export interface Combat { pu?: Record<string, number>; foeDealt?: number; enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; lastBy?: Rec2<string | null>; mods?: { off: number; bypass: boolean; freeNext: boolean; dupNext: boolean; combos: number }; cardCost?: Record<string, number>; lastUid?: string; pick?: string[] | null; syn?: { n: number; text: string }; runs?: Rec2<number>; chains?: Rec2<number>; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
 /** Effetti di una scelta di capitolo che valgono solo per il prossimo duello. */
 export interface Boon { block?: number; energy?: number; draw?: number; foeHp?: number; hp?: number }
 export interface Run {
@@ -23,7 +23,7 @@ export interface Run {
   deck: string[]; phase: Phase; combat: Combat | null; msg: string;
 }
 type Rec2<T> = { off: T; def: T };
-export interface Placed { uid: string; name: string; icon: string; src: string; dmg: number; hits: number; block: number; ttl: number; sh?: number; id?: number; mv?: string; fx?: string; tag?: string }
+export interface Placed { trg?: Trigger; uid: string; name: string; icon: string; src: string; dmg: number; hits: number; block: number; ttl: number; sh?: number; id?: number; mv?: string; fx?: string; tag?: string }
 export interface Ev { by: 'me' | 'foe'; card: Placed; absorbed: number; dmg: number }
 export interface Side { off: Placed[]; def: Placed[] }
 /** Slot 0-1: carte visibili; slot 2: carta MISTERIOSA (id nascosto) a prezzo ridotto (eqPrice/mvPrice). */
@@ -208,11 +208,56 @@ function drawCards(c: Combat, r: Run, n: number) {
 /** Scala la durata delle difese; quelle scadute o abbattute vanno agli scarti. ttl<0 = finché abbattuta. */
 function decay(c: Combat, sh: Placed[]) { sh.forEach(s => { if (s.ttl > 0) s.ttl--; }); return sh.filter(s => { const keep = s.ttl !== 0 && s.block > 0; if (!keep && s.uid) c.discard.push(s.uid); return keep; }); }
 /** Le difese schierate assorbono il danno in ordine; restituisce il danno residuo. */
-function absorb(c: Combat, sh: Placed[], d: number) {
-  for (const s of sh) { if (d <= 0) break; const a = Math.min(s.block, d); s.block -= a; d -= a; }
-  sh.splice(0, sh.length, ...sh.filter(s => { if (s.block > 0) return true; if (s.uid) c.discard.push(s.uid); return false; })); return d;
+function absorb(c: Combat, sh: Placed[], d: number, onHit?: (p: Placed) => void) {
+  const hit: Placed[] = [];
+  for (const s of sh) { if (d <= 0) break; const a = Math.min(s.block, d); if (a > 0) hit.push(s); s.block -= a; d -= a; }
+  sh.splice(0, sh.length, ...sh.filter(s => { if (s.block > 0) return true; if (s.uid) c.discard.push(s.uid); return false; }));
+  if (onHit) hit.forEach(onHit); return d; // chi è stato colpito reagisce (anche se è stato abbattuto dal colpo)
 }
-function startTurn(r: Run) { const c = r.combat!; c.turn++; const comboBonus = (c.mods?.combos ?? 0) > 0 ? CONFIG.comboDraw : 0; /* almeno una combo nel turno concluso: +carte in questo */ c.field.def = decay(c, c.field.def); c.block = 0; c.combo = ''; c.played = {}; c.prev = null; c.mods = { off: 0, bypass: false, freeNext: false, dupNext: false, combos: 0 }; c.cardCost = {}; delete c.lastUid; c.pick = null; c.lastBy = { off: null, def: null }; c.runs = { off: 0, def: 0 }; c.chains = { off: 0, def: 0 }; c.ev = null; c.energy = maxEnergy(r); c.phase = 'player'; c.foeDealt = 0; drawCards(c, r, c.turn === 1 ? CONFIG.startHand : Math.max(CONFIG.drawPerTurn, CONFIG.handTarget - c.hand.length) + comboBonus); }
+// ---- categorie: conteggi, effetti "per ogni carta" e trigger (carte sul campo ed equipaggiamenti) ----
+const catMatch = (want: CatOrAny | undefined, have: Cat | undefined) => !want || want === 'any' || want === have;
+/** Quante carte della categoria ci sono (nel turno, in mano, sul campo, negli scarti). Chiamare PRIMA di schierare la carta: la carta stessa non conta. */
+export function countCat(c: Combat, s: Scale): number {
+  let n = 0;
+  if (s.where === 'played') { for (const [id, k] of Object.entries(c.played)) if (catMatch(s.cat, MOVES[id]?.cat)) n += k; }
+  else if (s.where === 'hand') { for (const u of c.hand) if (catMatch(s.cat, MOVES[moveOf(u)]?.cat)) n++; }
+  else if (s.where === 'discard') { for (const u of c.discard) if (catMatch(s.cat, MOVES[moveOf(u)]?.cat)) n++; }
+  else for (const p of [...c.field.off, ...c.field.def]) if (p.mv && catMatch(s.cat, MOVES[p.mv]?.cat)) n++;
+  return s.max ? Math.min(n, s.max) : n;
+}
+/** Il nemico è a 0 PV per un effetto fuori dal normale scambio di colpi: si passa alla risoluzione, che chiude il duello con la vittoria. */
+const foeDownCheck = (c: Combat) => { if (c.enemy.hp <= 0 && c.phase === 'player') { c.phase = 'resolve'; c.ev = null; } };
+/** Fa scattare un trigger (rispettando "max volte per turno"); restituisce false se non è scattato. */
+function fire(r: Run, c: Combat, t: Trigger, key: string, who: string): boolean {
+  if (t.max) { c.pu ??= {}; if ((c.pu[key] ?? 0) >= t.max) return false; c.pu[key] = (c.pu[key] ?? 0) + 1; }
+  const parts: string[] = [];
+  if (t.dmg) { c.enemy.hp = Math.max(0, c.enemy.hp - t.dmg); parts.push(`${t.dmg} danni diretti`); }
+  if (t.block) { c.block += t.block; parts.push(`+${t.block} guardia`); }
+  if (t.heal) { r.hp = Math.min(maxHp(r), r.hp + t.heal); parts.push(`cura ${t.heal}`); }
+  if (t.draw) { drawCards(c, r, t.draw); parts.push(`pesca ${t.draw}`); }
+  if (t.energy) { c.energy += t.energy; parts.push(`+${t.energy} energia`); }
+  if (parts.length) c.log.push(`${who}: ${parts.join(', ')}.`); return true;
+}
+/** Passive degli equipaggiamenti per un evento (play: solo per carte della categoria indicata). */
+function firePassives(r: Run, c: Combat, on: TrigOn, cat?: Cat) {
+  for (const e of r.equipped) (EQUIPMENT[e]?.passives ?? []).forEach((t, i) => { if (t.on === on && (on !== 'play' || catMatch(t.cat, cat))) fire(r, c, t, `e:${e}:${i}`, EQUIPMENT[e].name); });
+}
+/** Trigger delle carte già schierate (difese permanenti) più passive degli equipaggiamenti. `skip` = carta appena giocata (non reagisce a se stessa). */
+function fireAll(r: Run, c: Combat, on: 'play' | 'turnStart', cat?: Cat, skip?: number) {
+  for (const p of [...c.field.def]) if (p.trg && p.trg.on === on && p.id !== skip && (on !== 'play' || catMatch(p.trg.cat, cat))) fire(r, c, p.trg, `c:${p.id}`, p.name);
+  firePassives(r, c, on, cat);
+}
+/** Bonus (+danni/+guardia) dagli equipaggiamenti alla carta che si sta giocando. */
+function boostFor(r: Run, c: Combat, cat?: Cat): number { // rispetta "max volte per turno" (consuma una attivazione per ogni carta potenziata)
+  let sum = 0;
+  for (const e of r.equipped) (EQUIPMENT[e]?.passives ?? []).forEach((t, i) => {
+    if (t.on !== 'play' || !t.boost || !catMatch(t.cat, cat)) return;
+    if (t.max) { const k = `b:${e}:${i}`; c.pu ??= {}; if ((c.pu[k] ?? 0) >= t.max) return; c.pu[k] = (c.pu[k] ?? 0) + 1; }
+    sum += t.boost;
+  });
+  return sum;
+}
+function startTurn(r: Run) { const c = r.combat!; c.turn++; const comboBonus = (c.mods?.combos ?? 0) > 0 ? CONFIG.comboDraw : 0; /* almeno una combo nel turno concluso: +carte in questo */ c.field.def = decay(c, c.field.def); c.block = 0; c.combo = ''; c.played = {}; c.prev = null; c.mods = { off: 0, bypass: false, freeNext: false, dupNext: false, combos: 0 }; c.cardCost = {}; c.pu = {}; delete c.lastUid; c.pick = null; c.lastBy = { off: null, def: null }; c.runs = { off: 0, def: 0 }; c.chains = { off: 0, def: 0 }; c.ev = null; c.energy = maxEnergy(r); c.phase = 'player'; c.foeDealt = 0; drawCards(c, r, c.turn === 1 ? CONFIG.startHand : Math.max(CONFIG.drawPerTurn, CONFIG.handTarget - c.hand.length) + comboBonus); fireAll(r, c, 'turnStart'); foeDownCheck(c); }
 /** Scudi attivi del giocatore: guardia delle carte offensive del turno + difese schierate. */
 export const shieldsOf = (c: Combat) => c.block + c.field.def.reduce((s, p) => s + p.block, 0);
 /** Le carte "Scudo d'assalto" già schierate seguono gli scudi attivi (se ne giochi altri dopo, il loro danno cresce). */
@@ -224,7 +269,7 @@ export function playCard(r: Run, uid: string): Err {
   const c = r.combat; if (r.phase !== 'combat' || !c) return 'Nessun combattimento.'; if (c.phase !== 'player') return 'Non è il tuo turno.';
   if (!c.hand.includes(uid)) return 'Carta non in mano.'; if (c.pick?.length) return 'Scegli prima una carta (Stratega).';
   const m = MOVES[moveOf(uid)], f = m.effect, S = f.syn, mods = modsOf(c), cost = effCost(c, uid), keep = uid.startsWith('clone:') ? '' : uid;
-  const off = !!f.dmg || S?.k === 'momentum' || S?.k === 'shieldAtk', instant = !!S && S.k !== 'momentum' && S.k !== 'flow' && S.k !== 'shieldAtk', row = off ? c.field.off : c.field.def;
+  const off = !!f.dmg || !!f.scale?.dmg || S?.k === 'momentum' || S?.k === 'shieldAtk', instant = !!S && S.k !== 'momentum' && S.k !== 'flow' && S.k !== 'shieldAtk', row = off ? c.field.off : c.field.def;
   if (f.flee) { // carta di fuga: requisiti di partita, poi si lascia il duello senza conseguenze
     const q = f.req ?? {}; if (q.hpBelow !== undefined && r.hp / maxHp(r) >= q.hpBelow) return `Requisito: PV sotto il ${Math.round(q.hpBelow * 100)}%.`; if (q.minTurn !== undefined && c.turn < q.minTurn) return `Requisito: dal turno ${q.minTurn}.`;
     if (c.energy < cost) return 'Energia insufficiente.'; c.hand.splice(c.hand.indexOf(uid), 1); if (keep) c.discard.push(keep); resolveOutcome(r, 'flee'); return null;
@@ -245,22 +290,23 @@ export function playCard(r: Run, uid: string): Err {
   }
   if (row.length >= CONFIG.rowSize) return `Riga ${off ? 'offensiva' : 'difensiva'} piena.`;
   c.energy -= cost; mods.freeNext = false; c.hand.splice(c.hand.indexOf(uid), 1);
+  const sc = f.scale, sn = sc ? countCat(c, sc) : 0, bst = boostFor(r, c, m.cat); // carte contate PRIMA di schierare questa (non conta se stessa)
   // Combo: valida solo tra carte consecutive DELLO STESSO GENERE (offensive o difensive): una carta dell'altro genere non la interrompe.
   // Comboo = catena di almeno 3 mosse (stessa carta o concatenazione). Le concatenazioni guardano l'ultima carta del genere della carta indicata.
   const g: 'off' | 'def' = off ? 'off' : 'def', L = c.lastBy ?? (c.lastBy = { off: null, def: null }), R = c.runs ?? (c.runs = { off: 0, def: 0 }), C = c.chains ?? (c.chains = { off: 0, def: 0 });
   const same = L[g] === m.id, n = same ? R[g] + 1 : 1, pct = CONFIG.combo.same[Math.min(n, CONFIG.combo.max) - 1] ?? 0, fg: 'off' | 'def' = f.link ? (MOVES[f.link.from]?.effect.dmg ? 'off' : 'def') : g;
   const lk = f.link && L[fg] === f.link.from ? f.link : null, mul = (x: number) => Math.round(x * (1 + pct)), chain = same ? C[g] + 1 : lk ? C[fg] + 1 : 1;
   c.played[m.id] = (c.played[m.id] ?? 0) + 1; R[g] = n; C[g] = chain; L[g] = m.id; c.prev = m.id; c.tier = chain >= 3 ? 2 : chain === 2 ? 1 : 0;
-  const total = Object.values(c.played).reduce((a, b) => a + b, 0), dmgBase = S?.k === 'momentum' ? (S.n ?? 1) * total : S?.k === 'shieldAtk' ? shieldsOf(c) : f.dmg ?? 0;
-  const p: Placed = { uid: keep, name: m.name, icon: '', src: m.source, dmg: off ? mul(dmgBase + dmgBonus(r) + (lk?.dmg ?? 0) + mods.off) : 0, hits: f.hits ?? 1, block: 0, ttl: 1, id: ++c.seq, mv: m.id, ...(S?.k === 'shieldAtk' ? { sh: shieldsOf(c) } : {}) };
-  const blk = mul((f.block ?? 0) + (lk?.block ?? 0) + (S?.k === 'flow' ? (S.n ?? 0) * mods.combos : 0));
+  const total = Object.values(c.played).reduce((a, b) => a + b, 0), dmgBase = (S?.k === 'momentum' ? (S.n ?? 1) * total : S?.k === 'shieldAtk' ? shieldsOf(c) : f.dmg ?? 0) + (sc?.dmg ?? 0) * sn + (off ? bst : 0);
+  const p: Placed = { uid: keep, name: m.name, icon: '', src: m.source, dmg: off ? mul(dmgBase + dmgBonus(r) + (lk?.dmg ?? 0) + mods.off) : 0, hits: f.hits ?? 1, block: 0, ttl: 1, id: ++c.seq, mv: m.id, ...(f.trigger && !off ? { trg: { ...f.trigger } } : {}), ...(S?.k === 'shieldAtk' ? { sh: shieldsOf(c) } : {}) };
+  const blk = mul((f.block ?? 0) + (lk?.block ?? 0) + (sc?.block ?? 0) * sn + (!off && (f.block || sc?.block) ? bst : 0) + (S?.k === 'flow' ? (S.n ?? 0) * mods.combos : 0));
   if (chain >= 2) mods.combos++;
   if (off) c.block += blk; else { p.block = blk; p.ttl = f.dur === 0 ? -1 : f.dur ?? 1; } // guardia di una carta offensiva: temporanea
   row.push(p); c.fresh = p.id!; c.log.push(`${m.name} schierata.`);
-  const dr = (f.draw ?? 0) + (lk?.draw ?? 0), en = (f.energy ?? 0) + (lk?.energy ?? 0), heal = f.heal ? mul(f.heal) : 0, fx = () => { if (heal) r.hp = Math.min(maxHp(r), r.hp + heal); if (dr) drawCards(c, r, dr); if (en) c.energy += en; };
+  const dr = (f.draw ?? 0) + (lk?.draw ?? 0) + (sc?.draw ?? 0) * sn, en = (f.energy ?? 0) + (lk?.energy ?? 0) + (sc?.energy ?? 0) * sn, hl = (f.heal ?? 0) + (sc?.heal ?? 0) * sn, heal = hl ? mul(hl) : 0, fx = () => { if (heal) r.hp = Math.min(maxHp(r), r.hp + heal); if (dr) drawCards(c, r, dr); if (en) c.energy += en; };
   fx();
   if (mods.dupNext) { mods.dupNext = false; if (row.length < CONFIG.rowSize) row.push({ ...p, id: ++c.seq, uid: '' }); if (off) c.block += blk; fx(); } // Duplicazione: schierata due volte
-  c.lastUid = uid; syncShieldAtk(c);
+  c.lastUid = uid; syncShieldAtk(c); fireAll(r, c, 'play', m.cat, p.id); foeDownCheck(c);
   const tag = [pct ? `${m.name} ×${n} (+${Math.round(pct * 100)}%)` : '', lk ? `${MOVES[lk.from].name} → ${m.name}` : ''].filter(Boolean).join(' · '); c.combo = tag;
   p.fx = [dr && `✦${dr}`, en && `⚡+${en}`, heal && `✚${heal}`, off && blk && `🛡️${blk}`].filter(Boolean).join(' '); p.tag = [pct ? `🔥+${Math.round(pct * 100)}%` : '', lk ? '🔗' : ''].filter(Boolean).join(' ');
   return null;
@@ -296,6 +342,7 @@ function prepareEnemy(r: Run, c: Combat) {
 export function enemyStep(r: Run): Err {
   const c = r.combat; if (r.phase !== 'combat' || !c || c.phase === 'player') return 'Non è il turno nemico.';
   if (c.phase === 'resolve') { // risoluzione attacchi del giocatore, uno alla volta in ordine di schieramento
+    if (c.enemy.hp <= 0) { r.finalEv = c.ev ?? { by: 'me', card: c.field.off[0] ?? { uid: '', name: 'Effetto', icon: '', src: '', dmg: 0, hits: 1, block: 0, ttl: 0 }, absorbed: 0, dmg: 0 }; resolveOutcome(r, 'win'); return null; } // danni diretti (trigger/passive) hanno abbattuto il nemico
     const p = c.field.off.shift(); if (!p) { prepareEnemy(r, c); return null; }
     let abs = 0, dmg = 0; for (let i = 0; i < p.hits; i++) { const left = c.mods?.bypass ? p.dmg : absorb(c, c.foeField.def, p.dmg); abs += p.dmg - left; dmg += left; c.enemy.hp = Math.max(0, c.enemy.hp - left); }
     if (p.uid) c.discard.push(p.uid); c.ev = { by: 'me', card: p, absorbed: abs, dmg }; c.log.push(`${p.name}: ${dmg} danni${abs ? ` (${abs} assorbiti)` : ''}.`);
@@ -310,8 +357,8 @@ export function enemyStep(r: Run): Err {
   }
   const a = c.foeField.off.shift();
   if (a) {
-    let abs = 0, dmg = 0; for (let i = 0; i < a.hits; i++) { const t = Math.min(c.block, a.dmg); c.block -= t; let left = absorb(c, c.field.def, a.dmg - t); if (CONFIG.enemy.burstCap) left = Math.max(0, Math.min(left, Math.round(CONFIG.enemy.burstCap * maxHp(r)) - (c.foeDealt ?? 0))); c.foeDealt = (c.foeDealt ?? 0) + left; abs += a.dmg - left; dmg += left; r.hp = Math.max(0, r.hp - left); }
-    c.last = null; c.ev = { by: 'foe', card: a, absorbed: abs, dmg }; c.log.push(`${a.name}: ${dmg} danni${abs ? ` (${abs} assorbiti)` : ''}.`); if (r.hp <= 0) { r.finalEv = c.ev; resolveOutcome(r, 'lose'); } return null;
+    let abs = 0, dmg = 0; for (let i = 0; i < a.hits; i++) { const t = Math.min(c.block, a.dmg); c.block -= t; let left = absorb(c, c.field.def, a.dmg - t, q => { if (q.trg?.on === 'hit') fire(r, c, q.trg, `c:${q.id}`, q.name); }); if (CONFIG.enemy.burstCap) left = Math.max(0, Math.min(left, Math.round(CONFIG.enemy.burstCap * maxHp(r)) - (c.foeDealt ?? 0))); c.foeDealt = (c.foeDealt ?? 0) + left; abs += a.dmg - left; dmg += left; r.hp = Math.max(0, r.hp - left); if (left > 0 && r.hp > 0) firePassives(r, c, 'hit'); }
+    c.last = null; c.ev = { by: 'foe', card: a, absorbed: abs, dmg }; c.log.push(`${a.name}: ${dmg} danni${abs ? ` (${abs} assorbiti)` : ''}.`); if (r.hp <= 0) { r.finalEv = c.ev; resolveOutcome(r, 'lose'); } else if (c.enemy.hp <= 0) { r.finalEv = c.ev; resolveOutcome(r, 'win'); } return null;
   }
   startTurn(r); return null;
 }

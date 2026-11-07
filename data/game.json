@@ -76,6 +76,7 @@
     {
       "id": "jab",
       "name": "Jab",
+      "cat": "melee",
       "effect": {
         "dmg": 4
       }
@@ -83,6 +84,7 @@
     {
       "id": "guard",
       "name": "Guardia",
+      "cat": "melee",
       "effect": {
         "block": 4
       }
@@ -90,6 +92,7 @@
     {
       "id": "focus",
       "name": "Respiro",
+      "cat": "melee",
       "effect": {
         "block": 3,
         "draw": 1
@@ -98,6 +101,7 @@
     {
       "id": "kick",
       "name": "Calcio frontale",
+      "cat": "melee",
       "effect": {
         "dmg": 4
       }
@@ -105,6 +109,7 @@
     {
       "id": "roundkick",
       "name": "Calcio circolare",
+      "cat": "melee",
       "effect": {
         "dmg": 3,
         "hits": 2,
@@ -117,6 +122,7 @@
     {
       "id": "dodge",
       "name": "Schivata",
+      "cat": "melee",
       "effect": {
         "block": 2,
         "draw": 1
@@ -125,6 +131,7 @@
     {
       "id": "grab",
       "name": "Presa",
+      "cat": "melee",
       "effect": {
         "dmg": 3,
         "block": 2
@@ -133,6 +140,7 @@
     {
       "id": "throw",
       "name": "Proiezione",
+      "cat": "melee",
       "effect": {
         "dmg": 6,
         "link": {
@@ -144,6 +152,7 @@
     {
       "id": "lock",
       "name": "Leva articolare",
+      "cat": "melee",
       "effect": {
         "block": 5,
         "dur": 2
@@ -161,6 +170,7 @@
         {
           "id": "wraps_0",
           "name": "Gancio",
+          "cat": "melee",
           "effect": {
             "dmg": 6
           }
@@ -168,6 +178,7 @@
         {
           "id": "wraps_1",
           "name": "Doppio jab",
+          "cat": "melee",
           "effect": {
             "dmg": 3,
             "hits": 2
@@ -176,6 +187,7 @@
         {
           "id": "wraps_2",
           "name": "Uno-due",
+          "cat": "melee",
           "effect": {
             "dmg": 5,
             "link": {
@@ -189,6 +201,7 @@
         {
           "id": "wraps_a0",
           "name": "Overhand",
+          "cat": "melee",
           "effect": {
             "dmg": 14,
             "link": {
@@ -201,6 +214,7 @@
         {
           "id": "wraps_a1",
           "name": "Adrenalina",
+          "cat": "melee",
           "price": 24,
           "effect": {
             "syn": {
@@ -213,6 +227,7 @@
         {
           "id": "wraps_a2",
           "name": "Rabbia del ferito",
+          "cat": "melee",
           "price": 30,
           "effect": {
             "dmg": 11,
@@ -221,6 +236,21 @@
               "hpBelow": 0.5
             }
           }
+        },
+        {
+          "id": "wraps_a3",
+          "name": "Furia scatenata",
+          "cat": "melee",
+          "effect": {
+            "dmg": 4,
+            "scale": {
+              "cat": "melee",
+              "where": "played",
+              "dmg": 2,
+              "block": 1
+            }
+          },
+          "price": 28
         }
       ],
       "island": "boxing",
@@ -239,6 +269,7 @@
         {
           "id": "stance_0",
           "name": "Parata alta",
+          "cat": "melee",
           "effect": {
             "block": 6,
             "dur": 2
@@ -247,6 +278,7 @@
         {
           "id": "stance_1",
           "name": "Schivata",
+          "cat": "melee",
           "effect": {
             "block": 4,
             "draw": 1
@@ -255,6 +287,7 @@
         {
           "id": "stance_2",
           "name": "Contrattacco",
+          "cat": "melee",
           "effect": {
             "dmg": 5,
             "link": {
@@ -268,6 +301,7 @@
         {
           "id": "stance_a0",
           "name": "Muro di guardia",
+          "cat": "melee",
           "effect": {
             "block": 14,
             "dur": 3
@@ -277,6 +311,7 @@
         {
           "id": "stance_a1",
           "name": "Flow",
+          "cat": "melee",
           "price": 26,
           "effect": {
             "syn": {
@@ -289,6 +324,7 @@
         {
           "id": "stance_a2",
           "name": "Scudo d'assalto",
+          "cat": "melee",
           "price": 30,
           "effect": {
             "syn": {
@@ -300,12 +336,28 @@
         {
           "id": "stance_a3",
           "name": "Guardia attiva",
+          "cat": "melee",
           "price": 24,
           "effect": {
             "block": 6,
             "dur": 1,
             "draw": 1
           }
+        },
+        {
+          "id": "stance_a4",
+          "name": "Guardia spinata",
+          "cat": "melee",
+          "effect": {
+            "block": 6,
+            "dur": 0,
+            "trigger": {
+              "on": "hit",
+              "dmg": 2
+            }
+          },
+          "cost": 2,
+          "price": 28
         }
       ],
       "kind": "style"
@@ -317,10 +369,19 @@
       "price": 24,
       "island": "boxing",
       "bonus": {},
+      "passives": [
+        {
+          "on": "play",
+          "cat": "melee",
+          "boost": 2,
+          "max": 1
+        }
+      ],
       "moves": [
         {
           "id": "footwork_0",
           "name": "Passo laterale",
+          "cat": "melee",
           "effect": {
             "block": 3,
             "draw": 1,
@@ -330,6 +391,7 @@
         {
           "id": "footwork_1",
           "name": "Colpo di rimessa",
+          "cat": "melee",
           "effect": {
             "dmg": 7,
             "link": {
@@ -341,6 +403,7 @@
         {
           "id": "footwork_2",
           "name": "Serie veloce",
+          "cat": "melee",
           "effect": {
             "dmg": 3,
             "hits": 3
@@ -351,6 +414,7 @@
         {
           "id": "footwork_a0",
           "name": "Combinazione perfetta",
+          "cat": "melee",
           "effect": {
             "dmg": 6,
             "hits": 2,
@@ -364,6 +428,7 @@
         {
           "id": "footwork_a1",
           "name": "Ritirata strategica",
+          "cat": "melee",
           "price": 18,
           "effect": {
             "flee": true,
@@ -376,6 +441,7 @@
         {
           "id": "footwork_a2",
           "name": "Riscaldamento",
+          "cat": "melee",
           "price": 20,
           "effect": {
             "syn": {
@@ -387,6 +453,7 @@
         {
           "id": "footwork_a3",
           "name": "Cambio di ritmo",
+          "cat": "melee",
           "price": 28,
           "effect": {
             "draw": 2,
@@ -408,6 +475,7 @@
         {
           "id": "plating_0",
           "name": "Indurisci",
+          "cat": "melee",
           "effect": {
             "block": 8,
             "dur": 2
@@ -416,6 +484,7 @@
         {
           "id": "plating_1",
           "name": "Reggi",
+          "cat": "melee",
           "effect": {
             "block": 6,
             "heal": 2,
@@ -425,6 +494,7 @@
         {
           "id": "plating_2",
           "name": "Scrollata",
+          "cat": "melee",
           "effect": {
             "block": 5,
             "draw": 1
@@ -435,6 +505,7 @@
         {
           "id": "plating_a0",
           "name": "Muro di ferro",
+          "cat": "melee",
           "effect": {
             "block": 16,
             "draw": 1,
@@ -445,6 +516,7 @@
         {
           "id": "plating_a1",
           "name": "Barriera reattiva",
+          "cat": "melee",
           "price": 36,
           "effect": {
             "block": 10,
@@ -468,6 +540,7 @@
         {
           "id": "servo_0",
           "name": "Pistone",
+          "cat": "melee",
           "effect": {
             "dmg": 9
           }
@@ -475,6 +548,7 @@
         {
           "id": "servo_1",
           "name": "Overclock",
+          "cat": "melee",
           "effect": {
             "dmg": 4,
             "draw": 1
@@ -483,6 +557,7 @@
         {
           "id": "servo_2",
           "name": "Idraulico",
+          "cat": "melee",
           "effect": {
             "dmg": 6,
             "link": {
@@ -496,6 +571,7 @@
         {
           "id": "servo_a0",
           "name": "Pugno a rotaia",
+          "cat": "melee",
           "effect": {
             "dmg": 18,
             "energy": 1
@@ -505,6 +581,7 @@
         {
           "id": "servo_a1",
           "name": "Momentum",
+          "cat": "melee",
           "price": 40,
           "effect": {
             "syn": {
@@ -524,10 +601,19 @@
       "desc": "Arma tagliente.",
       "price": 45,
       "bonus": {},
+      "passives": [
+        {
+          "on": "play",
+          "cat": "blade",
+          "boost": 1,
+          "max": 2
+        }
+      ],
       "moves": [
         {
           "id": "blade_0",
           "name": "Fendente",
+          "cat": "blade",
           "effect": {
             "dmg": 8
           }
@@ -535,6 +621,7 @@
         {
           "id": "blade_1",
           "name": "Riposta",
+          "cat": "blade",
           "effect": {
             "dmg": 5,
             "block": 5
@@ -543,6 +630,7 @@
         {
           "id": "blade_2",
           "name": "Raffica di tagli",
+          "cat": "blade",
           "effect": {
             "dmg": 4,
             "hits": 3
@@ -553,6 +641,7 @@
         {
           "id": "blade_a0",
           "name": "Recisione",
+          "cat": "blade",
           "effect": {
             "dmg": 8,
             "link": {
@@ -565,6 +654,7 @@
         {
           "id": "blade_a1",
           "name": "Punti deboli",
+          "cat": "blade",
           "price": 55,
           "effect": {
             "syn": {
@@ -572,10 +662,133 @@
             }
           },
           "cost": 3
+        },
+        {
+          "id": "blade_a2",
+          "name": "Danza delle lame",
+          "cat": "blade",
+          "effect": {
+            "dmg": 3,
+            "hits": 2,
+            "scale": {
+              "cat": "blade",
+              "where": "played",
+              "dmg": 2
+            }
+          },
+          "cost": 2,
+          "price": 52
+        },
+        {
+          "id": "blade_a3",
+          "name": "Parata dentata",
+          "cat": "blade",
+          "effect": {
+            "block": 8,
+            "dur": 0,
+            "trigger": {
+              "on": "play",
+              "cat": "blade",
+              "dmg": 1
+            }
+          },
+          "cost": 2,
+          "price": 50
         }
       ],
       "island": "battlefield",
       "kind": "gear"
+    },
+    {
+      "kind": "gear",
+      "island": "battlefield",
+      "id": "revolver",
+      "name": "Revolver da duello",
+      "desc": "Un revolver dalla canna lunga: ogni colpo conta, e ogni arma da fuoco giocata ti protegge un po'.",
+      "price": 42,
+      "bonus": {},
+      "passives": [
+        {
+          "on": "play",
+          "cat": "firearm",
+          "block": 1
+        }
+      ],
+      "moves": [
+        {
+          "id": "revolver_0",
+          "name": "Colpo secco",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 7
+          }
+        },
+        {
+          "id": "revolver_1",
+          "name": "Raffica",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 3,
+            "hits": 3
+          }
+        },
+        {
+          "id": "revolver_2",
+          "name": "Copertura",
+          "cat": "firearm",
+          "effect": {
+            "block": 5,
+            "dur": 2
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "revolver_a0",
+          "name": "Sparatoria",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 5,
+            "scale": {
+              "cat": "firearm",
+              "where": "played",
+              "dmg": 3
+            }
+          },
+          "price": 46
+        },
+        {
+          "id": "revolver_a1",
+          "name": "Torretta",
+          "cat": "firearm",
+          "effect": {
+            "block": 10,
+            "dur": 0,
+            "trigger": {
+              "on": "play",
+              "cat": "firearm",
+              "dmg": 1
+            }
+          },
+          "cost": 3,
+          "price": 52
+        },
+        {
+          "id": "revolver_a2",
+          "name": "Bossoli a terra",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 2,
+            "scale": {
+              "cat": "firearm",
+              "where": "discard",
+              "dmg": 1,
+              "max": 6
+            }
+          },
+          "price": 44
+        }
+      ]
     },
     {
       "id": "titan",
@@ -586,10 +799,19 @@
       "bonus": {
         "dmg": 3
       },
+      "passives": [
+        {
+          "on": "play",
+          "cat": "melee",
+          "boost": 1,
+          "max": 2
+        }
+      ],
       "moves": [
         {
           "id": "titan_0",
           "name": "Pugno devastante",
+          "cat": "melee",
           "effect": {
             "dmg": 14
           }
@@ -597,6 +819,7 @@
         {
           "id": "titan_1",
           "name": "Onda d'impatto",
+          "cat": "melee",
           "effect": {
             "dmg": 6,
             "hits": 2
@@ -605,6 +828,7 @@
         {
           "id": "titan_2",
           "name": "Presa schiacciante",
+          "cat": "melee",
           "effect": {
             "dmg": 9,
             "link": {
@@ -618,6 +842,7 @@
         {
           "id": "titan_a0",
           "name": "Terremoto",
+          "cat": "melee",
           "effect": {
             "dmg": 20,
             "hits": 2
@@ -627,11 +852,27 @@
         {
           "id": "titan_a1",
           "name": "Frantumazione",
+          "cat": "melee",
           "price": 60,
           "effect": {
             "dmg": 10,
             "hits": 3
           }
+        },
+        {
+          "id": "titan_a2",
+          "name": "Valanga di pugni",
+          "cat": "melee",
+          "effect": {
+            "dmg": 6,
+            "scale": {
+              "cat": "melee",
+              "where": "hand",
+              "dmg": 2
+            }
+          },
+          "cost": 2,
+          "price": 62
         }
       ],
       "kind": "body"
@@ -645,10 +886,17 @@
       "bonus": {
         "maxHp": 12
       },
+      "passives": [
+        {
+          "on": "hit",
+          "block": 1
+        }
+      ],
       "moves": [
         {
           "id": "hide_0",
           "name": "Indurimento",
+          "cat": "melee",
           "effect": {
             "block": 14,
             "dur": 3
@@ -657,6 +905,7 @@
         {
           "id": "hide_1",
           "name": "Resistenza",
+          "cat": "melee",
           "effect": {
             "block": 8,
             "heal": 4,
@@ -666,6 +915,7 @@
         {
           "id": "hide_2",
           "name": "Contrattacco brutale",
+          "cat": "melee",
           "effect": {
             "dmg": 10,
             "link": {
@@ -679,6 +929,7 @@
         {
           "id": "hide_a0",
           "name": "Corazza vivente",
+          "cat": "melee",
           "effect": {
             "block": 24,
             "dur": 0
@@ -688,15 +939,122 @@
         {
           "id": "hide_a1",
           "name": "Pelle di roccia",
+          "cat": "melee",
           "price": 58,
           "effect": {
             "block": 10,
             "dur": 2,
             "heal": 6
           }
+        },
+        {
+          "id": "hide_a2",
+          "name": "Corazza spinata",
+          "cat": "melee",
+          "effect": {
+            "block": 12,
+            "dur": 0,
+            "trigger": {
+              "on": "hit",
+              "dmg": 3
+            }
+          },
+          "cost": 4,
+          "price": 62
         }
       ],
       "kind": "body"
+    },
+    {
+      "kind": "arcane",
+      "island": "desert",
+      "id": "grimoire",
+      "name": "Grimorio dei sigilli",
+      "desc": "Un libro di sigilli antichi: la prima magia che lanci ogni turno ti fa pescare.",
+      "price": 58,
+      "bonus": {},
+      "passives": [
+        {
+          "on": "play",
+          "cat": "magic",
+          "draw": 1,
+          "max": 1
+        }
+      ],
+      "moves": [
+        {
+          "id": "grimoire_0",
+          "name": "Dardo arcano",
+          "cat": "magic",
+          "effect": {
+            "dmg": 6
+          }
+        },
+        {
+          "id": "grimoire_1",
+          "name": "Scudo di rune",
+          "cat": "magic",
+          "effect": {
+            "block": 6,
+            "dur": 2
+          }
+        },
+        {
+          "id": "grimoire_2",
+          "name": "Studio",
+          "cat": "magic",
+          "effect": {
+            "block": 3,
+            "draw": 1
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "grimoire_a0",
+          "name": "Biblioteca viva",
+          "cat": "magic",
+          "effect": {
+            "scale": {
+              "cat": "magic",
+              "where": "hand",
+              "draw": 1
+            }
+          },
+          "cost": 2,
+          "price": 52
+        },
+        {
+          "id": "grimoire_a1",
+          "name": "Tempesta arcana",
+          "cat": "magic",
+          "effect": {
+            "dmg": 4,
+            "scale": {
+              "cat": "magic",
+              "where": "played",
+              "dmg": 3
+            }
+          },
+          "price": 56
+        },
+        {
+          "id": "grimoire_a2",
+          "name": "Totem di rune",
+          "cat": "magic",
+          "effect": {
+            "block": 8,
+            "dur": 0,
+            "trigger": {
+              "on": "play",
+              "cat": "magic",
+              "heal": 2
+            }
+          },
+          "cost": 3,
+          "price": 54
+        }
+      ]
     },
     {
       "id": "reactor",
@@ -706,10 +1064,19 @@
       "bonus": {
         "maxHp": 4
       },
+      "passives": [
+        {
+          "on": "play",
+          "cat": "firearm",
+          "dmg": 1,
+          "max": 2
+        }
+      ],
       "moves": [
         {
           "id": "reactor_0",
           "name": "Impulso",
+          "cat": "firearm",
           "effect": {
             "dmg": 10
           }
@@ -717,6 +1084,7 @@
         {
           "id": "reactor_1",
           "name": "Sovraccarico",
+          "cat": "firearm",
           "effect": {
             "block": 4,
             "draw": 2,
@@ -726,6 +1094,7 @@
         {
           "id": "reactor_2",
           "name": "Esplosione",
+          "cat": "firearm",
           "effect": {
             "dmg": 6,
             "hits": 2,
@@ -737,6 +1106,7 @@
         {
           "id": "reactor_a0",
           "name": "Raggio",
+          "cat": "firearm",
           "effect": {
             "dmg": 14,
             "link": {
@@ -749,6 +1119,7 @@
         {
           "id": "reactor_a1",
           "name": "Stratega",
+          "cat": "firearm",
           "price": 65,
           "effect": {
             "syn": {
@@ -774,6 +1145,7 @@
         {
           "id": "dash_0",
           "name": "Scatto sonico",
+          "cat": "melee",
           "effect": {
             "dmg": 8,
             "draw": 1
@@ -782,6 +1154,7 @@
         {
           "id": "dash_1",
           "name": "Onda d'urto",
+          "cat": "firearm",
           "effect": {
             "dmg": 6,
             "hits": 3
@@ -790,6 +1163,7 @@
         {
           "id": "dash_2",
           "name": "Controllo del campo",
+          "cat": "firearm",
           "effect": {
             "block": 12,
             "energy": 1,
@@ -801,6 +1175,7 @@
         {
           "id": "dash_a0",
           "name": "Muro del suono",
+          "cat": "firearm",
           "effect": {
             "dmg": 12,
             "hits": 3,
@@ -814,6 +1189,7 @@
         {
           "id": "dash_a1",
           "name": "Scatto di fuga",
+          "cat": "melee",
           "price": 40,
           "effect": {
             "flee": true,
@@ -826,6 +1202,7 @@
         {
           "id": "dash_a2",
           "name": "Clonazione",
+          "cat": "magic",
           "price": 60,
           "effect": {
             "syn": {
@@ -833,6 +1210,22 @@
             }
           },
           "cost": 1
+        },
+        {
+          "id": "dash_a3",
+          "name": "Reazione a catena",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 5,
+            "scale": {
+              "cat": "any",
+              "where": "played",
+              "dmg": 1,
+              "block": 1
+            }
+          },
+          "cost": 2,
+          "price": 80
         }
       ],
       "kind": "implant"
@@ -850,6 +1243,7 @@
         {
           "id": "regen_0",
           "name": "Rigenerazione",
+          "cat": "melee",
           "effect": {
             "block": 10,
             "heal": 10,
@@ -859,6 +1253,7 @@
         {
           "id": "regen_1",
           "name": "Sensi acuti",
+          "cat": "melee",
           "effect": {
             "block": 6,
             "draw": 2
@@ -867,6 +1262,7 @@
         {
           "id": "regen_2",
           "name": "Morso istintivo",
+          "cat": "melee",
           "effect": {
             "dmg": 12,
             "heal": 6
@@ -877,6 +1273,7 @@
         {
           "id": "regen_a0",
           "name": "Mutazione",
+          "cat": "melee",
           "effect": {
             "dmg": 18,
             "heal": 12
@@ -886,6 +1283,7 @@
         {
           "id": "regen_a1",
           "name": "Rigenerazione rapida",
+          "cat": "melee",
           "price": 90,
           "effect": {
             "heal": 12,
@@ -904,10 +1302,19 @@
       "bonus": {
         "dmg": 4
       },
+      "passives": [
+        {
+          "on": "play",
+          "cat": "magic",
+          "boost": 1,
+          "max": 2
+        }
+      ],
       "moves": [
         {
           "id": "fruit_0",
           "name": "Braccio elastico",
+          "cat": "magic",
           "effect": {
             "dmg": 10,
             "hits": 2
@@ -916,6 +1323,7 @@
         {
           "id": "fruit_1",
           "name": "Forma ferina",
+          "cat": "magic",
           "effect": {
             "block": 14,
             "energy": 1,
@@ -925,6 +1333,7 @@
         {
           "id": "fruit_2",
           "name": "Incantesimo",
+          "cat": "magic",
           "effect": {
             "dmg": 14,
             "link": {
@@ -938,6 +1347,7 @@
         {
           "id": "fruit_a0",
           "name": "Risveglio del frutto",
+          "cat": "magic",
           "effect": {
             "dmg": 22,
             "draw": 1,
@@ -948,6 +1358,7 @@
         {
           "id": "fruit_a1",
           "name": "Forma sfuggente",
+          "cat": "magic",
           "price": 70,
           "effect": {
             "flee": true,
@@ -960,6 +1371,7 @@
         {
           "id": "fruit_a2",
           "name": "Duplicazione",
+          "cat": "magic",
           "price": 80,
           "effect": {
             "syn": {
@@ -979,10 +1391,17 @@
       "bonus": {
         "dmg": 3
       },
+      "passives": [
+        {
+          "on": "turnStart",
+          "block": 3
+        }
+      ],
       "moves": [
         {
           "id": "rift_0",
           "name": "Frantuma",
+          "cat": "magic",
           "effect": {
             "dmg": 16
           }
@@ -990,6 +1409,7 @@
         {
           "id": "rift_1",
           "name": "Distorsione",
+          "cat": "magic",
           "effect": {
             "block": 10,
             "draw": 1,
@@ -1000,6 +1420,7 @@
         {
           "id": "rift_2",
           "name": "Squarcio",
+          "cat": "magic",
           "effect": {
             "dmg": 8,
             "hits": 2,
@@ -1011,6 +1432,7 @@
         {
           "id": "rift_a0",
           "name": "Nova",
+          "cat": "magic",
           "effect": {
             "dmg": 15,
             "link": {
@@ -1023,6 +1445,7 @@
         {
           "id": "rift_a1",
           "name": "Strappo dimensionale",
+          "cat": "magic",
           "price": 95,
           "effect": {
             "dmg": 14,
@@ -1031,6 +1454,21 @@
               "dmg": 10
             }
           }
+        },
+        {
+          "id": "rift_a2",
+          "name": "Sovratensione",
+          "cat": "magic",
+          "effect": {
+            "dmg": 6,
+            "scale": {
+              "cat": "magic",
+              "where": "field",
+              "dmg": 4
+            }
+          },
+          "cost": 2,
+          "price": 100
         }
       ],
       "island": "volcano",
@@ -1050,6 +1488,7 @@
         {
           "id": "aura_0",
           "name": "Esplosione di ki",
+          "cat": "magic",
           "effect": {
             "dmg": 20
           }
@@ -1057,6 +1496,7 @@
         {
           "id": "aura_1",
           "name": "Aura divina",
+          "cat": "magic",
           "effect": {
             "block": 20,
             "draw": 1,
@@ -1066,6 +1506,7 @@
         {
           "id": "aura_2",
           "name": "Colpo cataclismico",
+          "cat": "magic",
           "effect": {
             "dmg": 12,
             "hits": 3,
@@ -1080,6 +1521,7 @@
         {
           "id": "aura_a0",
           "name": "Trasformazione divina",
+          "cat": "magic",
           "effect": {
             "dmg": 30,
             "draw": 2,
@@ -1090,12 +1532,28 @@
         {
           "id": "aura_a1",
           "name": "Esplosione di ki",
+          "cat": "magic",
           "price": 200,
           "effect": {
             "dmg": 16,
             "hits": 2,
             "draw": 1
           }
+        },
+        {
+          "id": "aura_a2",
+          "name": "Cataclisma",
+          "cat": "magic",
+          "effect": {
+            "dmg": 10,
+            "scale": {
+              "cat": "magic",
+              "where": "hand",
+              "dmg": 3
+            }
+          },
+          "cost": 3,
+          "price": 190
         }
       ],
       "kind": "body"
@@ -4612,7 +5070,32 @@
       "enemyMove.mend.name": "Repair",
       "enemyMove.bite.name": "Vampiric bite",
       "enemyMove.crush.name": "Crush",
-      "enemyMove.sting.name": "Stinger"
+      "enemyMove.sting.name": "Stinger",
+      "move.wraps_a3.name": "Unleashed Fury",
+      "move.stance_a4.name": "Spiked Guard",
+      "move.titan_a2.name": "Flurry of Fists",
+      "move.hide_a2.name": "Spiked Carapace",
+      "move.blade_a2.name": "Blade Dance",
+      "move.blade_a3.name": "Serrated Parry",
+      "move.dash_a3.name": "Chain Reaction",
+      "move.rift_a2.name": "Overcharge",
+      "move.aura_a2.name": "Cataclysm",
+      "equipment.revolver.name": "Duelling Revolver",
+      "equipment.revolver.desc": "A long-barrelled revolver: every shot counts, and every firearm you play shields you a little.",
+      "move.revolver_0.name": "Clean Shot",
+      "move.revolver_1.name": "Burst",
+      "move.revolver_2.name": "Cover Fire",
+      "move.revolver_a0.name": "Shootout",
+      "move.revolver_a1.name": "Turret",
+      "move.revolver_a2.name": "Spent Shells",
+      "equipment.grimoire.name": "Grimoire of Seals",
+      "equipment.grimoire.desc": "A book of ancient seals: the first spell you cast each turn makes you draw.",
+      "move.grimoire_0.name": "Arcane Dart",
+      "move.grimoire_1.name": "Rune Shield",
+      "move.grimoire_2.name": "Study",
+      "move.grimoire_a0.name": "Living Library",
+      "move.grimoire_a1.name": "Arcane Storm",
+      "move.grimoire_a2.name": "Rune Totem"
     }
   }
 }

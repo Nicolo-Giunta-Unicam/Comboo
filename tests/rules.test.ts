@@ -250,3 +250,40 @@ test('combo: pescaggio fisso di 2 carte, +1 al turno dopo se nel turno hai fatto
 test('nemici: ognuno ha un moveset riconoscibile e diverso dagli altri', () => {
   const sets = new Set<string>(); let n = 0; for (const rg of Object.values(REGIONS)) for (const e of rg.enemies) { assert.ok(e.moves && e.moves.length >= 3, e.name); sets.add([...new Set(e.moves)].sort().join(',')); n++; } assert.equal(sets.size, n);
 });
+
+// ---- categorie e effetti per categoria ----
+const arena = (hand: string[], bought: string[] = [], equipped: string[] = []) => { const r = newRun(5); r.arena = 3; r.bought = bought; r.equipped = equipped; beginArena(r); const c = r.combat!; c.energy = 10; c.hand = [...hand]; c.draw = []; c.queue = []; return { r, c }; };
+test('categorie: ogni carta ne ha una valida (le mosse base sono Corpo a corpo, le armi bianche Lame)', () => {
+  for (const m of Object.values(MOVES)) assert.ok(['melee', 'blade', 'firearm', 'magic'].includes(m.cat), `categoria mancante: ${m.id}`);
+  assert.equal(MOVES.jab.cat, 'melee'); assert.equal(MOVES.blade_0.cat, 'blade'); assert.equal(MOVES.revolver_0.cat, 'firearm'); assert.equal(MOVES.grimoire_0.cat, 'magic');
+});
+test('per ogni carta giocata nel turno: Furia scatenata dà +2 danni e +1 guardia per ogni Corpo a corpo già giocato', () => {
+  const { r, c } = arena(['base:jab:0', 'base:kick:1', 'base:guard:2', 'buy:wraps_a3'], ['wraps_a3']);
+  playCard(r, 'base:jab:0'); playCard(r, 'base:kick:1'); playCard(r, 'base:guard:2'); const b = c.block; playCard(r, 'buy:wraps_a3');
+  const p = c.field.off.at(-1)!; assert.equal(p.dmg, 4 + 3 * 2); assert.equal(c.block - b, 3); // 3 carte Corpo a corpo giocate prima
+});
+test('per ogni carta in mano: Biblioteca viva pesca una carta per ogni Magia rimasta in mano (la carta stessa non conta)', () => {
+  const { r, c } = arena(['buy:grimoire_a0', 'buy:grimoire_a1', 'buy:grimoire_a1', 'base:jab:0'], ['grimoire_a0', 'grimoire_a1']); c.draw = ['base:guard:7', 'base:guard:8', 'base:guard:9', 'base:guard:6'];
+  playCard(r, 'buy:grimoire_a0'); assert.equal(c.hand.length, 3 + 2); // 2 Magie in mano -> pesca 2
+});
+test('categoria diversa non conta: Sparatoria (Armi da fuoco) ignora le carte Corpo a corpo', () => {
+  const { r, c } = arena(['base:jab:0', 'buy:revolver_a0'], ['revolver_a0']); playCard(r, 'base:jab:0'); playCard(r, 'buy:revolver_a0'); assert.equal(c.field.off.at(-1)!.dmg, 5);
+});
+test('difesa permanente: infligge danni diretti ogni volta che viene colpita (Guardia spinata)', () => {
+  const { r, c } = arena(['buy:stance_a4'], ['stance_a4']); playCard(r, 'buy:stance_a4'); endTurn(r); settle(r); c.queue = [];
+  const hp0 = c.enemy.hp; c.foeField.off.push({ uid: '', name: 'x', icon: '', src: '', dmg: 2, hits: 1, block: 0, ttl: 1 }, { uid: '', name: 'y', icon: '', src: '', dmg: 2, hits: 1, block: 0, ttl: 1 });
+  enemyStep(r); assert.equal(c.enemy.hp, hp0 - 2); enemyStep(r); assert.equal(c.enemy.hp, hp0 - 4); // due colpi assorbiti = due reazioni
+});
+test('difesa permanente: Torretta infligge 1 danno diretto per ogni Armi da fuoco giocata mentre è sul campo (non per se stessa)', () => {
+  const { r, c } = arena(['buy:revolver_a1', 'buy:revolver_a0', 'buy:revolver_0', 'base:jab:0'], ['revolver_a1', 'revolver_a0']); const hp0 = c.enemy.hp;
+  playCard(r, 'buy:revolver_a1'); assert.equal(c.enemy.hp, hp0); // non reagisce a se stessa
+  playCard(r, 'buy:revolver_a0'); assert.equal(c.enemy.hp, hp0 - 1); playCard(r, 'base:jab:0'); assert.equal(c.enemy.hp, hp0 - 1); // il Corpo a corpo non fa scattare
+});
+test('equipaggiamento: passive per categoria (bonus +1 alle Lame, pesca una volta per turno con le Magie)', () => {
+  let { r, c } = arena(['base:jab:0', 'buy:blade_a2'], ['blade_a2'], ['blade']); playCard(r, 'buy:blade_a2'); assert.equal(c.field.off[0].dmg, 3 + 1); // Lama: +1 (boost)
+  ({ r, c } = arena(['buy:grimoire_0', 'buy:grimoire_0', 'base:jab:0'], [], ['grimoire'])); c.draw = ['base:guard:7', 'base:guard:8']; playCard(r, 'buy:grimoire_0'); assert.equal(c.hand.length, 3); playCard(r, 'buy:grimoire_0'); assert.equal(c.hand.length, 2); // pesca solo la prima volta
+});
+test('danni diretti che abbattono il nemico: vittoria alla prima risoluzione', () => {
+  const { r, c } = arena(['buy:revolver_a1', 'buy:revolver_0'], ['revolver_a1'], []); r.equipped = []; playCard(r, 'buy:revolver_a1'); c.enemy.hp = 1; playCard(r, 'buy:revolver_0');
+  assert.equal(c.enemy.hp, 0); assert.equal(c.phase, 'resolve'); enemyStep(r); assert.equal(r.phase, 'store'); assert.equal(r.outcome, 'win');
+});

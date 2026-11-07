@@ -129,3 +129,8 @@ Controlli fatti: la differenza tra stili (vittorie al primo tentativo, media sul
 - Le fughe/pietà non sono simulate.
 - I fine-gioco (arene 28–30) hanno pochi campioni nelle run reali: ricontrolla con `--immortal` dopo ogni modifica.
 - Il bonus danni "a ogni colpo" resta il fattore che favorisce le carte multicolpo: se la meta diventa solo multicolpo, riduci `bonus.dmg` degli equipaggiamenti tardivi.
+
+## Categorie ed effetti per categoria (nuove carte)
+Aggiunti `cat`, `scale`, `trigger` e `equipment[].passives` (vedi `data/README.md`): 20 carte, 2 equipaggiamenti (Revolver da duello, Grimorio dei sigilli) e 8 passive. Simulazione (`npm run sim`, 150 run, stile boxing, seed fisso):
+- Bot esperto (`smart`): 14,5 arene medie prima, 14,4 dopo. Bot occasionale (`casual`): +2 arene circa (6,0→7,8 boxing, 7,6→10,2 taekwondo, 6,2→8,5 jujitsu).
+- Attenzione alle passive sugli equipaggiamenti già comuni: la prima versione di Footwork (pesca 1 per la prima carta Corpo a corpo di ogni turno) portava il bot da 14,5 a oltre 26 arene (76% di run completate). Le passive che pescano o danno guardia ogni turno sono molto più forti dei bonus ai danni: tenerle con `max` basso.

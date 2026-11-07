@@ -27,11 +27,12 @@ const shields = (c: any) => E.shieldsOf(c);
 function valueOf(r: any, c: any, uid: string, skill: Skill): number {
   const m = MOVES[moveOf(uid)], f = m.effect, S = f.syn, mods = c.mods ?? { off: 0 }, L = c.lastBy ?? { off: null, def: null }, R = c.runs ?? { off: 0, def: 0 };
   if (f.flee) return -1;
-  const off = !!f.dmg || S?.k === 'momentum' || S?.k === 'shieldAtk', g = off ? 'off' : 'def', same = L[g] === m.id, n = same ? R[g] + 1 : 1, pct = CONFIG.combo.same[Math.min(n, CONFIG.combo.max) - 1] ?? 0;
+  const off = !!f.dmg || !!f.scale?.dmg || S?.k === 'momentum' || S?.k === 'shieldAtk', g = off ? 'off' : 'def', same = L[g] === m.id, n = same ? R[g] + 1 : 1, pct = CONFIG.combo.same[Math.min(n, CONFIG.combo.max) - 1] ?? 0;
   const fg = f.link ? (MOVES[f.link.from]?.effect.dmg ? 'off' : 'def') : g, lk = f.link && L[fg] === f.link.from ? f.link : null;
   const inc = expectedIncoming(r, c), need = Math.max(0, inc.avg * 0.8 - shields(c)), hpFrac = r.hp / E.maxHp(r);
   const wDef = skill === 'naive' ? 0.3 : skill === 'casual' ? (need > 0 ? 0.55 : 0.12) : need > 0 ? 0.9 : 0.12, wHeal = hpFrac < 0.7 ? 0.8 : 0.1;
-  const nOff = c.field.off.length; let v = 0;
+  const nOff = c.field.off.length, sc = f.scale, sn = sc ? E.countCat(c, sc) : 0; let v = 0; // sn = carte della categoria contate ora (effetti "per ogni carta")
+  if (f.trigger) { const t = f.trigger, hits = t.on === 'hit' ? 2 : t.on === 'play' ? 2.5 : 3; v += ((t.dmg ?? 0) * 1 + (t.block ?? 0) * wDef * 0.7 + (t.heal ?? 0) * wHeal + (t.draw ?? 0) * 1.5) * hits * (t.max ? Math.min(1, t.max / hits) : 1); } // valore atteso di una difesa permanente con trigger
   if (S) switch (S.k) {
     case 'adrenaline': v = (S.n ?? 0) * (nOff + 1.2); break;
     case 'bypass': v = Math.min(20, c.foeField.def.reduce((s: number, p: any) => s + p.block, 0)) * 0.8; break;
@@ -40,11 +41,11 @@ function valueOf(r: any, c: any, uid: string, skill: Skill): number {
     case 'momentum': v = (S.n ?? 1) * (Object.values(c.played).reduce((a: number, b: any) => a + b, 0) + 1) * (1 + pct); break;
     case 'shieldAtk': v = shields(c); break;
   }
-  if (f.dmg) v += (f.dmg + (lk?.dmg ?? 0) + E.dmgBonus(r) + mods.off) * (f.hits ?? 1) * (1 + pct);
-  if (f.block || lk?.block) { const b = ((f.block ?? 0) + (lk?.block ?? 0)) * (1 + pct), dur = f.dur === 0 ? 3 : f.dur ?? 1; v += b * wDef * (off ? 0.8 : 1 + (dur - 1) * 0.3); }
-  if (f.heal) v += f.heal * wHeal * (1 + pct);
+  if (f.dmg || sc?.dmg) v += ((f.dmg ?? 0) + (sc?.dmg ?? 0) * sn + (lk?.dmg ?? 0) + E.dmgBonus(r) + mods.off) * (f.hits ?? 1) * (1 + pct);
+  if (f.block || lk?.block || sc?.block) { const b = ((f.block ?? 0) + (lk?.block ?? 0) + (sc?.block ?? 0) * sn) * (1 + pct), dur = f.dur === 0 ? 3 : f.dur ?? 1; v += b * wDef * (off ? 0.8 : 1 + (dur - 1) * 0.3); }
+  if (f.heal || sc?.heal) v += ((f.heal ?? 0) + (sc?.heal ?? 0) * sn) * wHeal * (1 + pct);
   const handLow = c.hand.length < 4, drawOk = c.draw.length > 0 && c.hand.length < CONFIG.maxHand;
-  const dr = (f.draw ?? 0) + (lk?.draw ?? 0), en = (f.energy ?? 0) + (lk?.energy ?? 0);
+  const dr = (f.draw ?? 0) + (lk?.draw ?? 0) + (sc?.draw ?? 0) * sn, en = (f.energy ?? 0) + (lk?.energy ?? 0) + (sc?.energy ?? 0) * sn;
   if (dr && drawOk) v += dr * (handLow ? 2.2 : 1.1); if (en) v += en * 2.5;
   return v;
 }
