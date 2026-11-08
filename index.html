@@ -408,6 +408,20 @@ body:not(.fs) .top>span.lowhp{border-color:#ff3b5c;color:#ff8a9a;background:#3a0
 .grow{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--bd2);border-radius:10px;background:#0004}.grow button{flex:none;padding:6px 10px;font-size:13px;min-height:0}
 .gi{flex:1;min-width:0}.gd{font-size:11px;color:var(--m);overflow-wrap:anywhere}
 .catb.static{position:static;flex:none}.godmsg{color:var(--gold)}
+/* notifiche: popup sopra l'interfaccia (non la riducono), 3 secondi, X per chiuderle prima */
+#toasts{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:400;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.ntoast{pointer-events:auto;display:flex;align-items:center;gap:10px;width:min(94vw,520px);padding:9px 10px 9px 14px;border-radius:14px;background:#4a1d2a;border:1px solid #ff546899;box-shadow:0 10px 28px #000b,0 0 14px #ff546833;font-size:14px;font-weight:600;animation:toastIn .28s cubic-bezier(.2,1.2,.3,1) both}
+.ntoast.ok{background:#173a2c;border-color:#46e0a0aa;box-shadow:0 10px 28px #000b,0 0 14px #46e0a033}
+.ntoast span{flex:1;min-width:0}
+.ntoast .x{flex:none;width:28px;height:28px;min-height:0;padding:0;border-radius:50%;line-height:1;font-size:13px;background:#ffffff1a;border:1px solid #ffffff33;box-shadow:none}
+.ntoast.out{animation:toastOut .22s ease-in both}
+@keyframes toastIn{from{opacity:0;transform:translateY(-16px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-12px) scale(.96)}}
+/* scorrimento laterale tra Storia, Store e Mazzo */
+.pane.slr{animation:slideR .34s cubic-bezier(.2,.8,.2,1) both}.pane.sll{animation:slideL .34s cubic-bezier(.2,.8,.2,1) both}
+@keyframes slideR{from{opacity:0;transform:translateX(70px)}to{opacity:1;transform:none}}
+@keyframes slideL{from{opacity:0;transform:translateX(-70px)}to{opacity:1;transform:none}}
+.pane.slr>*,.pane.sll>*,.pane.slr .offer,.pane.sll .offer,.pane.slr .storywrap .story>*,.pane.sll .storywrap .story>*{animation:none!important}
 /* compattezza: lo Store deve restare leggibile senza tagli */
 @media(min-aspect-ratio:5/4){.og{padding:3px 8px 5px}.og6{gap:8px}.tabs{padding:3px}.tabs button{padding:6px 2px;min-height:38px}.eqleft .sellz{padding:8px 10px;min-height:44px}body:not(.fs) .top{padding:5px 12px}}
 @media(max-aspect-ratio:5/4){.offers .card .nm{font-size:10px;line-height:1.1;white-space:normal}.offers .card .ef{font-size:8.5px;line-height:1.1;padding:1px 3px;white-space:normal}.offers .card .efs{overflow:hidden}}

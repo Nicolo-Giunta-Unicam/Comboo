@@ -15,6 +15,19 @@ const app = document.getElementById('app')!;
 // Sfondo ambientale (bagliori + braci) dietro alle schermate non di combattimento: stessa atmosfera del menu principale, nei colori dell'isola
 const embersHtml = (n: number) => Array.from({ length: n }, () => `<i style="--x:${Math.round(Math.random() * 100)}%;--s:${(0.5 + Math.random() * 1.4).toFixed(2)};--d:${(7 + Math.random() * 9).toFixed(1)}s;--w:-${(Math.random() * 16).toFixed(1)}s"></i>`).join('');
 const amb = document.createElement('div'); amb.id = 'amb'; amb.className = 'mfx'; amb.setAttribute('aria-hidden', 'true'); amb.innerHTML = embersHtml(30); document.body.prepend(amb);
+/** Notifiche (errori e messaggi come "Vittoria! +27 oro."): popup in sovrimpressione che non spostano l'interfaccia, spariscono dopo 3 secondi o con la X. */
+const toastBox = document.createElement('div'); toastBox.id = 'toasts'; document.body.appendChild(toastBox);
+const closeToast = (el: Element | null) => { const t = el as HTMLElement | null; if (!t || !t.isConnected || t.classList.contains('out')) return; t.classList.add('out'); setTimeout(() => t.remove(), 230); };
+function pushToast(text: string, ok = false) {
+  for (const o of Array.from(toastBox.children) as HTMLElement[]) if (o.dataset.t === text) o.remove(); // lo stesso messaggio non si accumula: ricomincia il conteggio
+  const el = document.createElement('div'), sp = document.createElement('span'), x = document.createElement('button');
+  el.className = 'ntoast' + (ok ? ' ok' : ''); el.dataset.t = text; el.setAttribute('role', 'status'); sp.textContent = text; x.className = 'x'; x.textContent = '✕'; x.setAttribute('aria-label', 'Chiudi'); x.title = 'Chiudi';
+  el.append(sp, x); toastBox.appendChild(el); while (toastBox.children.length > 3) closeToast(toastBox.firstElementChild);
+  setTimeout(() => closeToast(el), 3000);
+}
+/** Il messaggio dell'ultimo evento (es. "Vittoria! +27 oro.") compare una sola volta, quando si arriva alla schermata di mappa/store. */
+const flushMsg = (r: Run | null) => { if (r?.msg && r.msg !== shownMsg) { pushToast(r.msg, true); shownMsg = r.msg; } };
+toastBox.addEventListener('click', ev => closeToast((ev.target as HTMLElement).closest('.x')?.parentElement ?? null));
 let lastScr = ''; // l'animazione d'ingresso parte solo quando cambia schermata (non a ogni ridisegno) e mai nel tutorial
 const enter = (k: string) => { const f = lastScr !== k && !tutActive(); lastScr = k; return f ? ' enter' : ''; };
 const ICON = new Proxy({} as Record<string, string>, { get: (_t, k: string) => EQUIPMENT[k] ? eqIcon(k, EQUIPMENT[k].kind) : undefined }); // icona dell'equipaggiamento (non per le carte base)
@@ -26,7 +39,7 @@ const settings = { speed: 0, speedV: 2, calm: false, music: true, sfx: true, god
 if (!(settings.speed in DELAYS)) settings.speed = 0; if (![0, 1, 2].includes(settings.tmode)) settings.tmode = 1;
 audioCfg(settings.music, settings.sfx, settings.mv, settings.sv); addEventListener('pointerdown', () => unlock());
 let settingsOpen = false, sure = false, pileView: 'draw' | 'discard' | null = null;
-let run = loadRun(localStorage), tab: 'sto' | 'st' | 'me' = 'sto', note = '', started = !!run && run.phase === 'combat', pop = { e: 0, p: 0 };
+let run = loadRun(localStorage), tab: 'sto' | 'st' | 'me' = 'sto', note = '', started = !!run && run.phase === 'combat', pop = { e: 0, p: 0 }, shownMsg = run?.msg ?? '';
 const kind = (m: Move) => m.effect.syn ? 'syn' : (m.effect.dmg || m.effect.scale?.dmg) ? 'atk' : m.effect.block ? 'def' : 'utl';
 /** Pallino della categoria (Corpo a corpo, Lame, Armi da fuoco, Magia) in alto a destra della carta. */
 const catBadge = (m: Move) => m.cat && CAT_INFO[m.cat] ? `<span class="catb ${m.cat}" title="${catLabel(m.cat)}">${CAT_INFO[m.cat].icon}</span>` : '';
@@ -74,7 +87,7 @@ function drawMap(r: Run) { // oceano con isola centrale + 5 isole a pentagono; h
   const labels = REGION_LIST.map(g => `<span class="ilabel" style="left:${g.x}%;top:${(g.y + (g.id === 'boxing' ? 9.5 : 8)) / 60 * 100}%">${ul.includes(g.id) ? '' : '🔒 '}${g.name}${ul.includes(g.id) ? ` ${wins(r, g.id)}/${CONFIG.matchesPerIsland}` : ''}</span>`).join('');
   const pm = `<div class="pmark" style="left:${here.x}%;top:${(here.y - 9.5) / 60 * 100}%"><div class="pm">${heroImg()}</div></div>`;
   const info = sel ? `<div><b>${sel.name}</b><br><small>${sel.level} · ${sel.concept}<br>Partite ${wins(r, sel.id)}/${CONFIG.matchesPerIsland} · Nemici: ${sel.enemies.map(x => x.name).slice(0, 3).join(', ')}…</small></div><button class="pri" data-a="sail">${sel.id === here.id ? '⚔ Combatti qui' : `⛵ Salpa per ${sel.name}`}</button>` : '<small>Tocca un\'isola per sceglierla.</small>';
-  app.innerHTML = `${head(r)}${r.msg ? `<div class="toast ok">${r.msg}</div>` : ''}<div class="mapscr${enter('map')}"><div class="maptitle">🗺 Dove vuoi andare? · Arena ${r.arena}</div><div class="mapwrap"><div class="mapbox">${sea}${labels}${pm}</div></div><div class="mapinfo">${info}</div></div>`;
+  flushMsg(r); app.innerHTML = `${head(r)}<div class="mapscr${enter('map')}"><div class="maptitle">🗺 Dove vuoi andare? · Arena ${r.arena}</div><div class="mapwrap"><div class="mapbox">${sea}${labels}${pm}</div></div><div class="mapinfo">${info}</div></div>`;
   const wrap = app.querySelector('.mapwrap') as HTMLElement, box = app.querySelector('.mapbox') as HTMLElement, w = Math.min(wrap.clientWidth, wrap.clientHeight * 100 / 60); box.style.width = w + 'px'; box.style.height = w * 0.6 + 'px';
 }
 function sail() { // il protagonista raggiunge l'isola scelta in barca (animazione a rAF, indipendente dal DOM della mappa), poi si passa allo store
@@ -142,7 +155,7 @@ function draw() {
   if (vs) { drawVs(); return; }
   if (endAnim) { drawEnd(); return; }
   if (run?.phase !== 'combat' && !finalView) { pileView = null; bars = null; prevHand = []; prevDraw = -1; lastCombo = ''; lastEv = null; lastSynN = 0; }
-  const r = run, t = note ? `<div class="toast">${note}</div>` : '';
+  const r = run; if (note) { pushToast(note); note = ''; } if (!r?.msg) shownMsg = ''; // le notifiche sono popup (non fanno parte del layout)
   if (!r || (!started && r.phase !== 'over')) {
     lastScr = 'menu'; app.innerHTML = `<div class="menu"><div class="mfx" aria-hidden="true">${Array.from({ length: 28 }, () => `<i style="--x:${Math.round(Math.random() * 100)}%;--s:${(0.5 + Math.random() * 1.4).toFixed(2)};--d:${(7 + Math.random() * 9).toFixed(1)}s;--w:-${(Math.random() * 14).toFixed(1)}s"></i>`).join('')}</div><div class="mcards" aria-hidden="true"><span style="--r:-14deg;--x:-84px">👊</span><span style="--r:0deg;--x:0px;--y:-10px">🛡️</span><span style="--r:14deg;--x:84px">⚡</span></div><div class="mlogo">COMB<span class="inf">∞</span></div>${CUSTOM ? `<p class="mcustom"><span class="edtag">Dati personalizzati (Editor) attivi</span></p>` : ''}<div class="mbtns">${r ? `<button class="mbtn pri" style="--i:0" data-a="cont"><span class="mi">▶</span><span>Continua run (arena ${r.arena})</span></button>` : ''}<button class="mbtn ${r ? '' : 'pri'}" style="--i:1" data-a="new"><span class="mi">⚔</span><span>Nuova run</span></button><button class="mbtn" style="--i:2" data-a="tutorial"><span class="mi">📘</span><span>Tutorial</span></button><button class="mbtn" style="--i:3" data-a="editor"><span class="mi">🛠</span><span>Editor</span></button><button class="mbtn" style="--i:4" data-a="set"><span class="mi">⚙</span><span>Impostazioni</span></button></div><div class="langrow">${LANGS.map(l => `<button class="${l.code === LANG ? 'on' : ''}" data-a="lang" data-id="${l.code}" data-notr>${l.name}</button>`).join('')}</div></div>`; return;
   }
@@ -165,7 +178,7 @@ function draw() {
     const eqh = em(r.equipped, r.slots), eqf = em(e.gear ?? [], slotsFor(r.arena));
     const to = { me: php / maxHp(r) * 100, foe: e.hp / e.maxHp * 100 }, bar0 = bars ?? to; bars = to;
     const side = (mine: boolean, hp: number, mx: number, shield: number, dmg: number, face: string, label: string, name: string, from: number, eqh = '') => `<div class="side ${mine ? 'me' : 'foe'} ${dmg ? 'hit' : ''}${hp > 0 && hp / mx < CONFIG.woundedBelow ? ' crit' : ''}" title="${name}">${dmg ? `<span class="pop">-${dmg}</span>` : ''}<div class="sidetop"><div class="vbar"><i class="${hp / mx < .25 ? 'low' : hp / mx < .5 ? 'mid' : ''}" data-to="${Math.max(0, hp / mx * 100)}" style="height:${from}%"></i></div>${eqh}</div><div class="face">${face}</div><div class="nameplate">${name}</div><b>${hp}<small>/${mx}</small></b><div class="sh">🛡️ ${shield}</div><small>${label}</small></div>`;
-    app.innerHTML = `${head(r)}${t}<div class="field" data-zone="field">${evh}<div class="arena">
+    app.innerHTML = `${head(r)}<div class="field" data-zone="field">${evh}<div class="arena">
       ${side(true, php, maxHp(r), c.block + sh(c.field.def), pop.p, heroImg(), `Turno ${c.turn}`, heroName(), bar0.me, eqh)}
       <div class="board">${rw(c.foeField.def, 'def', ev?.by === 'me' && ev.absorbed > 0)}${rw(c.foeField.off, 'off')}
       <div class="mat">${busy ? `<div class="matr"><small>${c.phase === 'resolve' ? 'Attacchi in corso…' : 'Turno avversario…'}</small><span class="back">${'🂠'.repeat(c.queue.length)}</span></div><div class="combo">&nbsp;</div>` : `<div class="matr"><div class="pips">⚡ ${c.energy}/${me}</div>${c.draw.length === 0 && c.discard.length ? `<button class="mercy ${c.energy < CONFIG.discardDrawCost || c.hand.length >= CONFIG.maxHand ? '' : 'blink'}" data-a="ddraw" title="Rimescola gli scarti nel mazzo e pesca 1 carta" ${c.energy < CONFIG.discardDrawCost || c.hand.length >= CONFIG.maxHand ? 'disabled' : ''}>♻ ${CONFIG.discardDrawCost}⚡</button>` : ''}<button class="mercy" data-a="mercy" ${c.mercy ? 'disabled' : ''}>🙏 Pietà${c.mercy ? ' (usata)' : ''}</button><button class="pri end" data-a="end">${settings.timer ? '<i class="tfill" style="width:${Math.max(0, Math.min(1, tLeft / (TLIM[settings.tmode] * 1000))) * 100}%"></i>' : ''}<span>Fine turno ⚔</span>${settings.timer ? '<b class="tsec"></b>' : ''}</button></div><div class="combo">${c.combo ? '🔥 ' + c.combo : '&nbsp;'}</div>`}</div>
@@ -229,7 +242,9 @@ function draw() {
     <h3>Mazzo attivo ${inn.length}/${CONFIG.maxDeck}</h3><small>Trascina (o tocca) le carte tra le due aree.</small><div class="zone" data-zone="in"><div class="cards">${cs(inn)}</div></div>
     <h3>Fuori dal mazzo (${out.length})</h3><div class="zone" data-zone="out"><div class="cards">${cs(out)}</div></div>`;
   }
-  app.innerHTML = `${head(r)}${r.msg ? `<div class="toast ok">${r.msg}</div>` : ''}${t}<div class="tabs three">${(['sto', 'st', 'me'] as const).map((k, i) => `<button class="${tab === k ? 'on' : ''}" data-a="tab" data-id="${k}" ${pc && k !== 'sto' ? 'aria-disabled="true" data-locked="1"' : ''}>${['📖 Storia', '🛒 Store', '🎴 Mazzo'][i]}</button>`).join('')}</div><div class="pane${enter('t:' + tab)}">${r.god && tab !== 'sto' ? '<button class="godbtn" data-a="godshop">🎁 God mode · Aggiungi carta</button>' : ''}${tab === 'st' ? store : tab === 'sto' ? storyHtml : body}</div><div class="actbar">${tab === 'me' ? go : `<button class="pri go" data-a="next" ${pc ? 'aria-disabled="true" data-locked="1"' : ''}>Avanti ➜</button>`}<button data-a="openmap" ${pc ? 'aria-disabled="true" data-locked="1"' : ''}>🗺 Mappa</button></div>`;
+  flushMsg(r);
+  const prevScr = lastScr, ent = enter('t:' + tab), TABS = ['sto', 'st', 'me'], paneCls = ent + (ent && prevScr.startsWith('t:') ? (TABS.indexOf(tab) > TABS.indexOf(prevScr.slice(2)) ? ' slr' : ' sll') : ''); // passando da una scheda all'altra la scheda scorre di lato
+  app.innerHTML = `${head(r)}<div class="tabs three">${(['sto', 'st', 'me'] as const).map((k, i) => `<button class="${tab === k ? 'on' : ''}" data-a="tab" data-id="${k}" ${pc && k !== 'sto' ? 'aria-disabled="true" data-locked="1"' : ''}>${['📖 Storia', '🛒 Store', '🎴 Mazzo'][i]}</button>`).join('')}</div><div class="pane${paneCls}">${r.god && tab !== 'sto' ? '<button class="godbtn" data-a="godshop">🎁 God mode · Aggiungi carta</button>' : ''}${tab === 'st' ? store : tab === 'sto' ? storyHtml : body}</div><div class="actbar">${tab === 'me' ? go : `<button class="pri go" data-a="next" ${pc ? 'aria-disabled="true" data-locked="1"' : ''}>Avanti ➜</button>`}<button data-a="openmap" ${pc ? 'aria-disabled="true" data-locked="1"' : ''}>🗺 Mappa</button></div>`;
   if (tab === 'st') { const en2 = maxEnergy(r); if (prevEn >= 0 && en2 > prevEn) { const tk = app.querySelectorAll<HTMLElement>('.tick')[en2 - 1]; if (tk) { tk.classList.add('gain'); const q = tk.getBoundingClientRect(); burst('combo', q.left + q.width / 2, q.top + q.height / 2); sfx('energy'); } } prevEn = en2; }
 }
 // ---- Slot machine per le carte misteriose: scorrono carte a caso, FERMA rallenta e atterra sulla carta sbloccata ----
