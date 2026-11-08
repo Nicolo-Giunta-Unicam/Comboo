@@ -387,12 +387,11 @@ body:not(.fs) .top>span.lowhp{border-color:#ff3b5c;color:#ff8a9a;background:#3a0
 .rowf .card:hover{z-index:30}
 /* carte in mano: SOLO il bordo cambia (verde = giocabile, dorato = potenziata, grigio = non giocabile); il colore della carta resta quello originale */
 .hand .card.off{filter:none;opacity:1}
-.hand .card.rdy{box-shadow:0 0 0 4px #39ff88,0 0 22px 7px #39ff88cc,0 0 48px 12px #39ff8844,0 6px 14px #0009}
+.hand .card.rdy{box-shadow:0 0 0 3px #2fae62,0 0 7px 2px #2fae6299,0 6px 14px #0009}
 .hand .card.bst{box-shadow:0 0 0 4px #ffd43b,0 0 26px 9px #ffd43bee,0 0 58px 16px #ffb30077,0 6px 14px #0009}
-.hand .card.rdy::after,.hand .card.bst::after{content:"";position:absolute;inset:-5px;border-radius:15px;border:3px solid #7dffb0;pointer-events:none;animation:pwpulse 1.8s ease-in-out infinite}
-.hand .card.bst::after{border-color:#fff1a8;animation-duration:.9s}
+.hand .card.bst::after{content:"";position:absolute;inset:-5px;border-radius:15px;border:3px solid #fff1a8;pointer-events:none;animation:pwpulse .9s ease-in-out infinite}
 @keyframes pwpulse{0%,100%{opacity:.2}50%{opacity:1}}
-.hand .card.lck{box-shadow:0 0 0 3px #9aa0b4,0 6px 14px #0009}
+.hand .card.lck{filter:grayscale(.65) brightness(.82)}
 /* energia insufficiente: la scritta dell'energia residua lampeggia in rosso */
 .pips{display:inline-block}.pips.lowen{color:#ff6b80;text-shadow:0 0 12px #ff3b5c;animation:lowen .9s ease-in-out}
 @keyframes lowen{0%,100%{transform:scale(1)}12%,52%,92%{transform:scale(1.4);color:#ff2d55;text-shadow:0 0 16px #ff2d55,0 0 32px #ff1f4a}32%,72%{transform:scale(1.12);color:#ffd0d6;text-shadow:0 0 6px #ff3b5c}}
