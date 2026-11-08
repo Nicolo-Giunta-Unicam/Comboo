@@ -385,13 +385,17 @@ body:not(.fs) .top>span.lowhp{border-color:#ff3b5c;color:#ff8a9a;background:#3a0
 .rowf .card .ef{font-size:8.5px;line-height:1.12;padding:1px 3px}.rowf .card .nm{font-size:10px;line-height:1.1;padding:1px}.rowf .card .art{min-height:0}
 .trgb{position:absolute;bottom:3px;right:3px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;background:#1b1430;border:2px solid #ffd24a;box-shadow:0 0 8px #ffd24a;z-index:2;animation:aglow 2.4s ease-in-out infinite}
 .rowf .card:hover{z-index:30}
-/* carte in mano: contorno verde = giocabile, dorato = potenziata (passiva, combo, concatenazione…), grigio = non giocabile (nessuna trasparenza) */
+/* carte in mano: SOLO il bordo cambia (verde = giocabile, dorato = potenziata, grigio = non giocabile); il colore della carta resta quello originale */
 .hand .card.off{filter:none;opacity:1}
-.hand .card.ok{box-shadow:0 0 0 3px #46e08a,0 0 16px 3px #46e08acc,0 6px 14px #0009}
-.hand .card.pw{box-shadow:0 0 0 3px #ffd24a,0 0 18px 4px #ffd24add,0 6px 14px #0009}
-.hand .card.pw::after{content:"";position:absolute;inset:-3px;border-radius:14px;border:2px solid #ffe08a;pointer-events:none;animation:pwpulse 1.5s ease-in-out infinite}
-@keyframes pwpulse{0%,100%{opacity:.25}50%{opacity:1}}
-.hand .card.cant{box-shadow:0 0 0 3px #8a8fa3,0 6px 14px #0009}
+.hand .card.rdy{box-shadow:0 0 0 4px #39ff88,0 0 22px 7px #39ff88cc,0 0 48px 12px #39ff8844,0 6px 14px #0009}
+.hand .card.bst{box-shadow:0 0 0 4px #ffd43b,0 0 26px 9px #ffd43bee,0 0 58px 16px #ffb30077,0 6px 14px #0009}
+.hand .card.rdy::after,.hand .card.bst::after{content:"";position:absolute;inset:-5px;border-radius:15px;border:3px solid #7dffb0;pointer-events:none;animation:pwpulse 1.8s ease-in-out infinite}
+.hand .card.bst::after{border-color:#fff1a8;animation-duration:.9s}
+@keyframes pwpulse{0%,100%{opacity:.2}50%{opacity:1}}
+.hand .card.lck{box-shadow:0 0 0 3px #9aa0b4,0 6px 14px #0009}
+/* energia insufficiente: la scritta dell'energia residua lampeggia in rosso */
+.pips{display:inline-block}.pips.lowen{color:#ff6b80;text-shadow:0 0 12px #ff3b5c;animation:lowen .9s ease-in-out}
+@keyframes lowen{0%,100%{transform:scale(1)}12%,52%,92%{transform:scale(1.4);color:#ff2d55;text-shadow:0 0 16px #ff2d55,0 0 32px #ff1f4a}32%,72%{transform:scale(1.12);color:#ffd0d6;text-shadow:0 0 6px #ff3b5c}}
 /* carta schierata compatta: badge e campanella più piccoli; scheda completa nel suggerimento */
 .rowf .card .catb{width:16px;height:16px;font-size:9px;top:2px;right:2px;border-width:1.5px}
 .rowf .card .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rowf .card .src{display:none}.rowf .card .art{flex:1 0 26px;min-height:26px}
