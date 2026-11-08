@@ -382,7 +382,9 @@ app.addEventListener('click', ev => { const b = (ev.target as HTMLElement).close
 // ---- Drag & drop (pointer events: mouse + touch) ----
 let el: HTMLElement | null = null, sx = 0, sy = 0, moved = false, ph: HTMLElement | null = null;
 /** Durante il trascinamento la carta passa a position:fixed (con segnaposto): non viene più tagliata dai contenitori con overflow. */
-function lift(c: HTMLElement) { const q = c.getBoundingClientRect(); ph = document.createElement('div'); ph.style.cssText = `width:${q.width}px;height:${q.height}px;flex:none;margin:${getComputedStyle(c).margin}`; c.before(ph); Object.assign(c.style, { position: 'fixed', left: q.left + 'px', top: q.top + 'px', width: q.width + 'px', height: q.height + 'px', margin: '0', zIndex: '300' }); }
+function lift(c: HTMLElement) { const q = c.getBoundingClientRect(); ph = document.createElement('div'); ph.style.cssText = `width:${q.width}px;height:${q.height}px;flex:none;margin:${getComputedStyle(c).margin}`; c.before(ph); Object.assign(c.style, { position: 'fixed', left: q.left + 'px', top: q.top + 'px', width: q.width + 'px', height: q.height + 'px', margin: '0', zIndex: '300' });
+  const q2 = c.getBoundingClientRect(), ox = q2.left - q.left, oy = q2.top - q.top; if (Math.abs(ox) > 0.5 || Math.abs(oy) > 0.5) Object.assign(c.style, { left: q.left - ox + 'px', top: q.top - oy + 'px' }); // se un contenitore è trasformato/animato, position:fixed è relativo a lui: si compensa lo scarto
+}
 function markTarget(c: HTMLElement) { const u = c.dataset.drag ?? ''; if (u.startsWith('offer:')) document.querySelector(`[data-zone="${u.split(':')[1] === 'eq' ? 'eqbar' : 'deck'}"]`)?.classList.add('target'); } // evidenzia dove trascinare la carta da acquistare
 function clearTargets() { document.querySelectorAll('.target').forEach(z => z.classList.remove('target')); }
 function unlift(c: HTMLElement) { ph?.remove(); ph = null; ['position', 'left', 'top', 'width', 'height', 'margin', 'z-index'].forEach(p => c.style.removeProperty(p)); }

@@ -418,7 +418,7 @@ body:not(.fs) .top>span.lowhp{border-color:#ff3b5c;color:#ff8a9a;background:#3a0
 @keyframes toastIn{from{opacity:0;transform:translateY(-16px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes toastOut{to{opacity:0;transform:translateY(-12px) scale(.96)}}
 /* scorrimento laterale tra Storia, Store e Mazzo */
-.pane.slr{animation:slideR .34s cubic-bezier(.2,.8,.2,1) both}.pane.sll{animation:slideL .34s cubic-bezier(.2,.8,.2,1) both}
+.pane.slr{animation:slideR .34s cubic-bezier(.2,.8,.2,1) backwards}.pane.sll{animation:slideL .34s cubic-bezier(.2,.8,.2,1) backwards} /* niente fill-mode finale: un'animazione di transform ancora attiva farebbe da riferimento per le carte trascinate (position:fixed) */
 @keyframes slideR{from{opacity:0;transform:translateX(70px)}to{opacity:1;transform:none}}
 @keyframes slideL{from{opacity:0;transform:translateX(-70px)}to{opacity:1;transform:none}}
 .pane.slr>*,.pane.sll>*,.pane.slr .offer,.pane.sll .offer,.pane.slr .storywrap .story>*,.pane.sll .storywrap .story>*{animation:none!important}
