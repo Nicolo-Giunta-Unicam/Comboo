@@ -58,7 +58,7 @@ body.fs .mat{flex:none;flex-direction:column;gap:2px;height:54px;min-height:0;ju
 .combo{font-size:11px;height:14px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body.fs .handrow{flex:none;height:calc(var(--cw)*1.6 + 26px)}body.fs .handrow .hand{height:100%;align-items:flex-end}.vbar i{transition:height .9s ease-out}
 .tabs.two{grid-template-columns:repeat(2,1fr)}.offers{display:flex;gap:8px;justify-content:center;margin:6px 0}.offers .card{width:clamp(92px,29vw,150px);aspect-ratio:auto;min-height:calc(var(--cw)*1.7);touch-action:none;cursor:grab}
 .card.eqc{--c1:#b8862b;--c2:#4a3410}.cost.pr{width:auto;border-radius:12px;padding:0 6px;left:auto;right:-6px}.soldx{width:clamp(92px,29vw,150px);display:grid;place-items:center;border:2px dashed #4a3d70;border-radius:12px;color:var(--m);min-height:calc(var(--cw)*1.7)}
-.zone.dz{display:flex;gap:12px;align-items:center;margin:8px 0}.pile.mini{position:static;width:54px;margin:0;flex:none}.hand .card{margin-left:calc(var(--cw)*-1 + min(var(--cw)*.62, (var(--W) - 24px - var(--cw)) / max(1, var(--n) - 1)));transform:rotate(calc((var(--i) - (var(--n) - 1)/2) * 7deg)) translateY(calc((var(--i) - (var(--n) - 1)/2) * (var(--i) - (var(--n) - 1)/2) * 6px))}
+.zone.dz{display:flex;gap:12px;align-items:center;margin:8px 0}.pile.mini{position:static;width:54px;margin:0;flex:none}.hand .card{margin-left:calc(var(--cw)*-1 + min(max(var(--cw)*.55, var(--cw)*(1.3 - var(--n)*.1)), (var(--W) - 24px - var(--cw)) / max(1, var(--n) - 1)));transform:rotate(calc((var(--i) - (var(--n) - 1)/2) * 7deg)) translateY(calc((var(--i) - (var(--n) - 1)/2) * (var(--i) - (var(--n) - 1)/2) * 6px))}
 .side{width:60px}.vbar{width:18px}body.fs .side .face{width:54px;height:54px;font-size:32px}.side .face{width:54px;height:54px;font-size:32px}
 .nameplate{background:linear-gradient(#ffd77a,#c9892a);color:#2a1a00;font-weight:800;font-size:9px;border-radius:6px;padding:2px 4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid #fff8;box-shadow:0 2px 4px #0008}.side.foe .nameplate{background:linear-gradient(#c58bff,#6a2fa0);color:#fff}
 .gear{min-height:28px;padding:0 10px;font-size:16px}.modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;z-index:100}.mbox{background:var(--p);border:1px solid #4a3d70;border-radius:16px;padding:16px;width:min(92vw,380px);display:flex;flex-direction:column;gap:10px}
@@ -387,8 +387,8 @@ body:not(.fs) .top>span.lowhp{border-color:#ff3b5c;color:#ff8a9a;background:#3a0
 .rowf .card:hover{z-index:30}
 /* carte in mano: SOLO il bordo cambia (verde = giocabile, dorato = potenziata, grigio = non giocabile); il colore della carta resta quello originale */
 .hand .card.off{filter:none;opacity:1}
-.hand .card.rdy{box-shadow:0 0 0 3px #2fae62,0 0 7px 2px #2fae6299,0 6px 14px #0009}
-.hand .card.bst{box-shadow:0 0 0 4px #ffd43b,0 0 26px 9px #ffd43bee,0 0 58px 16px #ffb30077,0 6px 14px #0009}
+.hand .card.rdy{box-shadow:0 0 0 3px #17e346,0 0 10px 3px #17e346e6,0 0 23px 6px #17e34677,0 6px 14px #0009}
+.hand .card.bst{box-shadow:0 0 0 4px #ffd43b,0 0 21px 7px #ffd43bee,0 0 46px 13px #ffb30077,0 6px 14px #0009}
 .hand .card.bst::after{content:"";position:absolute;inset:-5px;border-radius:15px;border:3px solid #fff1a8;pointer-events:none;animation:pwpulse .9s ease-in-out infinite}
 @keyframes pwpulse{0%,100%{opacity:.2}50%{opacity:1}}
 .hand .card.lck{filter:grayscale(.65) brightness(.82)}
