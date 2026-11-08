@@ -287,3 +287,25 @@ test('danni diretti che abbattono il nemico: vittoria alla prima risoluzione', (
   const { r, c } = arena(['buy:revolver_a1', 'buy:revolver_0'], ['revolver_a1'], []); r.equipped = []; playCard(r, 'buy:revolver_a1'); c.enemy.hp = 1; playCard(r, 'buy:revolver_0');
   assert.equal(c.enemy.hp, 0); assert.equal(c.phase, 'resolve'); enemyStep(r); assert.equal(r.phase, 'store'); assert.equal(r.outcome, 'win');
 });
+
+// ---- stato delle carte in mano (contorno verde / dorato / grigio) e acquisto libero in god mode ----
+import { cardInfo, godGiveCard } from '../src/engine';
+test('carte in mano: giocabile (energia) e potenziata (combo, passiva, "per ogni carta", sinergie)', () => {
+  const { r, c } = arena(['base:jab:0', 'base:jab:1', 'base:guard:2', 'buy:blade_a2', 'buy:wraps_a3'], ['blade_a2', 'wraps_a3'], ['blade']);
+  assert.deepEqual(cardInfo(r, 'base:guard:2'), { playable: true, boosted: false }); // nessun bonus
+  assert.equal(cardInfo(r, 'buy:blade_a2').boosted, true); // passiva dell'equipaggiamento: +1 alle Lame
+  c.energy = 0; assert.deepEqual(cardInfo(r, 'base:guard:2'), { playable: false, boosted: false }); c.energy = 10; // energia insufficiente
+  assert.equal(cardInfo(r, 'base:jab:0').boosted, false); playCard(r, 'base:jab:0'); assert.equal(cardInfo(r, 'base:jab:1').boosted, true); // stessa carta di seguito = combo
+  assert.equal(cardInfo(r, 'buy:wraps_a3').boosted, true); // "per ogni carta Corpo a corpo giocata nel turno": ne è stata giocata una
+  assert.equal(cardInfo(r, 'nessuna').playable, false);
+});
+test('carte in mano: la passiva con limite per turno smette di potenziare dopo il tetto; riga piena = non giocabile', () => {
+  const { r, c } = arena(['buy:blade_a2', 'buy:blade_a2'], ['blade_a2'], ['blade']); // passiva Lame: +1, massimo 2 volte per turno
+  playCard(r, 'buy:blade_a2'); assert.equal(c.field.off.length, 1); const info = cardInfo(r, c.hand[0]); assert.equal(info.playable, true);
+  c.field.off.length = 0; for (let i = 0; i < CONFIG.rowSize; i++) c.field.off.push({ uid: '', name: 'x', icon: '', src: '', dmg: 1, hits: 1, block: 0, ttl: 1 }); assert.equal(cardInfo(r, c.hand[0]).playable, false);
+});
+test('god mode: si può aggiungere qualsiasi carta gratis, una volta sola; senza god mode no', () => {
+  const r = newRun(5); r.phase = 'store'; assert.equal(godGiveCard(r, 'revolver_a0'), 'Solo in god mode.');
+  r.god = true; assert.equal(godGiveCard(r, 'revolver_a0'), null); assert.ok(ownedCards(r).some(k => k.move === 'revolver_a0')); assert.equal(godGiveCard(r, 'revolver_a0'), 'Già posseduta.'); assert.equal(godGiveCard(r, 'inesistente'), 'Carta sconosciuta.');
+  assert.equal(sellMove(r, 'revolver_a0'), null); assert.ok(!ownedCards(r).some(k => k.move === 'revolver_a0')); // rivendibile
+});

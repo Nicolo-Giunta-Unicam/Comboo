@@ -217,10 +217,10 @@ function absorb(c: Combat, sh: Placed[], d: number, onHit?: (p: Placed) => void)
 // ---- categorie: conteggi, effetti "per ogni carta" e trigger (carte sul campo ed equipaggiamenti) ----
 const catMatch = (want: CatOrAny | undefined, have: Cat | undefined) => !want || want === 'any' || want === have;
 /** Quante carte della categoria ci sono (nel turno, in mano, sul campo, negli scarti). Chiamare PRIMA di schierare la carta: la carta stessa non conta. */
-export function countCat(c: Combat, s: Scale): number {
+export function countCat(c: Combat, s: Scale, skip?: string): number {
   let n = 0;
   if (s.where === 'played') { for (const [id, k] of Object.entries(c.played)) if (catMatch(s.cat, MOVES[id]?.cat)) n += k; }
-  else if (s.where === 'hand') { for (const u of c.hand) if (catMatch(s.cat, MOVES[moveOf(u)]?.cat)) n++; }
+  else if (s.where === 'hand') { for (const u of c.hand) if (u !== skip && catMatch(s.cat, MOVES[moveOf(u)]?.cat)) n++; }
   else if (s.where === 'discard') { for (const u of c.discard) if (catMatch(s.cat, MOVES[moveOf(u)]?.cat)) n++; }
   else for (const p of [...c.field.off, ...c.field.def]) if (p.mv && catMatch(s.cat, MOVES[p.mv]?.cat)) n++;
   return s.max ? Math.min(n, s.max) : n;
@@ -248,11 +248,11 @@ function fireAll(r: Run, c: Combat, on: 'play' | 'turnStart', cat?: Cat, skip?: 
   firePassives(r, c, on, cat);
 }
 /** Bonus (+danni/+guardia) dagli equipaggiamenti alla carta che si sta giocando. */
-function boostFor(r: Run, c: Combat, cat?: Cat): number { // rispetta "max volte per turno" (consuma una attivazione per ogni carta potenziata)
+function boostFor(r: Run, c: Combat, cat?: Cat, consume = true): number { // rispetta "max volte per turno" (consuma una attivazione per ogni carta potenziata; consume=false = solo anteprima)
   let sum = 0;
   for (const e of r.equipped) (EQUIPMENT[e]?.passives ?? []).forEach((t, i) => {
     if (t.on !== 'play' || !t.boost || !catMatch(t.cat, cat)) return;
-    if (t.max) { const k = `b:${e}:${i}`; c.pu ??= {}; if ((c.pu[k] ?? 0) >= t.max) return; c.pu[k] = (c.pu[k] ?? 0) + 1; }
+    if (t.max) { const k = `b:${e}:${i}`; if (((c.pu ?? {})[k] ?? 0) >= t.max) return; if (consume) { c.pu ??= {}; c.pu[k] = (c.pu[k] ?? 0) + 1; } }
     sum += t.boost;
   });
   return sum;
@@ -312,6 +312,26 @@ export function playCard(r: Run, uid: string): Err {
   return null;
 }
 /** Mazzo esaurito: per CONFIG.discardDrawCost energia gli scarti vengono rimescolati nel mazzo e si pesca 1 carta. */
+/** Stato di una carta in mano, senza modificare nulla: giocabile ora? potenziata (combo, concatenazione, passiva, "per ogni carta", sinergie)? */
+export function cardInfo(r: Run, uid: string): { playable: boolean; boosted: boolean } {
+  const c = r.combat; if (r.phase !== 'combat' || !c || c.phase !== 'player' || c.pick?.length || !c.hand.includes(uid)) return { playable: false, boosted: false };
+  const m = MOVES[moveOf(uid)], f = m.effect, S = f.syn, mods = modsOf(c), cost = effCost(c, uid);
+  const off = !!f.dmg || !!f.scale?.dmg || S?.k === 'momentum' || S?.k === 'shieldAtk', instant = !!S && S.k !== 'momentum' && S.k !== 'flow' && S.k !== 'shieldAtk';
+  let playable = c.energy >= cost;
+  if (f.flee) { const q = f.req ?? {}; if ((q.hpBelow !== undefined && r.hp / maxHp(r) >= q.hpBelow) || (q.minTurn !== undefined && c.turn < q.minTurn)) playable = false; }
+  else if (instant) { if ((S!.k === 'clone' && !c.lastUid) || (S!.k === 'scout' && !c.draw.length)) playable = false; }
+  else if ((off ? c.field.off : c.field.def).length >= CONFIG.rowSize) playable = false;
+  if (f.flee || instant) return { playable, boosted: playable && (cost < m.cost) };
+  const g: 'off' | 'def' = off ? 'off' : 'def', fg: 'off' | 'def' = f.link ? (MOVES[f.link.from]?.effect.dmg ? 'off' : 'def') : g, L = c.lastBy ?? { off: null, def: null }, R = c.runs ?? { off: 0, def: 0 };
+  const pct = CONFIG.combo.same[Math.min(L[g] === m.id ? R[g] + 1 : 1, CONFIG.combo.max) - 1] ?? 0, lk = !!f.link && L[fg] === f.link.from, sc = f.scale, sn = sc ? countCat(c, sc, uid) : 0, bst = boostFor(r, c, m.cat, false);
+  const boosted = pct > 0 || lk || (!!sc && sn > 0 && !!(sc.dmg || sc.block || sc.draw || sc.energy || sc.heal)) || (bst > 0 && (off || !!f.block || !!sc?.block)) || (off && (mods.off > 0 || !!mods.bypass)) || !!mods.dupNext || cost < m.cost;
+  return { playable, boosted: playable && boosted };
+}
+/** God mode: aggiunge qualsiasi carta al mazzo, gratis (una copia per carta; si può rivendere a 0). */
+export function godGiveCard(r: Run, id: string): Err {
+  if (!r.god) return 'Solo in god mode.'; if (r.phase !== 'store') return 'Store non disponibile.'; if (!MOVES[id]) return 'Carta sconosciuta.'; if (r.bought.includes(id)) return 'Già posseduta.';
+  r.paid[id] = 0; r.bought.push(id); autoAdd(r, [`buy:${id}`]); return null;
+}
 export function drawDiscard(r: Run): Err {
   const c = r.combat; if (r.phase !== 'combat' || !c) return 'Nessun combattimento.'; if (c.phase !== 'player') return 'Non è il tuo turno.'; if (c.pick?.length) return 'Scegli prima una carta (Stratega).';
   if (c.draw.length) return 'Hai ancora carte da pescare nel mazzo.'; if (!c.discard.length) return 'Nessuna carta negli scarti.'; if (c.hand.length >= CONFIG.maxHand) return `Mano piena (${CONFIG.maxHand}).`; if (c.energy < CONFIG.discardDrawCost) return 'Energia insufficiente.';
