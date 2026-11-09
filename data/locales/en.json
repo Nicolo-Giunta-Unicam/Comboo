@@ -708,5 +708,9 @@
  "IN CAMPO": "ON THE FIELD",
  "{0} aggiunta al mazzo": "{0} added to the deck",
  "✓ {0} aggiunta al mazzo": "✓ {0} added to the deck",
- "God mode · Carte": "God mode · Cards"
+ "God mode · Carte": "God mode · Cards",
+ "<b>🔄 Offerte dello store</b>": "<b>🔄 Store offers</b>",
+ "Cambia <span class=\"price\">💰{0}</span>": "Reroll <span class=\"price\">💰{0}</span>",
+ "Offerte rinnovate.": "Offers refreshed.",
+ "Prima risolvi la carta misteriosa.": "Resolve the mystery card first."
 }

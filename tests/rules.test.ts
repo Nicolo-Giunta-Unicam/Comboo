@@ -1,5 +1,5 @@
 import { test } from 'node:test'; import assert from 'node:assert/strict';
-import { newRun, maxHp, askMercy, healRun, setStyle, effCost, choosePick, drawDiscard, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
+import { newRun, maxHp, askMercy, healRun, setStyle, effCost, choosePick, drawDiscard, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, rerollOffers, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
 import { EQUIPMENT, MOVES, STYLES } from '../src/data'; import { REGIONS } from '../src/regions'; import { CONFIG } from '../src/config'; import { saveRun, loadRun, SAVE_KEY, type KV } from '../src/save';
 const kv = (): KV & { m: Map<string, string> } => { const m = new Map<string, string>(); return { m, getItem: k => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v), removeItem: k => void m.delete(k) }; };
 const settle = (r: Run) => { const c = r.combat!; for (let i = 0; i < 10 && c.phase === 'resolve'; i++) enemyStep(r); };
@@ -308,4 +308,10 @@ test('god mode: si può aggiungere qualsiasi carta gratis, una volta sola; senza
   const r = newRun(5); r.phase = 'store'; assert.equal(godGiveCard(r, 'revolver_a0'), 'Solo in god mode.');
   r.god = true; assert.equal(godGiveCard(r, 'revolver_a0'), null); assert.ok(ownedCards(r).some(k => k.move === 'revolver_a0')); assert.equal(godGiveCard(r, 'revolver_a0'), 'Già posseduta.'); assert.equal(godGiveCard(r, 'inesistente'), 'Carta sconosciuta.');
   assert.equal(sellMove(r, 'revolver_a0'), null); assert.ok(!ownedCards(r).some(k => k.move === 'revolver_a0')); // rivendibile
+});
+
+test('reroll dello store: costa CONFIG.rerollCost, rigenera le offerte, non senza oro né con carta misteriosa da risolvere', () => {
+  const r = rich(); assert.equal(chooseRegion(r, 'boxing'), null); const g = r.gold; assert.equal(CONFIG.rerollCost, 15); assert.equal(r.needsMap, false); assert.equal(rerollOffers(r), null); assert.equal(r.gold, g - CONFIG.rerollCost);
+  assert.equal(r.offers.eq.filter(Boolean).length, 3); r.offers.eq.forEach(id => id && assert.equal(EQUIPMENT[id].island, 'boxing'));
+  r.gold = CONFIG.rerollCost - 1; assert.equal(rerollOffers(r), 'Oro insufficiente.'); assert.equal(r.gold, CONFIG.rerollCost - 1);
 });

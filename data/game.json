@@ -70,7 +70,8 @@
     "hpPerArena": 3,
     "handTarget": 0,
     "discardDrawCards": 1,
-    "comboDraw": 1
+    "comboDraw": 1,
+    "rerollCost": 15
   },
   "baseMoves": [
     {
@@ -258,7 +259,7 @@
     },
     {
       "id": "stance",
-      "name": "Guardia a conchiglia",
+      "name": "Guantoni imbottiti",
       "desc": "Stile difensivo: tanta guardia e contrattacchi.",
       "price": 20,
       "island": "boxing",
@@ -467,7 +468,7 @@
       "id": "plating",
       "name": "Placcatura sottocutanea",
       "desc": "Pelle indurita. +8 PV max.",
-      "price": 28,
+      "price": 50,
       "bonus": {
         "maxHp": 8
       },
@@ -525,14 +526,14 @@
           }
         }
       ],
-      "island": "battlefield",
+      "island": "desert",
       "kind": "implant"
     },
     {
       "id": "servo",
       "name": "Braccio servoassistito",
       "desc": "Cyberware. +2 danni a ogni attacco.",
-      "price": 40,
+      "price": 56,
       "bonus": {
         "dmg": 2
       },
@@ -592,7 +593,7 @@
           "cost": 1
         }
       ],
-      "island": "battlefield",
+      "island": "desert",
       "kind": "implant"
     },
     {
@@ -967,11 +968,11 @@
     },
     {
       "kind": "arcane",
-      "island": "desert",
+      "island": "forest",
       "id": "grimoire",
       "name": "Grimorio dei sigilli",
       "desc": "Un libro di sigilli antichi: la prima magia che lanci ogni turno ti fa pescare.",
-      "price": 58,
+      "price": 95,
       "bonus": {},
       "passives": [
         {
@@ -1129,7 +1130,7 @@
           "cost": 1
         }
       ],
-      "island": "ocean",
+      "island": "desert",
       "kind": "implant"
     },
     {
@@ -1557,6 +1558,1242 @@
         }
       ],
       "kind": "body"
+    },
+    {
+      "id": "muaythai",
+      "name": "Muay Thai",
+      "desc": "Arte degli otto armi: gomiti, ginocchia e clinch. Ogni colpo che subisci ti costa poco: lo restituisci.",
+      "price": 26,
+      "island": "boxing",
+      "kind": "style",
+      "bonus": {},
+      "passives": [
+        {
+          "on": "hit",
+          "dmg": 1,
+          "max": 1
+        }
+      ],
+      "moves": [
+        {
+          "id": "muaythai_0",
+          "name": "Ginocchiata",
+          "cat": "melee",
+          "effect": {
+            "dmg": 6,
+            "link": {
+              "from": "grab",
+              "dmg": 3
+            }
+          }
+        },
+        {
+          "id": "muaythai_1",
+          "name": "Gomitata",
+          "cat": "melee",
+          "effect": {
+            "dmg": 4,
+            "hits": 2
+          }
+        },
+        {
+          "id": "muaythai_2",
+          "name": "Calcio basso",
+          "cat": "melee",
+          "effect": {
+            "dmg": 5,
+            "link": {
+              "from": "kick",
+              "dmg": 3
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "muaythai_a0",
+          "name": "Clinch thailandese",
+          "cat": "melee",
+          "effect": {
+            "dmg": 3,
+            "block": 3,
+            "draw": 1
+          },
+          "price": 24
+        },
+        {
+          "id": "muaythai_a1",
+          "name": "Gomito volante",
+          "cat": "melee",
+          "effect": {
+            "dmg": 13,
+            "link": {
+              "from": "muaythai_1",
+              "dmg": 5
+            }
+          },
+          "price": 30
+        },
+        {
+          "id": "muaythai_a2",
+          "name": "Ginocchiate a raffica",
+          "cat": "melee",
+          "effect": {
+            "dmg": 3,
+            "hits": 2,
+            "scale": {
+              "cat": "melee",
+              "where": "discard",
+              "dmg": 1,
+              "max": 5
+            }
+          },
+          "cost": 2,
+          "price": 28
+        }
+      ]
+    },
+    {
+      "id": "capoeira",
+      "name": "Capoeira",
+      "desc": "Ginga e acrobazie: schivare significa pescare, e ogni schivata prepara il colpo successivo.",
+      "price": 28,
+      "island": "boxing",
+      "kind": "style",
+      "bonus": {},
+      "passives": [
+        {
+          "on": "hit",
+          "draw": 1,
+          "max": 1
+        }
+      ],
+      "moves": [
+        {
+          "id": "capoeira_0",
+          "name": "Ginga",
+          "cat": "melee",
+          "effect": {
+            "block": 4,
+            "draw": 1
+          }
+        },
+        {
+          "id": "capoeira_1",
+          "name": "Rasteira",
+          "cat": "melee",
+          "effect": {
+            "dmg": 5,
+            "link": {
+              "from": "capoeira_0",
+              "dmg": 4
+            }
+          }
+        },
+        {
+          "id": "capoeira_2",
+          "name": "Meia-lua de compasso",
+          "cat": "melee",
+          "effect": {
+            "dmg": 3,
+            "hits": 2,
+            "link": {
+              "from": "kick",
+              "dmg": 2
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "capoeira_a0",
+          "name": "Armada",
+          "cat": "melee",
+          "effect": {
+            "dmg": 6,
+            "hits": 2,
+            "link": {
+              "from": "capoeira_1",
+              "dmg": 5
+            }
+          },
+          "price": 30
+        },
+        {
+          "id": "capoeira_a1",
+          "name": "Macaco",
+          "cat": "melee",
+          "effect": {
+            "block": 9,
+            "dur": 2,
+            "draw": 1
+          },
+          "price": 26
+        },
+        {
+          "id": "capoeira_a2",
+          "name": "Mortal",
+          "cat": "melee",
+          "effect": {
+            "dmg": 8,
+            "energy": 1
+          },
+          "price": 32
+        }
+      ]
+    },
+    {
+      "id": "knives",
+      "name": "Coltelli da lancio",
+      "desc": "Lame leggere e rapide: tanti tagli, tante carte. La prima lama di ogni turno ti fa pescare.",
+      "price": 40,
+      "island": "battlefield",
+      "kind": "gear",
+      "bonus": {},
+      "passives": [
+        {
+          "on": "play",
+          "cat": "blade",
+          "draw": 1,
+          "max": 1
+        }
+      ],
+      "moves": [
+        {
+          "id": "knives_0",
+          "name": "Lancio rapido",
+          "cat": "blade",
+          "effect": {
+            "dmg": 5
+          }
+        },
+        {
+          "id": "knives_1",
+          "name": "Pugnalata",
+          "cat": "blade",
+          "effect": {
+            "dmg": 3,
+            "hits": 2,
+            "link": {
+              "from": "knives_0",
+              "dmg": 2
+            }
+          }
+        },
+        {
+          "id": "knives_2",
+          "name": "Parata col pugnale",
+          "cat": "blade",
+          "effect": {
+            "dmg": 2,
+            "block": 3
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "knives_a0",
+          "name": "Coltelli piantati",
+          "cat": "blade",
+          "effect": {
+            "dmg": 2,
+            "scale": {
+              "cat": "blade",
+              "where": "discard",
+              "dmg": 1,
+              "max": 6
+            }
+          },
+          "price": 46
+        },
+        {
+          "id": "knives_a1",
+          "name": "Colpo alla gola",
+          "cat": "blade",
+          "effect": {
+            "dmg": 7,
+            "link": {
+              "from": "knives_1",
+              "dmg": 9
+            }
+          },
+          "price": 48
+        },
+        {
+          "id": "knives_a2",
+          "name": "Tutto o niente",
+          "cat": "blade",
+          "effect": {
+            "dmg": 18,
+            "req": {
+              "hpBelow": 0.5
+            }
+          },
+          "price": 50
+        }
+      ]
+    },
+    {
+      "id": "shotgun",
+      "name": "Fucile a pompa",
+      "desc": "Pochi colpi, tutti devastanti. Il primo sparo di ogni turno fa più danni.",
+      "price": 48,
+      "island": "battlefield",
+      "kind": "gear",
+      "bonus": {},
+      "passives": [
+        {
+          "on": "play",
+          "cat": "firearm",
+          "boost": 2,
+          "max": 1
+        }
+      ],
+      "moves": [
+        {
+          "id": "shotgun_0",
+          "name": "Pallettoni",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 10
+          }
+        },
+        {
+          "id": "shotgun_1",
+          "name": "Ricarica a pompa",
+          "cat": "firearm",
+          "effect": {
+            "block": 3,
+            "draw": 1
+          }
+        },
+        {
+          "id": "shotgun_2",
+          "name": "Calcio del fucile",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 4,
+            "block": 3
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "shotgun_a0",
+          "name": "Doppietta",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 7,
+            "hits": 2,
+            "link": {
+              "from": "shotgun_1",
+              "dmg": 5
+            }
+          },
+          "price": 52
+        },
+        {
+          "id": "shotgun_a1",
+          "name": "Colpo a bruciapelo",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 14
+          },
+          "price": 50
+        },
+        {
+          "id": "shotgun_a2",
+          "name": "Barricata",
+          "cat": "firearm",
+          "effect": {
+            "block": 9,
+            "dur": 0,
+            "trigger": {
+              "on": "hit",
+              "dmg": 3
+            }
+          },
+          "cost": 3,
+          "price": 50
+        }
+      ]
+    },
+    {
+      "id": "grenades",
+      "name": "Arsenale esplosivo",
+      "desc": "Granate, mine e fumogeni: controllo del campo e danni a raffica.",
+      "price": 52,
+      "island": "battlefield",
+      "kind": "gear",
+      "bonus": {},
+      "passives": [
+        {
+          "on": "play",
+          "cat": "firearm",
+          "block": 1,
+          "max": 2
+        }
+      ],
+      "moves": [
+        {
+          "id": "grenades_0",
+          "name": "Granata a frammentazione",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 5,
+            "hits": 2
+          }
+        },
+        {
+          "id": "grenades_1",
+          "name": "Fumogeno",
+          "cat": "firearm",
+          "effect": {
+            "block": 5,
+            "draw": 1
+          }
+        },
+        {
+          "id": "grenades_2",
+          "name": "Granata stordente",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 4,
+            "link": {
+              "from": "grenades_1",
+              "dmg": 6
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "grenades_a0",
+          "name": "Mina antiuomo",
+          "cat": "firearm",
+          "effect": {
+            "block": 6,
+            "dur": 0,
+            "trigger": {
+              "on": "hit",
+              "dmg": 3
+            }
+          },
+          "cost": 3,
+          "price": 50
+        },
+        {
+          "id": "grenades_a1",
+          "name": "Bomba a grappolo",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 3,
+            "hits": 4,
+            "scale": {
+              "cat": "firearm",
+              "where": "played",
+              "dmg": 1
+            }
+          },
+          "cost": 3,
+          "price": 54
+        },
+        {
+          "id": "grenades_a2",
+          "name": "Carica demolitrice",
+          "cat": "firearm",
+          "effect": {
+            "dmg": 18
+          },
+          "price": 55
+        }
+      ]
+    },
+    {
+      "id": "parkour",
+      "name": "Parkour",
+      "desc": "Muoversi è combattere: ogni salto prepara il colpo successivo. Il primo colpo corpo a corpo di ogni turno ti fa pescare.",
+      "price": 62,
+      "island": "ocean",
+      "kind": "style",
+      "bonus": {},
+      "passives": [
+        {
+          "on": "play",
+          "cat": "melee",
+          "draw": 1,
+          "max": 1
+        }
+      ],
+      "moves": [
+        {
+          "id": "parkour_0",
+          "name": "Salto del muro",
+          "cat": "melee",
+          "effect": {
+            "block": 5,
+            "draw": 1
+          }
+        },
+        {
+          "id": "parkour_1",
+          "name": "Calcio in scivolata",
+          "cat": "melee",
+          "effect": {
+            "dmg": 8,
+            "link": {
+              "from": "parkour_0",
+              "dmg": 5
+            }
+          }
+        },
+        {
+          "id": "parkour_2",
+          "name": "Rimbalzo",
+          "cat": "melee",
+          "effect": {
+            "dmg": 4,
+            "hits": 3
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "parkour_a0",
+          "name": "Flusso continuo",
+          "cat": "melee",
+          "effect": {
+            "dmg": 3,
+            "scale": {
+              "cat": "any",
+              "where": "played",
+              "dmg": 2
+            }
+          },
+          "cost": 2,
+          "price": 70
+        },
+        {
+          "id": "parkour_a1",
+          "name": "Salto mortale",
+          "cat": "melee",
+          "effect": {
+            "dmg": 14,
+            "energy": 1
+          },
+          "price": 78
+        },
+        {
+          "id": "parkour_a2",
+          "name": "Corsa sui tetti",
+          "cat": "melee",
+          "effect": {
+            "block": 8,
+            "draw": 2
+          },
+          "price": 66
+        }
+      ]
+    },
+    {
+      "id": "reflex",
+      "name": "Sinapsi accelerate",
+      "desc": "Cyberware neurale: il mondo rallenta. Quando subisci un colpo guadagni guardia.",
+      "price": 70,
+      "island": "ocean",
+      "kind": "implant",
+      "bonus": {},
+      "passives": [
+        {
+          "on": "hit",
+          "block": 2,
+          "max": 2
+        }
+      ],
+      "moves": [
+        {
+          "id": "reflex_0",
+          "name": "Tempo bullet",
+          "cat": "melee",
+          "effect": {
+            "block": 6,
+            "energy": 1,
+            "dur": 1
+          }
+        },
+        {
+          "id": "reflex_1",
+          "name": "Contromossa",
+          "cat": "melee",
+          "effect": {
+            "dmg": 8,
+            "block": 4
+          }
+        },
+        {
+          "id": "reflex_2",
+          "name": "Anticipazione",
+          "cat": "melee",
+          "effect": {
+            "block": 4,
+            "draw": 2
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "reflex_a0",
+          "name": "Riflesso condizionato",
+          "cat": "melee",
+          "effect": {
+            "block": 8,
+            "dur": 0,
+            "trigger": {
+              "on": "hit",
+              "draw": 1,
+              "max": 1
+            }
+          },
+          "cost": 3,
+          "price": 74
+        },
+        {
+          "id": "reflex_a1",
+          "name": "Scarica neurale",
+          "cat": "melee",
+          "effect": {
+            "syn": {
+              "k": "adrenaline",
+              "n": 3
+            }
+          },
+          "cost": 2,
+          "price": 76
+        },
+        {
+          "id": "reflex_a2",
+          "name": "Raffica di riflessi",
+          "cat": "melee",
+          "effect": {
+            "dmg": 5,
+            "hits": 3
+          },
+          "price": 74
+        }
+      ]
+    },
+    {
+      "id": "senses",
+      "name": "Sensi sovrumani",
+      "desc": "Vedi i colpi prima che partano: più carte e più scelte.",
+      "price": 66,
+      "island": "ocean",
+      "kind": "body",
+      "bonus": {
+        "maxHp": 6
+      },
+      "moves": [
+        {
+          "id": "senses_0",
+          "name": "Colpo mirato",
+          "cat": "melee",
+          "effect": {
+            "dmg": 5,
+            "draw": 1
+          }
+        },
+        {
+          "id": "senses_1",
+          "name": "Lettura del campo",
+          "cat": "melee",
+          "effect": {
+            "block": 5,
+            "draw": 1
+          }
+        },
+        {
+          "id": "senses_2",
+          "name": "Punto cieco",
+          "cat": "melee",
+          "effect": {
+            "dmg": 7,
+            "link": {
+              "from": "senses_1",
+              "dmg": 5
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "senses_a0",
+          "name": "Visione predittiva",
+          "cat": "melee",
+          "effect": {
+            "syn": {
+              "k": "scout"
+            }
+          },
+          "cost": 1,
+          "price": 60
+        },
+        {
+          "id": "senses_a1",
+          "name": "Udito assoluto",
+          "cat": "melee",
+          "effect": {
+            "block": 6,
+            "dur": 1,
+            "draw": 2
+          },
+          "price": 64
+        },
+        {
+          "id": "senses_a2",
+          "name": "Colpo al centro",
+          "cat": "melee",
+          "effect": {
+            "dmg": 16,
+            "link": {
+              "from": "senses_0",
+              "dmg": 6
+            }
+          },
+          "price": 78
+        }
+      ]
+    },
+    {
+      "id": "gravboots",
+      "name": "Stivali antigravità",
+      "desc": "Scatti e salti impossibili. Ogni colpo corpo a corpo è più forte, fino a tre volte per turno.",
+      "price": 80,
+      "island": "ocean",
+      "kind": "gear",
+      "bonus": {
+        "dmg": 1
+      },
+      "passives": [
+        {
+          "on": "play",
+          "cat": "melee",
+          "boost": 1,
+          "max": 3
+        }
+      ],
+      "moves": [
+        {
+          "id": "gravboots_0",
+          "name": "Calcio a mezz'aria",
+          "cat": "melee",
+          "effect": {
+            "dmg": 6,
+            "hits": 2
+          }
+        },
+        {
+          "id": "gravboots_1",
+          "name": "Schivata aerea",
+          "cat": "melee",
+          "effect": {
+            "block": 6,
+            "energy": 1,
+            "dur": 1
+          }
+        },
+        {
+          "id": "gravboots_2",
+          "name": "Picchiata",
+          "cat": "melee",
+          "effect": {
+            "dmg": 12,
+            "link": {
+              "from": "gravboots_1",
+              "dmg": 6
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "gravboots_a0",
+          "name": "Tempesta di calci",
+          "cat": "melee",
+          "effect": {
+            "dmg": 4,
+            "hits": 4,
+            "link": {
+              "from": "gravboots_0",
+              "dmg": 2
+            }
+          },
+          "price": 85
+        },
+        {
+          "id": "gravboots_a1",
+          "name": "Salto gravitazionale",
+          "cat": "melee",
+          "effect": {
+            "dmg": 10,
+            "draw": 1,
+            "energy": 1
+          },
+          "price": 90
+        }
+      ]
+    },
+    {
+      "id": "stand",
+      "name": "Stand spettrale",
+      "desc": "Uno spirito combattente al tuo fianco: raffiche a distanza e guardie spettrali. Ogni magia giocata infligge danni diretti.",
+      "price": 105,
+      "island": "forest",
+      "kind": "arcane",
+      "bonus": {},
+      "passives": [
+        {
+          "on": "play",
+          "cat": "magic",
+          "dmg": 2,
+          "max": 2
+        }
+      ],
+      "moves": [
+        {
+          "id": "stand_0",
+          "name": "Raffica dello Stand",
+          "cat": "magic",
+          "effect": {
+            "dmg": 4,
+            "hits": 4
+          }
+        },
+        {
+          "id": "stand_1",
+          "name": "Guardia spettrale",
+          "cat": "magic",
+          "effect": {
+            "block": 12,
+            "dur": 2
+          }
+        },
+        {
+          "id": "stand_2",
+          "name": "Pugno a distanza",
+          "cat": "magic",
+          "effect": {
+            "dmg": 12,
+            "link": {
+              "from": "stand_1",
+              "dmg": 6
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "stand_a0",
+          "name": "Raffica infinita",
+          "cat": "magic",
+          "effect": {
+            "dmg": 3,
+            "hits": 6,
+            "scale": {
+              "cat": "magic",
+              "where": "played",
+              "dmg": 1
+            }
+          },
+          "cost": 4,
+          "price": 125
+        },
+        {
+          "id": "stand_a1",
+          "name": "Stand protettivo",
+          "cat": "magic",
+          "effect": {
+            "block": 16,
+            "dur": 0,
+            "trigger": {
+              "on": "play",
+              "cat": "magic",
+              "dmg": 2
+            }
+          },
+          "cost": 4,
+          "price": 115
+        },
+        {
+          "id": "stand_a2",
+          "name": "Requiem",
+          "cat": "magic",
+          "effect": {
+            "dmg": 24,
+            "draw": 1
+          },
+          "price": 135
+        }
+      ]
+    },
+    {
+      "id": "oath",
+      "name": "Giuramento vincolante",
+      "desc": "Un voto che lega te e il nemico: ogni colpo subito ti torna indietro come danno diretto.",
+      "price": 100,
+      "island": "forest",
+      "kind": "arcane",
+      "bonus": {
+        "maxHp": 8
+      },
+      "passives": [
+        {
+          "on": "hit",
+          "dmg": 2,
+          "max": 2
+        }
+      ],
+      "moves": [
+        {
+          "id": "oath_0",
+          "name": "Catena dell'anima",
+          "cat": "magic",
+          "effect": {
+            "dmg": 8
+          }
+        },
+        {
+          "id": "oath_1",
+          "name": "Voto di ferro",
+          "cat": "magic",
+          "effect": {
+            "block": 10,
+            "dur": 2
+          }
+        },
+        {
+          "id": "oath_2",
+          "name": "Vincolo di sangue",
+          "cat": "magic",
+          "effect": {
+            "dmg": 6,
+            "heal": 4
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "oath_a0",
+          "name": "Contratto d'anima",
+          "cat": "magic",
+          "effect": {
+            "block": 14,
+            "dur": 0,
+            "trigger": {
+              "on": "hit",
+              "dmg": 4
+            }
+          },
+          "cost": 4,
+          "price": 110
+        },
+        {
+          "id": "oath_a1",
+          "name": "Maledizione",
+          "cat": "magic",
+          "effect": {
+            "dmg": 12,
+            "hits": 2,
+            "link": {
+              "from": "oath_1",
+              "dmg": 8
+            }
+          },
+          "price": 115
+        },
+        {
+          "id": "oath_a2",
+          "name": "Clausola finale",
+          "cat": "magic",
+          "effect": {
+            "dmg": 18,
+            "req": {
+              "hpBelow": 0.4
+            }
+          },
+          "price": 105
+        }
+      ]
+    },
+    {
+      "id": "aegis",
+      "name": "Egida divina",
+      "desc": "Lo scudo di un dio: difese immense e folgori di rimando. All'inizio del turno ti protegge.",
+      "price": 150,
+      "island": "volcano",
+      "kind": "arcane",
+      "bonus": {
+        "maxHp": 16
+      },
+      "passives": [
+        {
+          "on": "turnStart",
+          "block": 4
+        }
+      ],
+      "moves": [
+        {
+          "id": "aegis_0",
+          "name": "Scudo sacro",
+          "cat": "magic",
+          "effect": {
+            "block": 18,
+            "dur": 2
+          }
+        },
+        {
+          "id": "aegis_1",
+          "name": "Benedizione",
+          "cat": "magic",
+          "effect": {
+            "block": 8,
+            "heal": 8
+          }
+        },
+        {
+          "id": "aegis_2",
+          "name": "Giudizio riflesso",
+          "cat": "magic",
+          "effect": {
+            "dmg": 14,
+            "link": {
+              "from": "aegis_0",
+              "dmg": 14
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "aegis_a0",
+          "name": "Santuario",
+          "cat": "magic",
+          "effect": {
+            "block": 28,
+            "dur": 0,
+            "trigger": {
+              "on": "hit",
+              "dmg": 5
+            }
+          },
+          "cost": 5,
+          "price": 200
+        },
+        {
+          "id": "aegis_a1",
+          "name": "Pioggia divina",
+          "cat": "magic",
+          "effect": {
+            "block": 12,
+            "heal": 10,
+            "dur": 3
+          },
+          "price": 170
+        },
+        {
+          "id": "aegis_a2",
+          "name": "Ira dell'Egida",
+          "cat": "magic",
+          "effect": {
+            "dmg": 8,
+            "scale": {
+              "cat": "any",
+              "where": "field",
+              "dmg": 2,
+              "block": 2
+            }
+          },
+          "cost": 3,
+          "price": 180
+        }
+      ]
+    },
+    {
+      "id": "thunder",
+      "name": "Martello del tuono",
+      "desc": "L'arma di un dio del cielo: folgori che frantumano. Le prime due magie di ogni turno colpiscono più forte.",
+      "price": 170,
+      "island": "volcano",
+      "kind": "gear",
+      "bonus": {
+        "dmg": 5
+      },
+      "passives": [
+        {
+          "on": "play",
+          "cat": "magic",
+          "boost": 2,
+          "max": 2
+        }
+      ],
+      "moves": [
+        {
+          "id": "thunder_0",
+          "name": "Folgore",
+          "cat": "magic",
+          "effect": {
+            "dmg": 18
+          }
+        },
+        {
+          "id": "thunder_1",
+          "name": "Tuono",
+          "cat": "magic",
+          "effect": {
+            "dmg": 9,
+            "hits": 2
+          }
+        },
+        {
+          "id": "thunder_2",
+          "name": "Tempesta",
+          "cat": "magic",
+          "effect": {
+            "block": 12,
+            "draw": 1
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "thunder_a0",
+          "name": "Giudizio del cielo",
+          "cat": "magic",
+          "effect": {
+            "dmg": 28
+          },
+          "price": 210
+        },
+        {
+          "id": "thunder_a1",
+          "name": "Catena di fulmini",
+          "cat": "magic",
+          "effect": {
+            "dmg": 6,
+            "hits": 2,
+            "scale": {
+              "cat": "magic",
+              "where": "played",
+              "dmg": 4
+            }
+          },
+          "price": 190
+        },
+        {
+          "id": "thunder_a2",
+          "name": "Cielo in tempesta",
+          "cat": "magic",
+          "effect": {
+            "block": 14,
+            "dur": 0,
+            "trigger": {
+              "on": "play",
+              "cat": "magic",
+              "dmg": 3
+            }
+          },
+          "cost": 4,
+          "price": 195
+        }
+      ]
+    },
+    {
+      "id": "phoenix",
+      "name": "Fiamma della fenice",
+      "desc": "Il fuoco che rinasce dalle ceneri: cure e rigenerazione divine. Ti ristora a inizio turno.",
+      "price": 155,
+      "island": "volcano",
+      "kind": "arcane",
+      "bonus": {
+        "maxHp": 24
+      },
+      "passives": [
+        {
+          "on": "turnStart",
+          "heal": 2
+        }
+      ],
+      "moves": [
+        {
+          "id": "phoenix_0",
+          "name": "Fiamma purificatrice",
+          "cat": "magic",
+          "effect": {
+            "dmg": 10,
+            "heal": 6
+          }
+        },
+        {
+          "id": "phoenix_1",
+          "name": "Ali di cenere",
+          "cat": "magic",
+          "effect": {
+            "block": 14,
+            "heal": 6,
+            "dur": 2
+          }
+        },
+        {
+          "id": "phoenix_2",
+          "name": "Rogo sacro",
+          "cat": "magic",
+          "effect": {
+            "dmg": 14,
+            "link": {
+              "from": "phoenix_1",
+              "dmg": 10
+            }
+          }
+        }
+      ],
+      "advanced": [
+        {
+          "id": "phoenix_a0",
+          "name": "Rinascita",
+          "cat": "magic",
+          "effect": {
+            "heal": 20,
+            "draw": 1,
+            "energy": 1
+          },
+          "price": 190
+        },
+        {
+          "id": "phoenix_a1",
+          "name": "Piuma ardente",
+          "cat": "magic",
+          "effect": {
+            "block": 10,
+            "dur": 0,
+            "trigger": {
+              "on": "turnStart",
+              "heal": 2
+            }
+          },
+          "cost": 3,
+          "price": 175
+        },
+        {
+          "id": "phoenix_a2",
+          "name": "Supernova della fenice",
+          "cat": "magic",
+          "effect": {
+            "dmg": 16,
+            "hits": 2,
+            "heal": 8
+          },
+          "price": 200
+        }
+      ]
     }
   ],
   "enemyMoves": [
@@ -4374,7 +5611,7 @@
       "move.wraps_2.name": "One-two",
       "move.wraps_a0.name": "Overhand",
       "move.wraps_a1.name": "Adrenaline",
-      "equipment.stance.name": "Shell guard",
+      "equipment.stance.name": "Padded gloves",
       "equipment.stance.desc": "Defensive style: lots of guard and counters.",
       "move.stance_0.name": "High parry",
       "move.stance_1.name": "Dodge",
@@ -5095,7 +6332,118 @@
       "move.grimoire_2.name": "Study",
       "move.grimoire_a0.name": "Living Library",
       "move.grimoire_a1.name": "Arcane Storm",
-      "move.grimoire_a2.name": "Rune Totem"
+      "move.grimoire_a2.name": "Rune Totem",
+      "equipment.muaythai.name": "Muay Thai",
+      "equipment.muaythai.desc": "Art of eight limbs: elbows, knees and clinch. Hits you take are paid back.",
+      "move.muaythai_0.name": "Knee strike",
+      "move.muaythai_1.name": "Elbow strike",
+      "move.muaythai_2.name": "Low kick",
+      "move.muaythai_a0.name": "Thai clinch",
+      "move.muaythai_a1.name": "Flying elbow",
+      "move.muaythai_a2.name": "Knee barrage",
+      "equipment.capoeira.name": "Capoeira",
+      "equipment.capoeira.desc": "Ginga and acrobatics: every dodge draws cards and sets up the next strike.",
+      "move.capoeira_0.name": "Ginga",
+      "move.capoeira_1.name": "Sweep",
+      "move.capoeira_2.name": "Spinning half-moon",
+      "move.capoeira_a0.name": "Armada",
+      "move.capoeira_a1.name": "Macaco",
+      "move.capoeira_a2.name": "Back flip kick",
+      "equipment.knives.name": "Throwing knives",
+      "equipment.knives.desc": "Light, fast blades. The first blade each turn draws a card.",
+      "move.knives_0.name": "Quick throw",
+      "move.knives_1.name": "Stab",
+      "move.knives_2.name": "Dagger parry",
+      "move.knives_a0.name": "Planted knives",
+      "move.knives_a1.name": "Throat strike",
+      "move.knives_a2.name": "All or nothing",
+      "equipment.shotgun.name": "Pump shotgun",
+      "equipment.shotgun.desc": "Few shots, all devastating. The first shot each turn hits harder.",
+      "move.shotgun_0.name": "Buckshot",
+      "move.shotgun_1.name": "Pump reload",
+      "move.shotgun_2.name": "Gun butt",
+      "move.shotgun_a0.name": "Double barrel",
+      "move.shotgun_a1.name": "Point blank",
+      "move.shotgun_a2.name": "Barricade",
+      "equipment.grenades.name": "Explosive arsenal",
+      "equipment.grenades.desc": "Grenades, mines and smoke: field control and burst damage.",
+      "move.grenades_0.name": "Frag grenade",
+      "move.grenades_1.name": "Smoke bomb",
+      "move.grenades_2.name": "Stun grenade",
+      "move.grenades_a0.name": "Claymore mine",
+      "move.grenades_a1.name": "Cluster bomb",
+      "move.grenades_a2.name": "Demolition charge",
+      "equipment.parkour.name": "Parkour",
+      "equipment.parkour.desc": "Movement is combat: every jump sets up the next strike. First melee card each turn draws.",
+      "move.parkour_0.name": "Wall vault",
+      "move.parkour_1.name": "Slide kick",
+      "move.parkour_2.name": "Rebound",
+      "move.parkour_a0.name": "Endless flow",
+      "move.parkour_a1.name": "Flip strike",
+      "move.parkour_a2.name": "Rooftop run",
+      "equipment.reflex.name": "Accelerated synapses",
+      "equipment.reflex.desc": "Neural cyberware: the world slows down. Taking a hit grants block.",
+      "move.reflex_0.name": "Bullet time",
+      "move.reflex_1.name": "Counter move",
+      "move.reflex_2.name": "Anticipation",
+      "move.reflex_a0.name": "Conditioned reflex",
+      "move.reflex_a1.name": "Neural surge",
+      "move.reflex_a2.name": "Reflex flurry",
+      "equipment.senses.name": "Superhuman senses",
+      "equipment.senses.desc": "You see attacks before they start: more cards and more choices.",
+      "move.senses_0.name": "Aimed strike",
+      "move.senses_1.name": "Reading the field",
+      "move.senses_2.name": "Blind spot",
+      "move.senses_a0.name": "Predictive sight",
+      "move.senses_a1.name": "Absolute hearing",
+      "move.senses_a2.name": "Dead centre",
+      "equipment.gravboots.name": "Anti-gravity boots",
+      "equipment.gravboots.desc": "Impossible dashes and leaps. Melee cards hit harder, up to three times per turn.",
+      "move.gravboots_0.name": "Mid-air kick",
+      "move.gravboots_1.name": "Air dodge",
+      "move.gravboots_2.name": "Dive strike",
+      "move.gravboots_a0.name": "Kick storm",
+      "move.gravboots_a1.name": "Gravity leap",
+      "equipment.stand.name": "Spectral Stand",
+      "equipment.stand.desc": "A fighting spirit at your side: ranged barrages and spectral guards. Each spell played deals direct damage.",
+      "move.stand_0.name": "Stand barrage",
+      "move.stand_1.name": "Spectral guard",
+      "move.stand_2.name": "Long-range punch",
+      "move.stand_a0.name": "Endless barrage",
+      "move.stand_a1.name": "Guardian Stand",
+      "move.stand_a2.name": "Requiem",
+      "equipment.oath.name": "Binding oath",
+      "equipment.oath.desc": "A vow binding you and your foe: every hit you take comes back as direct damage.",
+      "move.oath_0.name": "Soul chain",
+      "move.oath_1.name": "Iron vow",
+      "move.oath_2.name": "Blood bond",
+      "move.oath_a0.name": "Soul contract",
+      "move.oath_a1.name": "Curse",
+      "move.oath_a2.name": "Final clause",
+      "equipment.aegis.name": "Divine Aegis",
+      "equipment.aegis.desc": "A god's shield: immense defenses and lightning in return. Shields you at turn start.",
+      "move.aegis_0.name": "Sacred shield",
+      "move.aegis_1.name": "Blessing",
+      "move.aegis_2.name": "Reflected judgement",
+      "move.aegis_a0.name": "Sanctuary",
+      "move.aegis_a1.name": "Divine rain",
+      "move.aegis_a2.name": "Wrath of the Aegis",
+      "equipment.thunder.name": "Thunder hammer",
+      "equipment.thunder.desc": "A sky god's weapon: shattering lightning. The first two spells each turn hit harder.",
+      "move.thunder_0.name": "Bolt",
+      "move.thunder_1.name": "Thunderclap",
+      "move.thunder_2.name": "Storm",
+      "move.thunder_a0.name": "Judgement of the sky",
+      "move.thunder_a1.name": "Chain lightning",
+      "move.thunder_a2.name": "Stormy sky",
+      "equipment.phoenix.name": "Phoenix flame",
+      "equipment.phoenix.desc": "Fire reborn from ashes: divine healing and regeneration. Restores you each turn.",
+      "move.phoenix_0.name": "Cleansing flame",
+      "move.phoenix_1.name": "Ashen wings",
+      "move.phoenix_2.name": "Sacred pyre",
+      "move.phoenix_a0.name": "Rebirth",
+      "move.phoenix_a1.name": "Burning feather",
+      "move.phoenix_a2.name": "Phoenix supernova"
     }
   }
 }

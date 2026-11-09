@@ -10,7 +10,7 @@ test('rinomina carta: aggiorna equipaggiamenti, collegamenti, mazzi e traduzioni
   assert.ok(renameId(d, 'move', 'guard', 'pugno')); assert.ok(renameId(d, 'move', 'guard', 'no spazi')); assert.deepEqual(validate(d).filter(i => i.level === 'err'), []);
 });
 test('rinomina isola: aggiorna equipaggiamenti, scelte e id dei nemici', () => {
-  const d = fresh(); assert.equal(renameId(d, 'region', 'desert', 'dune'), null); assert.ok(d.equipment.filter((e: any) => e.island === 'dune').length === 3); assert.ok(d.choices.every((c: any) => c.region !== 'desert')); assert.ok((d.regions as any[]).find(r => r.id === 'dune').enemies[0].id.startsWith('dune-'));
+  const d = fresh(); assert.equal(renameId(d, 'region', 'desert', 'dune'), null); assert.ok(d.equipment.filter((e: any) => e.island === 'dune').length === 5); assert.ok(d.choices.every((c: any) => c.region !== 'desert')); assert.ok((d.regions as any[]).find(r => r.id === 'dune').enemies[0].id.startsWith('dune-'));
   assert.deepEqual(validate(d).filter(i => i.level === 'err'), []);
 });
 test('rinominazioni: catene collassate e script', () => {

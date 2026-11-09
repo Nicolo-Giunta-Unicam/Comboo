@@ -44,6 +44,11 @@ export const dmgBonus = (r: Run) => r.equipped.reduce((s, e) => s + (EQUIPMENT[e
 export const maxEnergy = (r: Run) => Math.min(CONFIG.maxEnergy, CONFIG.energyPerTurn + (r.energyBonus ?? 0));
 export const energyPrice = (r: Run) => CONFIG.energyPrice(r.energyBonus ?? 0);
 /** Estensione energia: +1 energia per turno fino a CONFIG.maxEnergy. DECISIONE APERTA: non rivendibile. */
+/** Cambia tutte le offerte dello store (potenziamenti e mosse) pagando CONFIG.rerollCost. */
+export function rerollOffers(r: Run): Err {
+  if (r.phase !== 'store' || r.needsMap) return 'Store non disponibile.'; if (r.pending) return 'Prima risolvi la carta misteriosa.';
+  const p = CONFIG.rerollCost; if (r.gold < p) return 'Oro insufficiente.'; r.gold -= p; genOffers(r); r.msg = 'Offerte rinnovate.'; return null;
+}
 export function buyEnergy(r: Run): Err {
   if (r.phase !== 'store') return 'Store non disponibile.'; if (maxEnergy(r) >= CONFIG.maxEnergy) return `Energia già al massimo (${CONFIG.maxEnergy}).`;
   const p = energyPrice(r); if (r.gold < p) return 'Oro insufficiente.'; r.gold -= p; r.energyBonus++; return null;
@@ -59,10 +64,14 @@ export function sellCard(r: Run, uid: string): Err {
 }
 // ---- Offerte dello store: 3 potenziamenti e 3 mosse (delle mosse avanzate degli equipaggiamenti installati), casuali ----
 const eligibleMoves = (r: Run) => r.equipped.flatMap(e => EQUIPMENT[e].advanced).filter(m => !r.bought.includes(m));
+/** Isola di cui il negozio offre i potenziamenti: solo quella dell'arena corrente (in god mode tutte quelle sbloccate). */
+export const storeIsland = (r: Run) => islandIndex(r.region ?? REGION_LIST[0].id);
+export const arenaEquipment = (r: Run) => Object.values(EQUIPMENT).filter(e => r.god ? islandIndex(e.island) <= reach(r) : islandIndex(e.island) === storeIsland(r));
 export function genOffers(r: Run) {
   const n = CONFIG.offers, fit = (a: string[]): (string | null)[] => { const x: (string | null)[] = shuffle(r, a).slice(0, n); while (x.length < n) x.push(null); return x; };
   const avg = (a: number[]) => a.reduce((s, x) => s + x, 0) / (a.length || 1);
-  r.offers = { eq: fit(Object.values(EQUIPMENT).filter(e => islandIndex(e.island) <= reach(r) && !r.equipped.includes(e.id)).map(e => e.id)), mv: fit(eligibleMoves(r)), eqPrice: Math.round(avg(Object.values(EQUIPMENT).map(e => e.price)) * CONFIG.mystery), mvPrice: Math.round(avg(Object.values(MOVES).filter(m => m.price > 0).map(m => m.price)) * CONFIG.mystery) };
+  const pool = arenaEquipment(r), ids = new Set(pool.map(e => e.id)), pmv = Object.values(MOVES).filter(m => m.price > 0 && ids.has(m.source));
+  r.offers = { eq: fit(pool.filter(e => !r.equipped.includes(e.id)).map(e => e.id)), mv: fit(eligibleMoves(r)), eqPrice: Math.round(avg((pool.length ? pool : Object.values(EQUIPMENT)).map(e => e.price)) * CONFIG.mystery), mvPrice: Math.round(avg((pmv.length ? pmv : Object.values(MOVES).filter(m => m.price > 0)).map(m => m.price)) * CONFIG.mystery) };
 }
 /** Acquisto per offerta (la UI lo chiama dopo il drag & drop). Un equipaggiamento nuovo rende offribili le sue mosse avanzate. */
 export function buyOfferEq(r: Run, i: number): Err {
@@ -84,7 +93,7 @@ export function healRun(r: Run): Err {
 export function setStyle(r: Run, id: string): Err { if (!STYLES.some(x => x.id === id)) return 'Stile sconosciuto.'; r.style = id; r.deck = ownedCards(r).map(c => c.uid); return null; }
 export function chooseRegion(r: Run, id: string): Err {
   if (r.phase !== 'store' || !r.needsMap) return 'Non puoi scegliere ora.'; const g = REGIONS[id]; if (!g) return 'Regione sconosciuta.'; if (!unlocked(r).includes(id)) return 'Isola bloccata.';
-  r.region = id; r.needsMap = false; r.msg = `Arena: ${g.name}.`; return null;
+  const changed = islandIndex(id) !== storeIsland(r); r.region = id; r.needsMap = false; r.msg = `Arena: ${g.name}.`; if (changed) genOffers(r); return null;
 }
 // ---- Scelte di capitolo ----
 const seeded = (seed: number) => () => { seed = (seed + 0x6D2B79F5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
