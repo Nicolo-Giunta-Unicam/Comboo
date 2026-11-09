@@ -91,7 +91,7 @@
     },
     {
       "id": "focus",
-      "name": "Respiro",
+      "name": "Clinch",
       "cat": "melee",
       "effect": {
         "block": 3,
@@ -177,7 +177,7 @@
         },
         {
           "id": "wraps_1",
-          "name": "Doppio jab",
+          "name": "Flicker jab",
           "cat": "melee",
           "effect": {
             "dmg": 3,
@@ -186,7 +186,7 @@
         },
         {
           "id": "wraps_2",
-          "name": "Uno-due",
+          "name": "Cross",
           "cat": "melee",
           "effect": {
             "dmg": 5,
@@ -226,7 +226,7 @@
         },
         {
           "id": "wraps_a2",
-          "name": "Rabbia del ferito",
+          "name": "Dempsey Roll",
           "cat": "melee",
           "price": 30,
           "effect": {
@@ -239,7 +239,7 @@
         },
         {
           "id": "wraps_a3",
-          "name": "Furia scatenata",
+          "name": "Uppercut",
           "cat": "melee",
           "effect": {
             "dmg": 4,
@@ -277,7 +277,7 @@
         },
         {
           "id": "stance_1",
-          "name": "Schivata",
+          "name": "Parata bassa",
           "cat": "melee",
           "effect": {
             "block": 4,
@@ -300,7 +300,7 @@
       "advanced": [
         {
           "id": "stance_a0",
-          "name": "Muro di guardia",
+          "name": "Peek-a-boo",
           "cat": "melee",
           "effect": {
             "block": 14,
@@ -335,7 +335,7 @@
         },
         {
           "id": "stance_a3",
-          "name": "Guardia attiva",
+          "name": "Guardia dinamica",
           "cat": "melee",
           "price": 24,
           "effect": {
@@ -346,7 +346,7 @@
         },
         {
           "id": "stance_a4",
-          "name": "Guardia spinata",
+          "name": "Guardia di pietra",
           "cat": "melee",
           "effect": {
             "block": 6,
@@ -390,7 +390,7 @@
         },
         {
           "id": "footwork_1",
-          "name": "Colpo di rimessa",
+          "name": "Gazelle punch",
           "cat": "melee",
           "effect": {
             "dmg": 7,
@@ -474,7 +474,7 @@
       "moves": [
         {
           "id": "plating_0",
-          "name": "Indurisci",
+          "name": "Indurimento",
           "cat": "melee",
           "effect": {
             "block": 8,
@@ -483,7 +483,7 @@
         },
         {
           "id": "plating_1",
-          "name": "Reggi",
+          "name": "Riposo accellerato",
           "cat": "melee",
           "effect": {
             "block": 6,
@@ -556,7 +556,7 @@
         },
         {
           "id": "servo_2",
-          "name": "Idraulico",
+          "name": "Pugno a rotaia",
           "cat": "melee",
           "effect": {
             "dmg": 6,
@@ -570,7 +570,7 @@
       "advanced": [
         {
           "id": "servo_a0",
-          "name": "Pugno a rotaia",
+          "name": "Pressa idraulica",
           "cat": "melee",
           "effect": {
             "dmg": 18,
@@ -597,7 +597,7 @@
     },
     {
       "id": "blade",
-      "name": "Lama monomolecolare",
+      "name": "Katana",
       "desc": "Arma tagliente.",
       "price": 45,
       "bonus": {},
@@ -818,7 +818,7 @@
         },
         {
           "id": "titan_1",
-          "name": "Onda d'impatto",
+          "name": "Onda d'urto",
           "cat": "melee",
           "effect": {
             "dmg": 6,
@@ -1153,7 +1153,7 @@
         },
         {
           "id": "dash_1",
-          "name": "Onda d'urto",
+          "name": "Z sfuggente",
           "cat": "firearm",
           "effect": {
             "dmg": 6,
@@ -1332,7 +1332,7 @@
         },
         {
           "id": "fruit_2",
-          "name": "Incantesimo",
+          "name": "Impulso di fuoco",
           "cat": "magic",
           "effect": {
             "dmg": 14,
@@ -1637,7 +1637,7 @@
       "name": "Contrattacco",
       "icon": "↩️",
       "dmg": 0.7,
-      "block": 1.0,
+      "block": 1,
       "dur": 1
     },
     {
@@ -1651,8 +1651,8 @@
       "id": "mend",
       "name": "Riparazione",
       "icon": "🔧",
-      "heal": 1.0,
-      "block": 1.0,
+      "heal": 1,
+      "block": 1,
       "dur": 2
     },
     {
@@ -1704,8 +1704,8 @@
           "name": "Pugile di strada",
           "story": "Dopo il primo round il tuo nome gira nei vicoli. Un pugile di strada, senza guanti né regole, ti aspetta dietro il locale: qui non esiste un gong che ti salvi.",
           "id": "boxing-2",
-          "hpMul": 1.0,
-          "atkMul": 1.0,
+          "hpMul": 1,
+          "atkMul": 1,
           "moves": [
             "flurry",
             "jab2",
@@ -1729,8 +1729,8 @@
           "name": "Peso massimo",
           "story": "Ogni vittoria alza la posta. Il peso massimo entra scortato dal brusio del pubblico, mentre Gorin ti stringe le fasce in silenzio: «Non accettare il suo ritmo. Imponi il tuo».",
           "id": "boxing-4",
-          "hpMul": 1.0,
-          "atkMul": 1.0,
+          "hpMul": 1,
+          "atkMul": 1,
           "moves": [
             "heavy",
             "heavy",
@@ -1777,8 +1777,8 @@
           "name": "Recluta cibernetica",
           "story": "L'uomo in nero ti porta oltre il mare, dove i pugni da soli non bastano. Un campo militare ti accoglie con il rumore dei motori, e la prima prova è una recluta con le braccia ancora fumanti d'officina.",
           "id": "battlefield-1",
-          "hpMul": 1.0,
-          "atkMul": 1.0,
+          "hpMul": 1,
+          "atkMul": 1,
           "moves": [
             "volley",
             "direct",
@@ -1913,7 +1913,7 @@
         },
         {
           "name": "Faraone solare",
-          "hpMul": 1.0,
+          "hpMul": 1,
           "atkMul": 1.02,
           "lore": "Il sole stesso sembra inchinarsi a lui; la sabbia obbedisce a ogni suo gesto.",
           "story": "All'orizzonte una piramide brilla come un secondo sole. Il Faraone ti attende sul trono: «Hai attraversato il mio regno senza inchinarti. Mostrami di cosa è fatto il tuo corpo».",
@@ -2147,8 +2147,8 @@
           "name": "Demone ardente",
           "story": "Un demone ardente ti riconosce: «Sei quello che sale». Non vuole fermarti, vuole sapere fino a dove puoi spingerti prima di bruciare.",
           "id": "volcano-3",
-          "hpMul": 1.0,
-          "atkMul": 1.0,
+          "hpMul": 1,
+          "atkMul": 1,
           "moves": [
             "cata",
             "drain",
