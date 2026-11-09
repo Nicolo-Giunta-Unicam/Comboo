@@ -23,7 +23,7 @@ const STEPS: Step[] = [
   { t: '🛍 Compra un potenziamento', sel: '.offers .card[data-drag="offer:eq:0"]', allow: '.offers .card[data-drag="offer:eq:0"]', to: '[data-zone="eqbar"]', until: () => R().equipped.includes('wraps'), x: `<b>Trascina</b> le Fasce da combattimento sulla barra degli equipaggiamenti (si illumina d'oro). Si compra solo trascinando.` },
   { t: '✨ Compra una mossa', sel: '.offers .card[data-drag="offer:mv:0"]', allow: '.offers .card[data-drag="offer:mv:0"]', pre: () => { R().offers.mv = ['wraps_a1', 'wraps_a0', null]; }, to: '[data-zone="deck"]', until: () => R().bought.includes('wraps_a1'), x: `Ora che hai le Fasce compaiono le loro mosse avanzate. Trascina <b>Adrenalina</b> (una carta <b>sinergia</b>, in viola) sul dorso del mazzo.` },
   { t: `⚡ L'energia`, sel: '.energyrow', x: `Ogni carta costa <b>energia</b> (il numero nel cerchio giallo). Ne hai 3 per turno, fino a un massimo di 10.` },
-  { t: '⚡ Più energia', sel: '.ebtn', allow: '[data-a="buyEn"]', until: () => maxEnergy(R()) >= 4, x: `Compra <b>+1 energia</b>: ti servirà tra poco.` },
+  { t: '⚡ Più energia', sel: '[data-a="buyEn"]', allow: '[data-a="buyEn"]', until: () => maxEnergy(R()) >= 4, x: `Compra <b>+1 energia</b>: ti servirà tra poco.` },
   { t: '➡ Al mazzo', sel: '.actbar .go', allow: '[data-a="next"]', until: () => ctx!.tab() === 'me', x: `Premi Avanti per passare al <b>Mazzo</b>.` },
   { t: '🎴 Il mazzo', sel: '.zone[data-zone="in"]', x: `Il <b>mazzo attivo</b>: da <b>10 a 30 carte</b>. Le carte fuori dal mazzo restano nella collezione; trascinale tra le due aree per sceglierle.` },
   { t: '💰 Vendere carte', sel: '.sellz', x: `Per <b>vendere</b> una carta (anche base) trascinala qui: ricevi il 50% del valore. Nel mazzo devono restarne almeno 10.` },

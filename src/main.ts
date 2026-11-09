@@ -227,7 +227,7 @@ function draw() {
   const storyHtml = `<div class="storywrap">${figHtml}<div class="story"><div class="sbook"><div class="chap">Capitolo ${chap} · ${rg.name} · ${STYLES.find(x => x.id === (r.style ?? 'boxing'))?.name}</div><h3>${boss ? '⚔ ' : ''}${esc(nme.name)}</h3><p class="tale">${tale}</p></div>${chHtml}
     <div class="sbox foe${boss ? ' boss' : ''}"><div class="sface">${foeArt(rg.id, rg.level, nme.id)}</div><div><b>${boss ? 'BOSS · ' : ''}${esc(nme.name)}</b><br><small>${rg.level} · partita ${idx + 1}/${CONFIG.matchesPerIsland} · ❤ ${pre.maxHp}</small><br><small>Mosse: ${emv}</small></div></div></div></div>`;
   const healRow = r.wounded ? `<div class="energyrow"><b>🩹 Ferite gravi: parti all'${Math.round(CONFIG.woundedStart * 100)}% dei PV</b><button class="ebtn" data-a="heal">Cura <span class="price">💰${CONFIG.healCost}</span></button></div>` : '';
-  const rerollBtn = `<div class="rrrow"><button class="ebtn rrbtn" data-a="reroll">Cambia <span class="price">💰${CONFIG.rerollCost}</span></button></div>`;
+  const rerollBtn = `<div class="srow"><button class="ebtn rrbtn" data-a="reroll">Cambia <span class="price">💰${CONFIG.rerollCost}</span></button>${healRow}</div>`;
   const back = (k: 'eq' | 'mv', p: number) => `<div class="offer"><div class="card back" data-drag="offer:${k}:2"><div class="bk">?<span class="pd"></span></div></div><div class="ptag mys">🎁 ${p}</div></div>`;
   const en = maxEnergy(r), energy = `<div class="energyrow"><b>⚡ ENERGIA ${en}/${CONFIG.maxEnergy}</b><div class="eticks">${Array.from({ length: CONFIG.maxEnergy }, (_, i) => `<div class="tick ${i < en ? 'fill' : ''}"></div>`).join('')}</div>${en >= CONFIG.maxEnergy ? '<small>✔ MAX</small>' : `<button class="ebtn" data-a="buyEn">+1 <span class="price">💰${energyPrice(r)}</span></button>`}</div>`;
   const store = `<div class="store"><div class="sl">${rerollBtn}<div class="og6">
@@ -235,7 +235,7 @@ function draw() {
     <div class="og"><small class="lbl">✦ MOSSE</small><div class="offers">${r.offers.mv.map((x, i) => i === 2 && x ? back('mv', r.offers.mvPrice) : slot(x, (id, j) => offer(card('buy:' + id, { attr: `data-drag="offer:mv:${j}"` }), MOVES[id].price), i)).join('')}</div></div></div>
     <div class="eqline"><div class="eqleft"><div class="zone dz" data-zone="eqbar"><div class="eqwrap"><b>Equipaggiamento ${r.equipped.length}/${r.slots}</b><small> · ⬆ trascina qui un potenziamento</small><div class="eqrow">${r.equipped.map(id => eqCard(id, -1)).join('')}${Array.from({ length: Math.max(0, r.slots - r.equipped.length) }, () => '<div class="ph">slot libero</div>').join('')}</div></div></div>
     <div class="zone dz sellz" data-zone="sell"><div><b>💰 Vendita</b> <small>Trascina qui un equipaggiamento (50%)</small></div></div></div>
-    <div class="zone dz deckz" data-zone="deck"><div class="card back"><div class="bk">${r.deck.length}<span class="pd"></span></div></div><b>Mazzo ${r.deck.length}/${CONFIG.maxDeck}</b><small>⬆ trascina qui una mossa</small></div></div>${energy}${healRow}</div></div>`;
+    <div class="zone dz deckz" data-zone="deck"><div class="card back"><div class="bk">${r.deck.length}<span class="pd"></span></div></div><b>Mazzo ${r.deck.length}/${CONFIG.maxDeck}</b><small>⬆ trascina qui una mossa</small></div></div>${energy}</div></div>`;
   if (tab === 'me') {
     const inn = own.filter(c => r.deck.includes(c.uid)), out = own.filter(c => !r.deck.includes(c.uid));
     const cs = (l: typeof own) => l.map(c => card(c.uid, { attr: `data-drag="${c.uid}"`, sell: cardValue(r, c.uid) })).join('');
