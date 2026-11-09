@@ -424,6 +424,7 @@ body:not(.fs) .top>span.lowhp{border-color:#ff3b5c;color:#ff8a9a;background:#3a0
 .pane.slr>*,.pane.sll>*,.pane.slr .offer,.pane.sll .offer,.pane.slr .storywrap .story>*,.pane.sll .storywrap .story>*{animation:none!important}
 /* Editor: visualizzazione a carte (griglia grafica come il Mazzo) */
 .edbody.one{grid-template-rows:minmax(0,1fr)} /* su schermi stretti la riga da 200px era riservata all'elenco: nelle viste a colonna unica serve tutta l'altezza */
+.edlist>.edview{flex:none} /* nella colonna dell'elenco (flex) non deve schiacciarsi */
 .edview{display:inline-flex;width:max-content;border:1px solid var(--bd2,#4a3d70);border-radius:10px;overflow:hidden;margin-bottom:6px}
 .edview button{flex:none;width:auto;border:0;border-radius:0;padding:6px 12px;font-size:13px;min-height:0;background:#0003;box-shadow:none}
 .edview button.on{background:linear-gradient(var(--ac1),var(--ac2));color:var(--acx)}
