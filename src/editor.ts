@@ -7,7 +7,7 @@ import { ASSETS } from './assets.generated';
 import { ART, customImg, eqIcon } from './art';
 import { CAT_INFO, costOf, effectLines, passiveLines } from './data';
 import { paletteVars } from './theme';
-import { CATS, CAT_NAMES, TRIG_ON, WHERES, CHOICE_FX, CHOICE_MAX_FX, CHOICE_RANGE, EQ_KINDS, SYN_KINDS, THEME_PRESETS, TUTORIAL_IDS, addRename, allMoves, choicePts, clone, delP, deleteMove, dupMove, findMove, getP, imageKeys, imageKeyList, moveCard, newMove, renameId, renameScript, setP, validate, type D, type Rename, type RenameKind } from './editor-data';
+import { type MoveRef, CATS, CAT_NAMES, TRIG_ON, WHERES, CHOICE_FX, CHOICE_MAX_FX, CHOICE_RANGE, EQ_KINDS, SYN_KINDS, THEME_PRESETS, TUTORIAL_IDS, addRename, allMoves, choicePts, clone, delP, deleteMove, dupMove, findMove, getP, imageKeys, imageKeyList, moveCard, newMove, renameId, renameScript, setP, validate, type D, type Rename, type RenameKind } from './editor-data';
 
 const DRAFT_KEY = 'comboo.editor.draft.v1', VIEW_KEY = 'comboo.editor.view.v1';
 type Tab = 'cards' | 'equip' | 'styles' | 'islands' | 'choices' | 'enemy' | 'images' | 'general';
@@ -43,12 +43,28 @@ const tl = (key: string, o: any, prop: string) => (S.lang !== BASE_LANG ? S.data
 // ---- carte ----
 const thumb = (key: string) => ASSETS[key] ? `<img class="edth" src="${ASSETS[key]}" alt="">` : '<span class="edth ph">🃏</span>';
 function ownerLabel(owner: string | null, slot: string) { if (owner === null) return 'Base'; const e = S.data.equipment.find((x: D) => x.id === owner), n = tl(`equipment.${owner}`, e ?? {}, 'name') || owner; return slot === 'adv' ? `${n} · avanzata` : `${n} · sbloccata`; }
+
+/** Ordine dell'editor: per arena (ordine delle isole) e, dentro l'arena, per equipaggiamento (ordine nel JSON). */
+const regionOf = (id: string) => (S.data.regions as D[]).find(g => g.id === id);
+const regionLabel = (id: string) => { const g = regionOf(id); return g ? (tl(`region.${id}`, g, 'name') || id) : (id || 'Senza arena'); };
+const eqSorted = (): D[] => { const rg = (S.data.regions as D[]).map(g => g.id), eqs = S.data.equipment as D[]; const ri = (e: D) => { const i = rg.indexOf(e.island); return i < 0 ? 999 : i; }; return eqs.map((e, i) => [e, i] as [D, number]).sort((a, b) => ri(a[0]) - ri(b[0]) || a[1] - b[1]).map(x => x[0]); };
+const eqName = (e: D) => tl(`equipment.${e.id}`, e, 'name') || e.id;
+/** Equipaggiamenti raggruppati per arena (con titoletto). */
+const eqByArena = (): { id: string; title: string; items: D[] }[] => { const out: { id: string; title: string; items: D[] }[] = []; for (const e of eqSorted()) { const k = regionOf(e.island) ? e.island : ''; let g = out.find(x => x.id === k); if (!g) { g = { id: k, title: regionLabel(k), items: [] }; out.push(g); } g.items.push(e); } return out; };
+/** Carte raggruppate per equipaggiamento: prima la base, poi gli equipaggiamenti in ordine di arena. */
+const cardGroups = (list: MoveRef[]): { id: string; title: string; sub: string; items: MoveRef[] }[] => {
+  const out: { id: string; title: string; sub: string; items: MoveRef[] }[] = [], base = list.filter(r => r.owner === null);
+  if (base.length) out.push({ id: 'base', title: 'Carte base', sub: `${base.length} carte`, items: base });
+  for (const e of eqSorted()) { const it = list.filter(r => r.owner === e.id); if (it.length) out.push({ id: e.id, title: eqName(e), sub: `${regionLabel(e.island)} · ${it.length} carte`, items: it }); }
+  return out;
+};
+/** Menu del filtro: Tutte / Base / equipaggiamenti raggruppati per arena. */
+const filterSelect = (f: string) => `<select data-flt><option value="" ${f === '' ? 'selected' : ''}>Tutte</option><option value="base" ${f === 'base' ? 'selected' : ''}>Base</option>${eqByArena().map(g => `<optgroup label="${esc(g.title)}">${g.items.map(e => `<option value="${esc(e.id)}" ${f === e.id ? 'selected' : ''}>${esc(eqName(e))}</option>`).join('')}</optgroup>`).join('')}</select>`;
 function cardsView(): [string, string] {
   const sel = S.sel.cards, refs = allMoves(S.data), q = S.q.toLowerCase(), f = S.filter;
   const list = refs.filter(r => (!f || (f === 'base' ? r.owner === null : r.owner === f)) && (!q || r.m.id.toLowerCase().includes(q) || tl(`move.${r.m.id}`, r.m, 'name').toLowerCase().includes(q)));
-  const opts = [['', 'Tutte'], ['base', 'Base'], ...S.data.equipment.map((e: D) => [e.id, tl(`equipment.${e.id}`, e, 'name') || e.id])] as [string, string][];
-  const l = viewToggle() + `<div class="edtools"><input data-q type="search" placeholder="Cerca…" value="${esc(S.q)}"><select data-flt>${opts.map(([v, n]) => `<option value="${esc(v)}" ${f === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div>` + btn('+ Nuova carta', 'newmove', { cls: 'pri', id: f === 'base' || !f ? '' : f }) +
-    list.map(r => `<div class="edi ${sel === r.m.id ? 'on' : ''}" data-e="sel" data-id="${esc(r.m.id)}">${thumb('card-' + r.m.id)}<div><b>${esc(tl(`move.${r.m.id}`, r.m, 'name'))}</b><small>${esc(r.m.id)} · ${CAT_NAMES[r.m.cat]?.split(' ')[0] ?? '❔'} ⚡${r.m.cost ?? costOf(r.m.effect ?? {})} · ${esc(ownerLabel(r.owner, r.slot))}</small></div></div>`).join('');
+  const l = viewToggle() + `<div class="edtools"><input data-q type="search" placeholder="Cerca…" value="${esc(S.q)}">${filterSelect(f)}</div>` + btn('+ Nuova carta', 'newmove', { cls: 'pri', id: f === 'base' || !f ? '' : f }) +
+    cardGroups(list).map(g => `<h5 class="edgrp">${esc(g.title)}<small>${esc(g.sub)}</small></h5>` + g.items.map(r => `<div class="edi ${sel === r.m.id ? 'on' : ''}" data-e="sel" data-id="${esc(r.m.id)}">${thumb('card-' + r.m.id)}<div><b>${esc(tl(`move.${r.m.id}`, r.m, 'name'))}</b><small>${esc(r.m.id)} · ${CAT_NAMES[r.m.cat]?.split(' ')[0] ?? '❔'} ⚡${r.m.cost ?? costOf(r.m.effect ?? {})} · ${esc(ownerLabel(r.owner, r.slot))}</small></div></div>`).join('')).join('');
   const r = refs.find(x => x.m.id === sel); if (!r) return [l, '<p class="edhint">Seleziona una carta a sinistra, oppure creane una nuova.</p>'];
   const m = r.m, p = r.path, fx = (k: string) => `${p}.effect.${k}`, e = m.effect ?? {}, own = r.owner === null ? 'base' : `${r.owner}:${r.slot === 'adv' ? 'adv' : 'basic'}`;
   const ownerOpts = [['base', 'Mosse base (di tutti)'], ...S.data.equipment.flatMap((q: D) => [[`${q.id}:basic`, `${tl(`equipment.${q.id}`, q, 'name') || q.id} · sbloccata`], [`${q.id}:adv`, `${tl(`equipment.${q.id}`, q, 'name') || q.id} · avanzata (store)`]])] as [string, string][];
@@ -71,7 +87,7 @@ function cardsView(): [string, string] {
 // ---- equipaggiamenti ----
 function equipView(): [string, string] {
   const sel = S.sel.equip, list = S.data.equipment as D[], eq = list.find(e => e.id === sel), reg = S.data.regions as D[];
-  const l = viewToggle() + btn('+ Nuovo equipaggiamento', 'neweq', { cls: 'pri' }) + list.map(e => `<div class="edi ${sel === e.id ? 'on' : ''}" data-e="sel" data-id="${esc(e.id)}">${thumb('eq-' + e.id)}<div><b>${esc(tl(`equipment.${e.id}`, e, 'name'))}</b><small>${esc(e.id)} · 💰${e.price} · ${esc(e.island)}</small></div></div>`).join('');
+  const l = viewToggle() + btn('+ Nuovo equipaggiamento', 'neweq', { cls: 'pri' }) + eqByArena().map(g => `<h5 class="edgrp">${esc(g.title)}<small>${g.items.length} equipaggiamenti</small></h5>` + g.items.map(e => `<div class="edi ${sel === e.id ? 'on' : ''}" data-e="sel" data-id="${esc(e.id)}">${thumb('eq-' + e.id)}<div><b>${esc(tl(`equipment.${e.id}`, e, 'name'))}</b><small>${esc(e.id)} · 💰${e.price} · ${esc(e.island)}</small></div></div>`).join('')).join('');
   if (!eq) return [l, '<p class="edhint">Seleziona un equipaggiamento.</p>']; const i = list.indexOf(eq), p = `equipment.${i}`, mv = (m: D, slot: string) => `<div class="edrow">${thumb('card-' + m.id)}<span><b>${esc(tl(`move.${m.id}`, m, 'name'))}</b> <small>${esc(m.id)}${slot === 'adv' ? ` · 💰${m.price ?? ''}` : ''}</small></span>${btn('Modifica', 'gotomove', { id: m.id })}</div>`;
   return [l, `<div class="edcols"><div>${idField('Id (anche nome file immagine)', 'equipment', eq.id)}${field('Nome', `${p}.name`, 's', { tk: `equipment.${eq.id}.name` })}${field('Descrizione', `${p}.desc`, 's', { tk: `equipment.${eq.id}.desc`, ml: true })}</div>
     <div>${field('Prezzo', `${p}.price`, 'n', { min: 0 })}${field('Isola dello store', `${p}.island`, 'sel', { opts: reg.map(r => [r.id, tl(`region.${r.id}`, r, 'name') || r.id]) })}${field('Tipo', `${p}.kind`, 'sel', { opts: EQ_KINDS.map(k => [k, k]) })}${field('Bonus danni', `${p}.bonus.dmg`, 'o')}${field('Bonus PV massimi', `${p}.bonus.maxHp`, 'o')}</div></div>
@@ -96,10 +112,9 @@ const viewToggle = () => `<div class="edview"><button class="${S.view === 'list'
 function gridView(): string {
   if (S.tab === 'cards') {
     const refs = allMoves(S.data), q = S.q.toLowerCase(), f = S.filter, list = refs.filter(r => (!f || (f === 'base' ? r.owner === null : r.owner === f)) && (!q || r.m.id.toLowerCase().includes(q) || tl(`move.${r.m.id}`, r.m, 'name').toLowerCase().includes(q)));
-    const opts = [['', 'Tutte'], ['base', 'Base'], ...S.data.equipment.map((e: D) => [e.id, tl(`equipment.${e.id}`, e, 'name') || e.id])] as [string, string][];
-    return `<div class="edtools gtools">${viewToggle()}<input data-q type="search" placeholder="Cerca…" value="${esc(S.q)}"><select data-flt>${opts.map(([v, n]) => `<option value="${esc(v)}" ${f === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>${btn('+ Nuova carta', 'newmove', { cls: 'pri', id: f === 'base' || !f ? '' : f })}<small>${list.length} carte</small></div><div class="cards gcards" style="--cw:146px">${list.map(gridCard).join('') || '<p class="edhint">Nessuna carta trovata.</p>'}</div>`;
+    return `<div class="edtools gtools">${viewToggle()}<input data-q type="search" placeholder="Cerca…" value="${esc(S.q)}">${filterSelect(f)}${btn('+ Nuova carta', 'newmove', { cls: 'pri', id: f === 'base' || !f ? '' : f })}<small>${list.length} carte</small></div>${cardGroups(list).map(g => `<h5 class="edgrp big">${esc(g.title)}<small>${esc(g.sub)}</small></h5><div class="cards gcards" style="--cw:146px">${g.items.map(gridCard).join('')}</div>`).join('') || '<p class="edhint">Nessuna carta trovata.</p>'}`;
   }
-  return `<div class="edtools gtools">${viewToggle()}${btn('+ Nuovo equipaggiamento', 'neweq', { cls: 'pri' })}<small>${S.data.equipment.length} equipaggiamenti</small></div><div class="cards gcards" style="--cw:146px">${(S.data.equipment as D[]).map(gridEq).join('')}</div>`;
+  return `<div class="edtools gtools">${viewToggle()}${btn('+ Nuovo equipaggiamento', 'neweq', { cls: 'pri' })}<small>${S.data.equipment.length} equipaggiamenti</small></div>${eqByArena().map(g => `<h5 class="edgrp big">${esc(g.title)}<small>${g.items.length} equipaggiamenti</small></h5><div class="cards gcards" style="--cw:146px">${g.items.map(gridEq).join('')}</div>`).join('')}`;
 }
 // ---- stili ----
 function stylesView(): [string, string] {
