@@ -422,6 +422,20 @@ body:not(.fs) .top>span.lowhp{border-color:#ff3b5c;color:#ff8a9a;background:#3a0
 @keyframes slideR{from{opacity:0;transform:translateX(70px)}to{opacity:1;transform:none}}
 @keyframes slideL{from{opacity:0;transform:translateX(-70px)}to{opacity:1;transform:none}}
 .pane.slr>*,.pane.sll>*,.pane.slr .offer,.pane.sll .offer,.pane.slr .storywrap .story>*,.pane.sll .storywrap .story>*{animation:none!important}
+/* Editor: visualizzazione a carte (griglia grafica come il Mazzo) */
+.edbody.one{grid-template-rows:minmax(0,1fr)} /* su schermi stretti la riga da 200px era riservata all'elenco: nelle viste a colonna unica serve tutta l'altezza */
+.edview{display:inline-flex;width:max-content;border:1px solid var(--bd2,#4a3d70);border-radius:10px;overflow:hidden;margin-bottom:6px}
+.edview button{flex:none;width:auto;border:0;border-radius:0;padding:6px 12px;font-size:13px;min-height:0;background:#0003;box-shadow:none}
+.edview button.on{background:linear-gradient(var(--ac1),var(--ac2));color:var(--acx)}
+.gtools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}.gtools>*{flex:0 0 auto}.gtools .edview{margin:0}.gtools>input[type=search]{flex:1 1 160px;min-width:140px}.gtools>select{flex:0 1 220px}.gtools>button{padding:8px 14px}
+.gcards{gap:20px 16px;justify-content:flex-start;align-items:flex-start}
+.gcw{display:flex;flex-direction:column;align-items:center;gap:5px;width:var(--cw)}
+.gid{color:var(--m);font-size:11px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gbtn{display:flex;gap:6px;width:100%}.gbtn button{flex:1;padding:6px 2px;font-size:11.5px;min-height:0;white-space:nowrap}
+.edmodal{position:fixed;inset:0;z-index:300;background:#000b;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:grid;place-items:center;padding:12px}
+.edmbox{width:min(980px,96vw);max-height:94dvh;display:flex;flex-direction:column;background:var(--p);border:1px solid var(--bd,#3a2f55);border-radius:16px;box-shadow:0 20px 60px #000d}
+.edmhead{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--bd2,#4a3d70)}
+.edmbody{overflow-y:auto;padding:12px 14px;border:0;border-radius:0;background:transparent}
 /* compattezza: lo Store deve restare leggibile senza tagli */
 @media(min-aspect-ratio:5/4){.og{padding:3px 8px 5px}.og6{gap:8px}.tabs{padding:3px}.tabs button{padding:6px 2px;min-height:38px}.eqleft .sellz{padding:8px 10px;min-height:44px}body:not(.fs) .top{padding:5px 12px}}
 @media(max-aspect-ratio:5/4){.offers .card .nm{font-size:10px;line-height:1.1;white-space:normal}.offers .card .ef{font-size:8.5px;line-height:1.1;padding:1px 3px;white-space:normal}.offers .card .efs{overflow:hidden}}

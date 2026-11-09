@@ -4,14 +4,15 @@
 import { BASE_LANG, CUSTOM, CUSTOM_KEY, RAW, forEachText } from './gamedata';
 import { LANG, LANGS } from './i18n';
 import { ASSETS } from './assets.generated';
-import { costOf, effectLines, passiveLines } from './data';
+import { ART, customImg, eqIcon } from './art';
+import { CAT_INFO, costOf, effectLines, passiveLines } from './data';
 import { paletteVars } from './theme';
 import { CATS, CAT_NAMES, TRIG_ON, WHERES, CHOICE_FX, CHOICE_MAX_FX, CHOICE_RANGE, EQ_KINDS, SYN_KINDS, THEME_PRESETS, TUTORIAL_IDS, addRename, allMoves, choicePts, clone, delP, deleteMove, dupMove, findMove, getP, imageKeys, imageKeyList, moveCard, newMove, renameId, renameScript, setP, validate, type D, type Rename, type RenameKind } from './editor-data';
 
-const DRAFT_KEY = 'comboo.editor.draft.v1';
+const DRAFT_KEY = 'comboo.editor.draft.v1', VIEW_KEY = 'comboo.editor.view.v1';
 type Tab = 'cards' | 'equip' | 'styles' | 'islands' | 'choices' | 'enemy' | 'images' | 'general';
 const TABS: [Tab, string][] = [['cards', '🃏 Carte'], ['equip', '🔧 Equipaggiamenti'], ['styles', '🥋 Stili'], ['islands', '🏝 Isole e capitoli'], ['choices', '✦ Scelte'], ['enemy', '👹 Mosse nemiche'], ['images', '🖼 Immagini'], ['general', '⚙ Generale']];
-interface St { data: D; tab: Tab; sel: Partial<Record<Tab, string>>; lang: string; q: string; filter: string; renames: Rename[]; msg: string }
+interface St { view: 'list' | 'grid'; gedit?: string; data: D; tab: Tab; sel: Partial<Record<Tab, string>>; lang: string; q: string; filter: string; renames: Rename[]; msg: string }
 let S: St, host: HTMLElement, onExit: () => void, wired: HTMLElement | null = null;
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
 const store = (): Storage | null => { try { return localStorage; } catch { return null; } };
@@ -46,7 +47,7 @@ function cardsView(): [string, string] {
   const sel = S.sel.cards, refs = allMoves(S.data), q = S.q.toLowerCase(), f = S.filter;
   const list = refs.filter(r => (!f || (f === 'base' ? r.owner === null : r.owner === f)) && (!q || r.m.id.toLowerCase().includes(q) || tl(`move.${r.m.id}`, r.m, 'name').toLowerCase().includes(q)));
   const opts = [['', 'Tutte'], ['base', 'Base'], ...S.data.equipment.map((e: D) => [e.id, tl(`equipment.${e.id}`, e, 'name') || e.id])] as [string, string][];
-  const l = `<div class="edtools"><input data-q type="search" placeholder="Cerca…" value="${esc(S.q)}"><select data-flt>${opts.map(([v, n]) => `<option value="${esc(v)}" ${f === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div>` + btn('+ Nuova carta', 'newmove', { cls: 'pri', id: f === 'base' || !f ? '' : f }) +
+  const l = viewToggle() + `<div class="edtools"><input data-q type="search" placeholder="Cerca…" value="${esc(S.q)}"><select data-flt>${opts.map(([v, n]) => `<option value="${esc(v)}" ${f === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></div>` + btn('+ Nuova carta', 'newmove', { cls: 'pri', id: f === 'base' || !f ? '' : f }) +
     list.map(r => `<div class="edi ${sel === r.m.id ? 'on' : ''}" data-e="sel" data-id="${esc(r.m.id)}">${thumb('card-' + r.m.id)}<div><b>${esc(tl(`move.${r.m.id}`, r.m, 'name'))}</b><small>${esc(r.m.id)} · ${CAT_NAMES[r.m.cat]?.split(' ')[0] ?? '❔'} ⚡${r.m.cost ?? costOf(r.m.effect ?? {})} · ${esc(ownerLabel(r.owner, r.slot))}</small></div></div>`).join('');
   const r = refs.find(x => x.m.id === sel); if (!r) return [l, '<p class="edhint">Seleziona una carta a sinistra, oppure creane una nuova.</p>'];
   const m = r.m, p = r.path, fx = (k: string) => `${p}.effect.${k}`, e = m.effect ?? {}, own = r.owner === null ? 'base' : `${r.owner}:${r.slot === 'adv' ? 'adv' : 'basic'}`;
@@ -70,7 +71,7 @@ function cardsView(): [string, string] {
 // ---- equipaggiamenti ----
 function equipView(): [string, string] {
   const sel = S.sel.equip, list = S.data.equipment as D[], eq = list.find(e => e.id === sel), reg = S.data.regions as D[];
-  const l = btn('+ Nuovo equipaggiamento', 'neweq', { cls: 'pri' }) + list.map(e => `<div class="edi ${sel === e.id ? 'on' : ''}" data-e="sel" data-id="${esc(e.id)}">${thumb('eq-' + e.id)}<div><b>${esc(tl(`equipment.${e.id}`, e, 'name'))}</b><small>${esc(e.id)} · 💰${e.price} · ${esc(e.island)}</small></div></div>`).join('');
+  const l = viewToggle() + btn('+ Nuovo equipaggiamento', 'neweq', { cls: 'pri' }) + list.map(e => `<div class="edi ${sel === e.id ? 'on' : ''}" data-e="sel" data-id="${esc(e.id)}">${thumb('eq-' + e.id)}<div><b>${esc(tl(`equipment.${e.id}`, e, 'name'))}</b><small>${esc(e.id)} · 💰${e.price} · ${esc(e.island)}</small></div></div>`).join('');
   if (!eq) return [l, '<p class="edhint">Seleziona un equipaggiamento.</p>']; const i = list.indexOf(eq), p = `equipment.${i}`, mv = (m: D, slot: string) => `<div class="edrow">${thumb('card-' + m.id)}<span><b>${esc(tl(`move.${m.id}`, m, 'name'))}</b> <small>${esc(m.id)}${slot === 'adv' ? ` · 💰${m.price ?? ''}` : ''}</small></span>${btn('Modifica', 'gotomove', { id: m.id })}</div>`;
   return [l, `<div class="edcols"><div>${idField('Id (anche nome file immagine)', 'equipment', eq.id)}${field('Nome', `${p}.name`, 's', { tk: `equipment.${eq.id}.name` })}${field('Descrizione', `${p}.desc`, 's', { tk: `equipment.${eq.id}.desc`, ml: true })}</div>
     <div>${field('Prezzo', `${p}.price`, 'n', { min: 0 })}${field('Isola dello store', `${p}.island`, 'sel', { opts: reg.map(r => [r.id, tl(`region.${r.id}`, r, 'name') || r.id]) })}${field('Tipo', `${p}.kind`, 'sel', { opts: EQ_KINDS.map(k => [k, k]) })}${field('Bonus danni', `${p}.bonus.dmg`, 'o')}${field('Bonus PV massimi', `${p}.bonus.maxHp`, 'o')}</div></div>
@@ -81,6 +82,25 @@ function equipView(): [string, string] {
     <div class="edact">${btn('⎘ Duplica', 'dupeq', { id: eq.id })}${btn('🗑 Elimina', 'deleq', { id: eq.id, cls: 'danger' })}</div>`];
 }
 
+// ---- visualizzazione a carte (stessa grafica del Mazzo in gioco) ----
+const cardKind = (m: D) => m.effect?.syn ? 'syn' : (m.effect?.dmg || m.effect?.scale?.dmg) ? 'atk' : m.effect?.block ? 'def' : 'utl';
+const cardImg = (m: D, owner: string | null) => customImg('card-' + m.id) ?? (owner ? eqIcon(owner, S.data.equipment.find((e: D) => e.id === owner)?.kind) : undefined) ?? ((m.effect?.dmg || m.effect?.scale?.dmg) ? ART.kind.atk : m.effect?.block ? ART.kind.def : ART.kind.utl);
+const gridCard = (r: { m: D; owner: string | null; slot: string }) => { const m = r.m, cat = CAT_INFO[m.cat as keyof typeof CAT_INFO];
+  return `<div class="gcw"><div class="card ${cardKind(m)}"><span class="cost">${m.cost ?? costOf(m.effect ?? {})}</span><div class="nm">${esc(tl(`move.${m.id}`, m, 'name'))}</div><div class="art">${cardImg(m, r.owner)}${cat ? `<span class="catb ${m.cat}" title="${esc(cat.name)}">${cat.icon}</span>` : ''}</div><div class="efs">${effectLines(m.effect ?? {}).map(l => `<div class="ef">${esc(l)}</div>`).join('')}</div><div class="src">${m.effect?.syn ? '✨ ' : ''}${esc(ownerLabel(r.owner, r.slot))}${m.price ? ` · 💰${m.price}` : ''}</div></div>
+    <small class="gid">${esc(m.id)}</small><div class="gbtn">${btn('✏ Modifica', 'gedit', { id: m.id })}${btn('🗑 Elimina', 'delmove', { id: m.id, cls: 'danger' })}</div></div>`; };
+const gridEq = (e: D) => { const bn = [e.bonus?.maxHp && `❤ +${e.bonus.maxHp} PV max`, e.bonus?.dmg && `⚔️ +${e.bonus.dmg} danni`].filter(Boolean) as string[];
+  return `<div class="gcw"><div class="card eqc"><div class="nm">${esc(tl(`equipment.${e.id}`, e, 'name'))}</div><div class="art">${eqIcon(e.id, e.kind)}</div><div class="efs">${[...bn, ...((e.passives ?? []).length ? ['🔔 Passiva'] : []), ...(e.moves ?? []).map((m: D) => '🎴 ' + tl(`move.${m.id}`, m, 'name'))].map(l => `<div class="ef">${esc(l)}</div>`).join('')}</div><div class="src">Potenziamento · 💰${e.price ?? 0}</div></div>
+    <small class="gid">${esc(e.id)}</small><div class="gbtn">${btn('✏ Modifica', 'gedit', { id: e.id })}${btn('🗑 Elimina', 'deleq', { id: e.id, cls: 'danger' })}</div></div>`; };
+/** Interruttore Elenco / Carte (valido per Carte ed Equipaggiamenti). */
+const viewToggle = () => `<div class="edview"><button class="${S.view === 'list' ? 'on' : ''}" data-e="view" data-id="list">☰ Elenco</button><button class="${S.view === 'grid' ? 'on' : ''}" data-e="view" data-id="grid">▦ Carte</button></div>`;
+function gridView(): string {
+  if (S.tab === 'cards') {
+    const refs = allMoves(S.data), q = S.q.toLowerCase(), f = S.filter, list = refs.filter(r => (!f || (f === 'base' ? r.owner === null : r.owner === f)) && (!q || r.m.id.toLowerCase().includes(q) || tl(`move.${r.m.id}`, r.m, 'name').toLowerCase().includes(q)));
+    const opts = [['', 'Tutte'], ['base', 'Base'], ...S.data.equipment.map((e: D) => [e.id, tl(`equipment.${e.id}`, e, 'name') || e.id])] as [string, string][];
+    return `<div class="edtools gtools">${viewToggle()}<input data-q type="search" placeholder="Cerca…" value="${esc(S.q)}"><select data-flt>${opts.map(([v, n]) => `<option value="${esc(v)}" ${f === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>${btn('+ Nuova carta', 'newmove', { cls: 'pri', id: f === 'base' || !f ? '' : f })}<small>${list.length} carte</small></div><div class="cards gcards" style="--cw:146px">${list.map(gridCard).join('') || '<p class="edhint">Nessuna carta trovata.</p>'}</div>`;
+  }
+  return `<div class="edtools gtools">${viewToggle()}${btn('+ Nuovo equipaggiamento', 'neweq', { cls: 'pri' })}<small>${S.data.equipment.length} equipaggiamenti</small></div><div class="cards gcards" style="--cw:146px">${(S.data.equipment as D[]).map(gridEq).join('')}</div>`;
+}
 // ---- stili ----
 function stylesView(): [string, string] {
   const sel = S.sel.styles, list = S.data.styles as D[], st = list.find(s => s.id === sel);
@@ -149,13 +169,17 @@ function generalView(): [string, string] {
 // ---- schermata ----
 function render() {
   const keep = host.querySelector('.edform')?.scrollTop ?? 0, keepL = host.querySelector('.edlist')?.scrollTop ?? 0, iss = validate(S.data), nerr = iss.filter(i => i.level === 'err').length, nwarn = iss.length - nerr;
-  const views: Record<Tab, () => [string, string]> = { cards: cardsView, equip: equipView, styles: stylesView, islands: islandsView, choices: choicesView, enemy: enemyView, images: imagesView, general: generalView }, [l, f] = views[S.tab]();
+  const views: Record<Tab, () => [string, string]> = { cards: cardsView, equip: equipView, styles: stylesView, islands: islandsView, choices: choicesView, enemy: enemyView, images: imagesView, general: generalView };
+  const grid = S.view === 'grid' && (S.tab === 'cards' || S.tab === 'equip');
+  if (S.gedit && !grid) S.gedit = undefined;
+  let [l, f] = grid ? ['', gridView()] : views[S.tab]();
+  if (grid && S.gedit) { const prev = S.sel[S.tab]; S.sel[S.tab] = S.gedit; const form = views[S.tab]()[1]; S.sel[S.tab] = prev; f += `<div class="edmodal"><div class="edmbox"><div class="edmhead"><b>✏ Modifica</b>${btn('✕ Chiudi', 'gclose', { cls: 'pri' })}</div><div class="edmbody edform">${form}</div></div></div>`; }
   const active = CUSTOM ? '<span class="edtag">Dati personalizzati attivi nel gioco</span>' : '';
   host.innerHTML = `<div class="ed"><header class="edh"><h1>🛠 Editor</h1><label class="edlang"><span>Lingua di modifica</span><select data-e-lang>${langs().map(c => `<option value="${esc(c)}" ${S.lang === c ? 'selected' : ''} data-notr>${esc(langName(c))}</option>`).join('')}</select></label>${active}
     <div class="edhb">${btn('⬇ Esporta JSON', 'export', { cls: 'pri' })}${btn('⬆ Importa JSON', 'import')}${btn('▶ Prova nel gioco', 'apply', { title: 'Usa la bozza nel gioco senza toccare il repository' })}${btn('↩ Dati originali', 'restore', { title: 'Torna ai dati inclusi nel gioco' })}${btn('✕ Esci', 'exit')}</div><input type="file" id="edimport" accept=".json,application/json" hidden></header>
     <div class="edmsg">${S.msg ? esc(S.msg) : ''}<span class="edbadge ${nerr ? 'bad' : nwarn ? 'warn' : 'ok'}" data-e="tab" data-id="general">${nerr ? `⛔ ${nerr} errori` : ''} ${nwarn ? `⚠ ${nwarn} avvisi` : nerr ? '' : '✓ nessun problema'}</span></div>
     <nav class="edtabs">${TABS.map(([k, n]) => `<button class="${S.tab === k ? 'on' : ''}" data-e="tab" data-id="${k}">${n}</button>`).join('')}</nav>
-    <div class="edbody ${S.tab === 'images' || S.tab === 'general' || S.tab === 'enemy' ? 'one' : ''}"><aside class="edlist">${l}</aside><section class="edform">${f}</section></div></div>`;
+    <div class="edbody ${S.tab === 'images' || S.tab === 'general' || S.tab === 'enemy' || grid ? 'one' : ''}"><aside class="edlist">${l}</aside><section class="edform">${f}</section></div></div>`;
   const nf = host.querySelector('.edform'), nl = host.querySelector('.edlist'); if (nf) nf.scrollTop = keep; if (nl) nl.scrollTop = keepL;
 }
 const touch = (msg = '') => { S.msg = msg; save(); render(); };
@@ -167,13 +191,16 @@ const d = () => S.data;
 function act(e: string, id: string | undefined, i: number, slot: string | undefined) {
   const D = d();
   switch (e) {
-    case 'tab': S.tab = id as Tab; S.q = ''; S.filter = ''; return touch();
+    case 'tab': S.tab = id as Tab; S.q = ''; S.filter = ''; S.gedit = undefined; return touch();
     case 'sel': S.sel[S.tab] = id; return touch();
-    case 'gotomove': S.tab = 'cards'; S.sel.cards = id; S.q = ''; S.filter = ''; return touch();
-    case 'newmove': { const own = id || null, nid = newMove(D, own, own ? 'basic' : 'base'); S.sel.cards = nid; return touch('Carta creata: cambia id e nome.'); }
-    case 'newmoveIn': { const nid = newMove(D, id!, slot as 'basic' | 'adv'); S.tab = 'cards'; S.sel.cards = nid; return touch('Carta creata.'); }
-    case 'dupmove': { const n = dupMove(D, id!); if (n) S.sel.cards = n; return touch('Carta duplicata.'); }
-    case 'delmove': if (!confirm(`Eliminare la carta "${id}"?`)) return; deleteMove(D, id!); S.sel.cards = undefined; return touch();
+    case 'view': S.view = id === 'grid' ? 'grid' : 'list'; S.gedit = undefined; try { store()?.setItem(VIEW_KEY, S.view); } catch { /* ignora */ } return touch();
+    case 'gedit': S.gedit = id; S.sel[S.tab] = id; return touch();
+    case 'gclose': S.gedit = undefined; return touch();
+    case 'gotomove': S.tab = 'cards'; S.sel.cards = id; S.gedit = S.view === 'grid' ? id : undefined; S.q = ''; S.filter = ''; return touch();
+    case 'newmove': { const own = id || null, nid = newMove(D, own, own ? 'basic' : 'base'); S.sel.cards = nid; if (S.view === 'grid') S.gedit = nid; return touch('Carta creata: cambia id e nome.'); }
+    case 'newmoveIn': { const nid = newMove(D, id!, slot as 'basic' | 'adv'); S.tab = 'cards'; S.sel.cards = nid; if (S.view === 'grid') S.gedit = nid; return touch('Carta creata.'); }
+    case 'dupmove': { const n = dupMove(D, id!); if (n) { S.sel.cards = n; if (S.view === 'grid') S.gedit = n; } return touch('Carta duplicata.'); }
+    case 'delmove': if (!confirm(`Eliminare la carta "${id}"?`)) return; deleteMove(D, id!); S.sel.cards = undefined; S.gedit = undefined; return touch();
     case 'addlink': setP(D, id + '.effect.link', { from: D.baseMoves[0]?.id ?? '', dmg: 2 }); return touch();
     case 'dellink': delP(D, id + '.effect.link'); return touch();
     case 'addsyn': setP(D, id + '.effect.syn', { k: 'adrenaline', n: 1 }); return touch();
@@ -186,9 +213,9 @@ function act(e: string, id: string | undefined, i: number, slot: string | undefi
     case 'delpassive': { const a = getP(D, id + '.passives') ?? []; a.splice(i, 1); if (!a.length) delP(D, id + '.passives'); return touch(); }
     case 'addreq': setP(D, id + '.effect.req', { hpBelow: 0.5 }); return touch();
     case 'delreq': delP(D, id + '.effect.req'); return touch();
-    case 'neweq': { const nid = uniq(D.equipment, 'equip'); D.equipment.push({ id: nid, name: 'Nuovo equipaggiamento', desc: '', price: 20, bonus: {}, moves: [], advanced: [], island: D.regions[0]?.id ?? '', kind: 'gear' }); S.sel.equip = nid; for (let k = 0; k < 3; k++) newMove(D, nid, 'basic'); return touch('Equipaggiamento creato con 3 mosse da modificare.'); }
-    case 'dupeq': { const q = D.equipment.find((x: D) => x.id === id), c = clone(q); c.id = uniq(D.equipment, id!); c.name += ' (copia)'; const ids = new Set(allMoves(D).map(r => r.m.id)); for (const m of [...c.moves, ...c.advanced]) { let n = 2; while (ids.has(`${m.id}_${n}`)) n++; m.id = `${m.id}_${n}`; ids.add(m.id); } D.equipment.push(c); S.sel.equip = c.id; return touch('Equipaggiamento duplicato.'); }
-    case 'deleq': if (!confirm(`Eliminare l'equipaggiamento "${id}" e le sue mosse?`)) return; for (const m of [...D.equipment.find((x: D) => x.id === id).moves, ...D.equipment.find((x: D) => x.id === id).advanced]) deleteMove(D, m.id); D.equipment = D.equipment.filter((x: D) => x.id !== id); S.sel.equip = undefined; return touch();
+    case 'neweq': { const nid = uniq(D.equipment, 'equip'); D.equipment.push({ id: nid, name: 'Nuovo equipaggiamento', desc: '', price: 20, bonus: {}, moves: [], advanced: [], island: D.regions[0]?.id ?? '', kind: 'gear' }); S.sel.equip = nid; if (S.view === 'grid') S.gedit = nid; for (let k = 0; k < 3; k++) newMove(D, nid, 'basic'); return touch('Equipaggiamento creato con 3 mosse da modificare.'); }
+    case 'dupeq': { const q = D.equipment.find((x: D) => x.id === id), c = clone(q); c.id = uniq(D.equipment, id!); c.name += ' (copia)'; const ids = new Set(allMoves(D).map(r => r.m.id)); for (const m of [...c.moves, ...c.advanced]) { let n = 2; while (ids.has(`${m.id}_${n}`)) n++; m.id = `${m.id}_${n}`; ids.add(m.id); } D.equipment.push(c); S.sel.equip = c.id; if (S.view === 'grid') S.gedit = c.id; return touch('Equipaggiamento duplicato.'); }
+    case 'deleq': if (!confirm(`Eliminare l'equipaggiamento "${id}" e le sue mosse?`)) return; for (const m of [...D.equipment.find((x: D) => x.id === id).moves, ...D.equipment.find((x: D) => x.id === id).advanced]) deleteMove(D, m.id); D.equipment = D.equipment.filter((x: D) => x.id !== id); S.sel.equip = undefined; S.gedit = undefined; return touch();
     case 'newstyle': { const nid = uniq(D.styles, 'stile'); D.styles.push({ id: nid, name: 'Nuovo stile', icon: '🥋', desc: '', deck: D.styles[0]?.deck.slice() ?? [] }); S.sel.styles = nid; return touch(); }
     case 'delstyle': if (D.styles.length < 2) return touch('Serve almeno uno stile.'); if (!confirm(`Eliminare lo stile "${id}"?`)) return; D.styles = D.styles.filter((x: D) => x.id !== id); S.sel.styles = undefined; return touch();
     case 'deckdel': { const st = D.styles.find((x: D) => x.id === S.sel.styles); st?.deck.splice(i, 1); return touch(); }
@@ -241,7 +268,7 @@ function onInput(ev: Event) { const el = ev.target as HTMLInputElement; if (el.d
 export function openEditor(container: HTMLElement, exit: () => void) {
   host = container; onExit = exit;
   let draft: any = null; try { draft = JSON.parse(store()?.getItem(DRAFT_KEY) ?? 'null'); } catch { /* ignora */ }
-  S = { data: draft?.data ?? clone(RAW), tab: draft?.tab ?? 'cards', sel: draft?.sel ?? {}, lang: draft?.lang ?? (LANG !== BASE_LANG && langs0().includes(LANG) ? LANG : BASE_LANG), q: '', filter: '', renames: draft?.renames ?? [], msg: draft ? 'Bozza precedente ripresa.' : '' };
+  S = { view: store()?.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list', data: draft?.data ?? clone(RAW), tab: draft?.tab ?? 'cards', sel: draft?.sel ?? {}, lang: draft?.lang ?? (LANG !== BASE_LANG && langs0().includes(LANG) ? LANG : BASE_LANG), q: '', filter: '', renames: draft?.renames ?? [], msg: draft ? 'Bozza precedente ripresa.' : '' };
   if (!langs().includes(S.lang)) S.lang = BASE_LANG;
   if (wired !== container) { wired = container; container.addEventListener('click', ev => { if (container.querySelector('.ed')) onClick(ev); }); container.addEventListener('change', ev => { if (container.querySelector('.ed')) onChange(ev); }); container.addEventListener('input', ev => { if (container.querySelector('.ed')) onInput(ev); }); }
   render();
