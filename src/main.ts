@@ -227,7 +227,7 @@ function draw() {
   const storyHtml = `<div class="storywrap">${figHtml}<div class="story"><div class="sbook"><div class="chap">Capitolo ${chap} · ${rg.name} · ${STYLES.find(x => x.id === (r.style ?? 'boxing'))?.name}</div><h3>${boss ? '⚔ ' : ''}${esc(nme.name)}</h3><p class="tale">${tale}</p></div>${chHtml}
     <div class="sbox foe${boss ? ' boss' : ''}"><div class="sface">${foeArt(rg.id, rg.level, nme.id)}</div><div><b>${boss ? 'BOSS · ' : ''}${esc(nme.name)}</b><br><small>${rg.level} · partita ${idx + 1}/${CONFIG.matchesPerIsland} · ❤ ${pre.maxHp}</small><br><small>Mosse: ${emv}</small></div></div></div></div>`;
   const healRow = r.wounded ? `<div class="energyrow"><b>🩹 Ferite gravi: parti all'${Math.round(CONFIG.woundedStart * 100)}% dei PV</b><button class="ebtn" data-a="heal">Cura <span class="price">💰${CONFIG.healCost}</span></button></div>` : '';
-  const rerollBtn = `<div class="srow"><button class="ebtn rrbtn" data-a="reroll">Cambia <span class="price">💰${CONFIG.rerollCost}</span></button>${healRow}</div>`;
+  const rerollBtn = `<div class="srow"><button class="ebtn rrbtn" data-a="reroll">Ricarica Store <span class="price">💰${CONFIG.rerollCost}</span></button>${healRow}</div>`;
   const back = (k: 'eq' | 'mv', p: number) => `<div class="offer"><div class="card back" data-drag="offer:${k}:2"><div class="bk">?<span class="pd"></span></div></div><div class="ptag mys">🎁 ${p}</div></div>`;
   const en = maxEnergy(r), energy = `<div class="energyrow"><b>⚡ ENERGIA ${en}/${CONFIG.maxEnergy}</b><div class="eticks">${Array.from({ length: CONFIG.maxEnergy }, (_, i) => `<div class="tick ${i < en ? 'fill' : ''}"></div>`).join('')}</div>${en >= CONFIG.maxEnergy ? '<small>✔ MAX</small>' : `<button class="ebtn" data-a="buyEn">+1 <span class="price">💰${energyPrice(r)}</span></button>`}</div>`;
   const store = `<div class="store"><div class="sl">${rerollBtn}<div class="og6">
@@ -376,6 +376,7 @@ function act(a: string, id = '') {
       if (a === 'go') { const en = run.combat!.enemy, o = { tier: en.tier, art: en.art, id: en.id, name: en.name, hp: en.maxHp, lv: run.arena }; vs = o; sfx('hit'); setTimeout(() => { if (vs === o) { vs = null; render(); } }, 2600); } }
   }
   note = err ?? ''; if (run) persist(run); if (tutActive()) tutPatchCombat(); render();
+  if (a === 'reroll' && !err) { sfx('shuffle'); app.querySelectorAll('.store .offers').forEach(row => Array.from(row.children).forEach((el, i) => { (el as HTMLElement).style.setProperty('--i', String(i)); el.classList.add('rr'); })); } // le offerte rinnovate entrano a ventaglio
   if (a === 'play' && err === 'Energia insufficiente.') { sfx('warn'); const pe = app.querySelector('.pips') as HTMLElement | null; if (pe) { pe.classList.add('lowen'); setTimeout(() => pe.classList.remove('lowen'), 1000); } } // energia insufficiente: lampeggia l'energia residua
   if (flashChoice) { flashChoice = false; sfx('warn'); const bx = app.querySelector('.chbox') as HTMLElement | null; bx?.classList.add('flash'); bx?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 }

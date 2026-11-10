@@ -709,7 +709,7 @@
  "{0} aggiunta al mazzo": "{0} added to the deck",
  "✓ {0} aggiunta al mazzo": "✓ {0} added to the deck",
  "God mode · Carte": "God mode · Cards",
- "Cambia <span class=\"price\">💰{0}</span>": "Reroll <span class=\"price\">💰{0}</span>",
  "Offerte rinnovate.": "Offers refreshed.",
- "Prima risolvi la carta misteriosa.": "Resolve the mystery card first."
+ "Prima risolvi la carta misteriosa.": "Resolve the mystery card first.",
+ "Ricarica Store <span class=\"price\">💰{0}</span>": "Refresh Store <span class=\"price\">💰{0}</span>"
 }
