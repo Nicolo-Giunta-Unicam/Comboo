@@ -20,7 +20,9 @@ export function forEachText(d: any, cb: (key: string, o: any, prop: string) => v
   for (const m of d.enemyMoves ?? []) T(`enemyMove.${m.id}`, m, ['name']);
   for (const s of d.styles ?? []) T(`style.${s.id}`, s, ['name', 'desc']);
   for (const r of d.regions ?? []) { T(`region.${r.id}`, r, ['name', 'level', 'concept', 'story', 'hero']); for (const e of r.enemies ?? []) T(`enemy.${e.id}`, e, ['name', 'lore', 'story']); }
-  for (const c of d.choices ?? []) { T(`choice.${c.id}`, c, ['title', 'text']); for (const o of c.options ?? []) T(`choice.${c.id}.${o.id}`, o, ['label', 'text']); }
+  for (const c of d.choices ?? []) { T(`choice.${c.id}`, c, ['title', 'text']); (c.extra ?? []).forEach((x: any, i: number) => T(`choice.${c.id}.extra${i}`, x, ['text'])); for (const o of c.options ?? []) T(`choice.${c.id}.${o.id}`, o, ['label', 'text', 'lock']); }
+  for (const e of d.epilogues ?? []) { T(`epilogue.${e.id}`, e, ['title', 'text']); (e.extra ?? []).forEach((x: any, i: number) => T(`epilogue.${e.id}.extra${i}`, x, ['text'])); }
+  for (const v of d.config?.virtues?.list ?? []) { T(`virtue.${v.id}`, v, ['name', 'desc']); (v.ranks ?? []).forEach((_: string, i: number) => cb(`virtue.${v.id}.rank${i}`, v.ranks, String(i))); for (const [k, pk] of Object.entries(v.perks ?? {})) T(`virtue.${v.id}.perk${k}`, pk, ['text']); }
 }
 export function localize(raw: GameData, lang: string): GameData {
   const ov = raw.i18n?.[lang]; if (lang === (raw.baseLang ?? 'it') || !ov) return raw;

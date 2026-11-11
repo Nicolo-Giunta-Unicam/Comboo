@@ -1,5 +1,5 @@
 import { CONFIG } from './config';
-import { CHOICES, ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, moveOf, type Cat, type CatOrAny, type ChoiceEv, type ChoiceFx, type ChoiceOpt, type Scale, type TrigOn, type Trigger } from './data';
+import { CHOICES, ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, moveOf, type Cat, type CatOrAny, type ChoiceEv, type ChoiceFx, type ChoiceOpt, EPILOGUES, VIRTUES, type Cond, type PerkFx, type VirtId, type VirtMap, type Scale, type TrigOn, type Trigger } from './data';
 import { REGION_LIST, REGIONS } from './regions';
 import { defeatOutcome, movesRetainedAfterRemoval } from './policies';
 export type Phase = 'store' | 'combat' | 'over';
@@ -17,7 +17,9 @@ export interface Run {
   god?: boolean; finalEv?: Ev | null; outcome?: string; style?: string; wounded?: boolean; scars?: number;
   sold?: string[]; hero?: { name: string; avatar: string };
   /** Scelte di capitolo: seme dell'ordine degli eventi, scelte già fatte (per capitolo) e bonus/malus per il prossimo duello. */
-  cs?: number; chapters?: Record<string, { ev: string; opt: string; gold: number; fx?: ChoiceFx }>; boon?: Boon;
+  cs?: number; chapters?: Record<string, { ev: string; opt: string; gold: number; fx?: ChoiceFx; v?: VirtMap; rk?: Partial<Record<VirtId, [number, number]>> }>; boon?: Boon;
+  /** Onore, Fama e Ambizione (se assenti valgono i valori iniziali di config.virtues), flag di storia, fine del viaggio e epilogo già letto. */
+  virt?: VirtMap; flags?: string[]; ended?: boolean; epiSeen?: boolean;
   v: 1; rng: number; arena: number; gold: number; hp: number; slots: number;
   equipped: string[]; bought: string[]; retained: string[]; energyBonus: number; offers: Offers; paid: Record<string, number>;
   deck: string[]; phase: Phase; combat: Combat | null; msg: string;
@@ -101,6 +103,34 @@ function sshuffle<T>(a: T[], seed: number) { const b = [...a], f = seeded(seed);
 /** Un capitolo = un incontro di un'isola; ripetere lo stesso duello (fuga/pietà) non genera una nuova scelta. */
 export const chapterKey = (r: Run) => r.region ? `${r.region}:${wins(r, r.region)}` : '';
 /** Valore in oro di 1 "unità" di ricompensa: cresce con l'arena (1/3 della vittoria). */
+
+// ---- Onore, Fama, Ambizione ----
+export const VIRT_IDS: VirtId[] = ['honor', 'fame', 'ambition'];
+export const virtDef = (id: VirtId) => VIRTUES.list.find(x => x.id === id)!;
+export const virtOf = (r: Run, id: VirtId) => r.virt?.[id] ?? virtDef(id).start;
+/** Livello (0–4) di un valore: soglie in config.virtues.ranks. */
+export const rankOf = (v: number) => VIRTUES.ranks.reduce((k, t, i) => (v >= t ? i : k), 0);
+export const rankName = (id: VirtId, v: number) => virtDef(id).ranks[rankOf(v)] ?? '';
+export const perkOf = (id: VirtId, v: number) => virtDef(id).perks?.[String(rankOf(v))];
+/** Somma degli effetti passivi dei livelli attuali delle tre statistiche. */
+export function perkFx(r: Run): PerkFx { const o: Record<string, number> = {}; for (const id of VIRT_IDS) { const p = perkOf(id, virtOf(r, id)); if (p) for (const [k, v] of Object.entries(p.fx)) o[k] = (o[k] ?? 0) + (v as number); } return o as PerkFx; }
+const flagList = (s?: string) => (s ?? '').split(',').map(x => x.trim()).filter(Boolean);
+export const hasFlag = (r: Run, f: string) => !!r.flags?.includes(f);
+export function condOk(r: Run, c?: Cond | null): boolean {
+  if (!c) return true;
+  for (const id of VIRT_IDS) { const v = virtOf(r, id), lo = c.min?.[id], hi = c.max?.[id]; if (lo != null && v < lo) return false; if (hi != null && v > hi) return false; }
+  return flagList(c.flag).every(f => hasFlag(r, f)) && !flagList(c.noFlag).some(f => hasFlag(r, f));
+}
+/** Applica le variazioni (con limiti 0–max); restituisce quanto è cambiato davvero e i cambi di livello. */
+function addVirt(r: Run, d: VirtMap) {
+  const v: VirtMap = {}, rk: Partial<Record<VirtId, [number, number]>> = {}; r.virt = { ...r.virt };
+  for (const id of VIRT_IDS) { const dv = d[id]; if (!dv) continue; const a = virtOf(r, id), b = Math.max(0, Math.min(VIRTUES.max, a + dv)); r.virt[id] = b; if (b !== a) v[id] = b - a; if (rankOf(a) !== rankOf(b)) rk[id] = [rankOf(a), rankOf(b)]; }
+  return { v, rk };
+}
+/** Testo dell'evento: paragrafo base + richiami alle scelte passate che valgono ora. */
+export const evParas = (r: Run, ev: ChoiceEv) => [ev.text, ...(ev.extra ?? []).filter(x => condOk(r, x.if)).map(x => x.text)];
+/** Epilogo del viaggio: il primo (in ordine) le cui condizioni valgono; con i paragrafi di richiamo. */
+export function epilogueOf(r: Run) { const e = EPILOGUES.find(x => condOk(r, x.needs)); return e ? { title: e.title, paras: [e.text, ...(e.extra ?? []).filter(x => condOk(r, x.if)).map(x => x.text)] } : null; }
 export const goldUnit = (r: Run) => Math.max(1, Math.round(CONFIG.reward(r.arena) / CONFIG.choice.goldDivisor));
 export const choiceGold = (r: Run, fx: ChoiceFx) => Math.round((fx.gold ?? 0) * goldUnit(r));
 export interface PendingChoice { key: string; ev: ChoiceEv; options: ChoiceOpt[] }
@@ -115,15 +145,16 @@ export function pendingChoice(r: Run): PendingChoice | null {
   if (r.phase !== 'store' || r.needsMap || !r.region || r.pending || !CHOICES.length) return null;
   const key = chapterKey(r); if (r.chapters?.[key]) return null;
   const at = wins(r, r.region) % CONFIG.matchesPerIsland, cs = (r.cs ?? 1) + hashStr(key);
-  let pool = CHOICES.filter(e => e.region === r.region && e.at === at); if (!pool.length) pool = CHOICES.filter(e => e.region === r.region); if (!pool.length) pool = CHOICES;
+  const avail = CHOICES.filter(e => condOk(r, e.needs)); let pool = avail.filter(e => e.region === r.region && e.at === at); const special = pool.filter(e => e.needs); if (special.length) pool = special; if (!pool.length) pool = avail.filter(e => e.region === r.region); if (!pool.length) pool = avail; if (!pool.length) pool = CHOICES;
   const used = new Set(Object.values(r.chapters ?? {}).map(c => c.ev)), order = sshuffle(pool, cs), ev = order.find(e => !used.has(e.id)) ?? order[0];
   return { key, ev, options: sshuffle(ev.options, cs * 31 + 7) };
 }
 export function makeChoice(r: Run, optId: string): Err {
-  const p = pendingChoice(r); if (!p) return 'Nessuna scelta in sospeso.'; const o = p.ev.options.find(x => x.id === optId); if (!o) return 'Scelta non valida.';
+  const p = pendingChoice(r); if (!p) return 'Nessuna scelta in sospeso.'; const o = p.ev.options.find(x => x.id === optId); if (!o) return 'Scelta non valida.'; if (!condOk(r, o.req)) return o.lock ?? 'Questa strada ti è preclusa.';
   const fx = scaledFx(r, o.fx), g = Math.max(-r.gold, choiceGold(r, fx)); r.gold += g;
   const b: Boon = { ...r.boon }; for (const k of ['block', 'energy', 'draw', 'foeHp', 'hp'] as const) if (fx[k]) b[k] = (b[k] ?? 0) + fx[k]!;
-  if (Object.values(b).some(Boolean)) r.boon = b; r.chapters = { ...r.chapters, [p.key]: { ev: p.ev.id, opt: o.id, gold: g, fx } }; r.msg = o.text; return null;
+  if (Object.values(b).some(Boolean)) r.boon = b; const vr = o.v ? addVirt(r, o.v) : { v: {}, rk: {} }; if (o.flag) r.flags = [...new Set([...(r.flags ?? []), ...flagList(o.flag)])];
+  r.chapters = { ...r.chapters, [p.key]: { ev: p.ev.id, opt: o.id, gold: g, fx, ...(Object.keys(vr.v).length ? { v: vr.v } : {}), ...(Object.keys(vr.rk).length ? { rk: vr.rk } : {}) } }; r.msg = o.text; return null;
 }
 export function openMap(r: Run): Err { if (r.phase !== 'store' || r.pending) return 'Non puoi ora.'; r.needsMap = true; return null; }
 export function resolvePending(r: Run, action: 'discard' | 'replace', target?: string): Err {
@@ -200,13 +231,14 @@ export function sellMove(r: Run, id: string): Err {
 export function beginArena(r: Run): Err {
   if (r.phase !== 'store') return 'Non sei nello store.'; if (r.pending) return 'Risolvi prima la carta in sospeso.'; sanitize(r);
   if (r.deck.length < CONFIG.minDeck) return `Servono almeno ${CONFIG.minDeck} carte nel mazzo.`;
-  r.hp = Math.max(1, startHp(r) + (r.boon?.hp ?? 0)); r.wounded = false;
+  r.hp = Math.max(1, startHp(r) + (r.boon?.hp ?? 0) + (scaledFx(r, perkFx(r)).hp ?? 0)); r.wounded = false;
   r.combat = { enemy: enemyFor(r.arena, r.region ?? undefined, wins(r, r.region ?? '') % CONFIG.matchesPerIsland), block: 0, draw: shuffle(r, r.deck), hand: [], discard: [], energy: 0, turn: 0, field: { off: [], def: [] }, foeField: { off: [], def: [] }, played: {}, prev: null, combo: '', phase: 'player', seq: 0, fresh: 0, ev: null, queue: [], last: null, log: ['Lo scontro ha inizio!'] };
   r.phase = 'combat'; r.msg = ''; startTurn(r); applyBoon(r); return null;
 }
 /** Applica (e consuma) i bonus/malus di una scelta di capitolo all'inizio del duello. */
 function applyBoon(r: Run) {
-  const b = r.boon, c = r.combat; delete r.boon; if (!b || !c) return;
+  const c = r.combat, pf = scaledFx(r, perkFx(r)), b: Boon = { ...r.boon }; delete r.boon; if (!c) return; for (const k of ['block', 'energy', 'draw', 'foeHp', 'hp'] as const) if (pf[k]) b[k] = (b[k] ?? 0) + pf[k]!;
+  if (!Object.values(b).some(Boolean)) return;
   if (b.foeHp) { c.enemy.maxHp = Math.max(1, Math.round(c.enemy.maxHp * (1 + b.foeHp / 100))); c.enemy.hp = c.enemy.maxHp; }
   if (b.block) c.field.def.push({ uid: '', name: 'Slancio', icon: '🛡️', src: 'Scelta', dmg: 0, hits: 0, block: b.block, ttl: -1, id: ++c.seq });
   if (b.energy) c.energy += b.energy; if (b.draw) drawCards(c, r, b.draw);
@@ -404,8 +436,9 @@ function scar(r: Run) { if (r.wounded && (r.scars ?? 0) < CONFIG.maxScars) { r.s
 /** Punto unico di gestione degli esiti: qui si aggiungeranno risparmio/fuga/sopravvivenza. */
 export function resolveOutcome(r: Run, res: 'win' | 'lose' | 'flee' | 'spared') {
   if (res === 'win') {
-    const g = CONFIG.reward(r.arena); r.gold += g; r.msg = `Vittoria! +${g} oro.`; r.outcome = 'win';
+    const g = Math.max(0, Math.round(CONFIG.reward(r.arena) * (1 + (perkFx(r).goldPct ?? 0) / 100))); r.gold += g; r.msg = `Vittoria! +${g} oro.`; r.outcome = 'win';
     if (r.region) { r.progress = { ...r.progress, [r.region]: wins(r, r.region) + 1 }; const nx = REGION_LIST[islandIndex(r.region) + 1]; if (wins(r, r.region) === CONFIG.matchesPerIsland && nx) r.msg += ` Isola completata: si sblocca ${nx.name}!`; }
+    if (!r.ended && REGION_LIST.every(g => wins(r, g.id) >= CONFIG.matchesPerIsland)) r.ended = true;
     r.wounded = r.hp / maxHp(r) < CONFIG.woundedBelow; r.arena++; r.slots = slotsFor(r.arena); scar(r); r.phase = 'store'; genOffers(r); r.needsMap = !r.region || wins(r, r.region) >= CONFIG.matchesPerIsland;
   } else if (res === 'flee' || res === 'spared') { // fuga (nessuna conseguenza) o pietà accettata (soldi dimezzati): si torna alla storia e il duello si ripete
     r.outcome = res; if (res === 'spared') r.gold = Math.floor(r.gold / 2); r.wounded = r.hp / maxHp(r) < CONFIG.woundedBelow; r.phase = 'store'; r.needsMap = false;

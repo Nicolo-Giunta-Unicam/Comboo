@@ -711,5 +711,20 @@
  "God mode · Carte": "God mode · Cards",
  "Offerte rinnovate.": "Offers refreshed.",
  "Prima risolvi la carta misteriosa.": "Resolve the mystery card first.",
- "Ricarica Store <span class=\"price\">💰{0}</span>": "Refresh Store <span class=\"price\">💰{0}</span>"
+ "Ricarica Store <span class=\"price\">💰{0}</span>": "Refresh Store <span class=\"price\">💰{0}</span>",
+ "<small class=\"vnext\"><span>Prossimo livello</span> {0}: <b>{1}</b></small>": "<small class=\"vnext\"><span>Next level</span> {0}: <b>{1}</b></small>",
+ "<small>Il tuo cammino</small><span class=\"chchips\">{0}</span>": "<small>Your path</small><span class=\"chchips\">{0}</span>",
+ "<small>Le tue scelte lasciano un segno su ciò che sei diventato.</small>": "<small>Your choices leave a mark on who you have become.</small>",
+ "{0}<small>Le scelte della Storia fanno salire o scendere queste tre statistiche, ma i loro effetti si scoprono solo dopo aver scelto.</small>": "{0}<small>Story choices raise or lower these three stats, but their effects are only revealed after you choose.</small>",
+ "✦ Epilogo": "✦ Epilogue",
+ "Continua il viaggio": "Continue the journey",
+ "Il tuo cammino": "Your path",
+ "Questa strada ti è preclusa.": "This path is closed to you.",
+ "{0} · {1} carte": "{0} · {1} cards",
+ "{0} carte": "{0} cards",
+ "{0}{1}<small>{2} carte</small>": "{0}{1}<small>{2} cards</small>",
+ "{0}{1}<small>{2} equipaggiamenti</small>": "{0}{1}<small>{2} items</small>",
+ "{0}<small>{1} equipaggiamenti</small>": "{0}<small>{1} items</small>",
+ "Carte base": "Base cards",
+ "Senza arena": "No arena"
 }

@@ -71,6 +71,18 @@ export const moveOf = (uid: string): string => {
 
 /** Scelte di capitolo (schermata Storia), legate a un'isola (`region`) e a un incontro (`at`, 0–4): 3 opzioni con effetti leggeri e bilanciati. gold è in "unità" (vedi goldUnit nel motore); gli altri effetti valgono solo per il duello successivo. */
 export interface ChoiceFx { gold?: number; block?: number; energy?: number; draw?: number; foeHp?: number; hp?: number }
-export interface ChoiceOpt { id: string; label: string; text: string; fx: ChoiceFx }
-export interface ChoiceEv { id: string; region: string; at: number; title: string; text: string; options: ChoiceOpt[] }
+/** Le tre statistiche narrative del protagonista: Onore, Fama e Ambizione (0–100, vedi config.virtues in game.json). */
+export type VirtId = 'honor' | 'fame' | 'ambition';
+export type VirtMap = Partial<Record<VirtId, number>>;
+/** Condizione su statistiche e flag di storia: min/max per statistica (inclusivi), flag richiesti (separati da virgola) e flag che NON devono esserci. */
+export interface Cond { min?: VirtMap; max?: VirtMap; flag?: string; noFlag?: string }
+/** Effetti passivi di un livello di statistica: come gli effetti di scelta (valgono a ogni duello) più goldPct (% sull'oro delle vittorie). */
+export interface PerkFx extends ChoiceFx { goldPct?: number }
+export interface VirtDef { id: VirtId; name: string; icon: string; color: string; start: number; desc: string; ranks: string[]; perks?: Record<string, { fx: PerkFx; text: string }> }
+export interface VirtCfg { max: number; ranks: number[]; list: VirtDef[] }
+export const VIRTUES = J.config.virtues as unknown as VirtCfg;
+export interface ChoiceOpt { id: string; label: string; text: string; fx: ChoiceFx; /** variazioni di Onore/Fama/Ambizione (nascoste finché non scegli) */ v?: VirtMap; /** requisito per poter scegliere questa opzione; lock = frase mostrata se è bloccata */ req?: Cond; lock?: string; /** flag di storia impostati da questa scelta (separati da virgola) */ flag?: string }
+export interface ChoiceEv { id: string; region: string; at: number; title: string; text: string; options: ChoiceOpt[]; /** disponibilità dell'evento (gli eventi con condizioni hanno la precedenza su quelli generici) */ needs?: Cond; /** paragrafi aggiunti al testo quando la condizione è vera (richiami a scelte passate) */ extra?: { if: Cond; text: string }[] }
+export interface Epilogue { id: string; title: string; text: string; needs?: Cond; extra?: { if: Cond; text: string }[] }
+export const EPILOGUES: Epilogue[] = ((J as unknown as { epilogues?: Epilogue[] }).epilogues ?? []);
 export const CHOICES: ChoiceEv[] = J.choices as ChoiceEv[];

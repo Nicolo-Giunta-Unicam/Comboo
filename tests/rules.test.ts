@@ -215,13 +215,13 @@ test('scelte di capitolo: ricompense e malus', () => {
   resolveOutcome(r, 'flee'); assert.equal(pendingChoice(r), null);
 });
 test('scelte di capitolo: ogni capitolo di ogni isola ha eventi suoi, coerenti col livello, deterministici e bilanciati', () => {
-  for (const rg of Object.keys(REGIONS)) for (let at = 0; at < CONFIG.matchesPerIsland; at++) assert.ok(CHOICES.filter(e => e.region === rg && e.at === at).length >= 2, `${rg}:${at}`);
+  for (const rg of Object.keys(REGIONS)) for (let at = 0; at < CONFIG.matchesPerIsland; at++) assert.ok(CHOICES.filter(e => e.region === rg && e.at === at).length >= 1, `${rg}:${at}`);
   const r = newRun(11); chooseRegion(r, 'boxing'); r.region = 'desert'; r.arena = 7; const p = pendingChoice(r)!; assert.equal(p.ev.region, 'desert'); assert.equal(p.ev.at, 0);
   assert.deepEqual(pendingChoice(r)!.options.map(x => x.id), p.options.map(x => x.id)); assert.equal(pendingChoice(r)!.ev.id, p.ev.id);
   // l'incontro successivo dell'isola pesca un evento del capitolo 2, diverso dal primo
   makeChoice(r, p.options[0].id); r.progress = { ...r.progress, desert: 1 }; const q = pendingChoice(r)!; assert.equal(q.ev.at, 1); assert.notEqual(q.ev.id, p.ev.id);
   const W: Record<string, number> = { gold: 1, block: 1 / 6, energy: 1.5, draw: 1, foeHp: -0.15, hp: 0.2 };
-  for (const e of CHOICES) { assert.equal(e.options.length, 3); const pts = e.options.map(o => Object.entries(o.fx).reduce((s, [k, v]) => s + W[k] * (v as number), 0)); assert.ok(Math.min(...pts) >= 1.1 && Math.max(...pts) <= 1.9 && Math.max(...pts) - Math.min(...pts) <= 0.5, `${e.id}: ${pts}`); for (const o of e.options) assert.ok(Object.values(o.fx).filter(Boolean).length <= 2, `${e.id}/${o.id}: più di 2 effetti`); }
+  for (const e of CHOICES) { assert.ok(e.options.length >= 3 && e.options.length <= 4, e.id); assert.ok(e.options.some(o => !o.req), `${e.id}: serve almeno un'opzione sempre disponibile`); const pts = e.options.map(o => Object.entries(o.fx).reduce((s, [k, v]) => s + W[k] * (v as number), 0)); assert.ok(Math.min(...pts) >= 1.1 && Math.max(...pts) <= 1.9 && Math.max(...pts) - Math.min(...pts) <= 0.5, `${e.id}: ${pts}`); for (const o of e.options) assert.ok(Object.values(o.fx).filter(Boolean).length <= 2, `${e.id}/${o.id}: più di 2 effetti`); }
   // il livello conta: oro, scudo e malus crescono con l'arena
   const a = newRun(1), b = newRun(1); b.arena = 20; assert.ok(goldUnit(b) > goldUnit(a)); assert.ok(scaledFx(b, { block: 12 }).block! > scaledFx(a, { block: 12 }).block!); assert.ok(scaledFx(b, { hp: -4 }).hp! < scaledFx(a, { hp: -4 }).hp!);
 });
@@ -314,4 +314,47 @@ test('reroll dello store: costa CONFIG.rerollCost, rigenera le offerte, non senz
   const r = rich(); assert.equal(chooseRegion(r, 'boxing'), null); const g = r.gold; assert.equal(CONFIG.rerollCost, 15); assert.equal(r.needsMap, false); assert.equal(rerollOffers(r), null); assert.equal(r.gold, g - CONFIG.rerollCost);
   assert.equal(r.offers.eq.filter(Boolean).length, 3); r.offers.eq.forEach(id => id && assert.equal(EQUIPMENT[id].island, 'boxing'));
   r.gold = CONFIG.rerollCost - 1; assert.equal(rerollOffers(r), 'Oro insufficiente.'); assert.equal(r.gold, CONFIG.rerollCost - 1);
+});
+
+// ---- Onore, Fama, Ambizione, flag di storia ed epilogo ----
+import { virtOf, rankOf, perkFx, condOk, epilogueOf, hasFlag, evParas, VIRT_IDS, startHp } from '../src/engine'; import { EPILOGUES, VIRTUES } from '../src/data';
+const atChapter = (r: any, region: string, at: number) => { r.region = region; r.needsMap = false; r.progress = { ...r.progress, [region]: at }; return pendingChoice(r)!; };
+test('statistiche: valori iniziali, variazioni con limiti 0–100, cambi di livello e flag registrati nella scelta', () => {
+  const r = newRun(21); chooseRegion(r, 'boxing'); assert.deepEqual(VIRT_IDS.map(id => virtOf(r, id)), VIRTUES.list.map(x => x.start));
+  assert.deepEqual(VIRT_IDS.map(id => rankOf(virtOf(r, id))), [2, 1, 1]); assert.deepEqual(perkFx(r), {}, 'all\'inizio nessun tratto attivo');
+  const p = atChapter(r, 'boxing', 0), o = p.ev.options.find(x => x.id === 'b')!; assert.equal(o.flag, 'gorin_bond');
+  assert.equal(makeChoice(r, 'b'), null); const dv = o.v!; assert.ok(dv.honor! > 0 && dv.ambition! < 0); assert.equal(virtOf(r, 'honor'), 40 + dv.honor!); assert.equal(virtOf(r, 'ambition'), 30 + dv.ambition!); assert.ok(hasFlag(r, 'gorin_bond'));
+  const ch = Object.values(r.chapters!)[0]; assert.deepEqual(ch.v, { honor: dv.honor, ambition: dv.ambition });
+  r.virt = { honor: 98, fame: 1, ambition: 50 }; r.chapters = {}; atChapter(r, 'boxing', 0); makeChoice(r, 'b'); assert.equal(virtOf(r, 'honor'), 100, 'limite superiore'); assert.equal(Object.values(r.chapters!)[0].v!.honor, 2, 'conta solo il valore davvero guadagnato');
+  r.virt = { honor: 58 }; r.chapters = {}; atChapter(r, 'boxing', 0); makeChoice(r, 'b'); assert.deepEqual(Object.values(r.chapters!)[0].rk!.honor, [2, 3], 'cambio di livello');
+  r.virt = { honor: 1 }; r.chapters = {}; atChapter(r, 'boxing', 2); makeChoice(r, 'a'); assert.equal(virtOf(r, 'honor'), 0, 'limite inferiore');
+});
+test('opzioni bloccate: richiedono statistiche o flag; le condizioni valgono per minimo, massimo e flag', () => {
+  const r = newRun(5); chooseRegion(r, 'boxing'); const p = atChapter(r, 'volcano', 4); assert.equal(p.ev.id, 'volcano-titano');
+  assert.equal(makeChoice(r, 'a'), p.ev.options[0].lock); assert.equal(Object.keys(r.chapters ?? {}).length, 0, 'scelta rifiutata: nulla viene registrato');
+  r.virt = { ambition: 70 }; assert.equal(makeChoice(r, 'a'), null); assert.ok(hasFlag(r, 'end_throne'));
+  assert.ok(condOk(r, { min: { honor: 10 }, max: { honor: 60 } })); assert.ok(!condOk(r, { min: { honor: 50 } })); assert.ok(!condOk(r, { flag: 'x' })); assert.ok(condOk(r, { noFlag: 'x' })); r.flags = ['x', 'y']; assert.ok(condOk(r, { flag: 'x,y' })); assert.ok(!condOk(r, { noFlag: 'y' }));
+});
+test('storia: gli eventi con condizioni hanno la precedenza e i richiami compaiono nel testo', () => {
+  const a = newRun(8); chooseRegion(a, 'boxing'); a.flags = ['gorin_bond']; assert.equal(atChapter(a, 'desert', 1).ev.id, 'desert-lettera');
+  const b = newRun(8); chooseRegion(b, 'boxing'); assert.equal(atChapter(b, 'desert', 1).ev.id, 'desert-voci');
+  const c = newRun(8); chooseRegion(c, 'boxing'); c.flags = ['pact']; const ev = atChapter(c, 'battlefield', 0).ev; assert.ok(evParas(c, ev).length > 1); assert.equal(evParas(newRun(8), ev).length, 1);
+});
+test('tratti: livelli alti o bassi danno effetti passivi a ogni duello (scudo, oro, energia/carte con PV)', () => {
+  const r = newRun(2); chooseRegion(r, 'boxing'); r.virt = { honor: 85, fame: 65, ambition: 85 }; assert.deepEqual(perkFx(r), { block: 8, goldPct: 10, energy: 1, draw: 1, hp: -4 });
+  beginArena(r); const c = r.combat!; assert.ok(c.field.def.reduce((s, x) => s + x.block, 0) >= 8); assert.equal(c.energy, maxEnergy(r) + 1); assert.ok(r.hp < startHp(r), 'Insaziabile: parti con meno PV');
+  const g0 = r.gold; resolveOutcome(r, 'win'); assert.equal(r.gold - g0, Math.round(CONFIG.reward(1) * 1.1));
+  const s = newRun(2); chooseRegion(s, 'boxing'); s.virt = { honor: 5, fame: 5, ambition: 5 }; assert.deepEqual(perkFx(s), { foeHp: -6, goldPct: -10, draw: 1, block: 3 });
+});
+test('epilogo: arriva dopo l\'ultima isola e dipende dalla scelta finale e dalle storie vissute', () => {
+  const r = newRun(4); chooseRegion(r, 'boxing'); assert.equal(r.ended, undefined); assert.equal(epilogueOf(r)!.title, EPILOGUES[EPILOGUES.length - 1].title, 'senza scelta finale: epilogo di base');
+  r.flags = ['end_break', 'gym_saved']; const e = epilogueOf(r)!; assert.equal(e.title, EPILOGUES.find(x => x.id === 'break')!.title); assert.ok(e.paras.length >= 2);
+  const w = newRun(4); w.progress = { boxing: 5, battlefield: 5, desert: 5, ocean: 5, forest: 5, volcano: 4 }; assert.equal(chooseRegion(w, 'volcano'), null); beginArena(w); resolveOutcome(w, 'win'); assert.equal(w.ended, true);
+});
+test('storia: ogni flag richiesto da una condizione viene impostato da almeno una scelta; ogni opzione con requisito ha una frase di blocco', () => {
+  const set = new Set<string>(); for (const e of CHOICES) for (const o of e.options) for (const f of (o.flag ?? '').split(',')) if (f) set.add(f);
+  const need = (c: any, where: string) => { for (const f of [...(c?.flag ?? '').split(','), ...(c?.noFlag ?? '').split(',')]) if (f) assert.ok(set.has(f), `${where}: flag \"${f}\" non viene mai impostato`); };
+  for (const e of CHOICES) { need(e.needs, e.id); (e.extra ?? []).forEach(x => need(x.if, e.id + '/extra')); for (const o of e.options) { need(o.req, `${e.id}/${o.id}`); if (o.req) assert.ok(o.lock, `${e.id}/${o.id}: manca la frase di blocco`); } }
+  for (const x of EPILOGUES) { need(x.needs, 'epilogo ' + x.id); (x.extra ?? []).forEach(y => need(y.if, 'epilogo ' + x.id)); }
+  assert.equal(EPILOGUES[EPILOGUES.length - 1].needs, undefined, 'l\'ultimo epilogo vale sempre');
 });
