@@ -534,7 +534,7 @@
  "PV iniziali": "Starting HP",
  "PV nemico %": "Enemy HP %",
  "Quando il mazzo finisce, {0}⚡ le rimescolano nel mazzo e pescano 1 carta.": "When the deck runs out, {0}⚡ shuffle them back into the deck and draw 1 card.",
- "Quattro righe: in alto <b>difesa</b> e <b>attacco</b> del nemico, poi <b>il tuo attacco</b> (al centro) e <b>la tua difesa</b> (vicino a te). I danni partono <b>a fine turno</b>, in ordine di schieramento.": "Four rows: at the top the enemy's <b>defense</b> and <b>attack</b>, then <b>your attack</b> (center) and <b>your defense</b> (near you). Damage goes off <b>at the end of the turn</b>, in the order cards were played.",
+ "Nel tuo turno vedi in alto la <b>difesa</b> del nemico e sotto <b>il tuo attacco</b> e <b>la tua difesa</b>. Nel turno nemico il campo si inverte: vedi <b>difesa</b> e <b>attacco</b> del nemico e solo la tua difesa. I danni partono <b>a fine turno</b>, in ordine di schieramento.": "On your turn you see the enemy's <b>defense</b> at the top, then <b>your attack</b> and <b>your defense</b>. On the enemy's turn the field flips: you see the enemy's <b>defense</b> and <b>attack</b> and only your defense. Damage goes off <b>at the end of the turn</b>, in the order cards were played.",
  "Qui vedi il nemico: <b>livello</b>, <b>punti vita</b> e le <b>mosse</b> che può usare. Studiale prima di combattere!": "Here you see the enemy: <b>level</b>, <b>hit points</b> and the <b>moves</b> it can use. Study them before fighting!",
  "Qui vedi l'energia che ti resta. Si ricarica a ogni turno. Ogni carta ne consuma tanta quanto indicato dal suo costo.": "Here you see the energy you have left. It refills every turn. Each card uses as much as its cost indicates.",
  "Recluta": "Recruit",

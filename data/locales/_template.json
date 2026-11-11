@@ -534,7 +534,7 @@
  "PV iniziali": "",
  "PV nemico %": "",
  "Quando il mazzo finisce, {0}⚡ le rimescolano nel mazzo e pescano 1 carta.": "",
- "Quattro righe: in alto <b>difesa</b> e <b>attacco</b> del nemico, poi <b>il tuo attacco</b> (al centro) e <b>la tua difesa</b> (vicino a te). I danni partono <b>a fine turno</b>, in ordine di schieramento.": "",
+ "Nel tuo turno vedi in alto la <b>difesa</b> del nemico e sotto <b>il tuo attacco</b> e <b>la tua difesa</b>. Nel turno nemico il campo si inverte: vedi <b>difesa</b> e <b>attacco</b> del nemico e solo la tua difesa. I danni partono <b>a fine turno</b>, in ordine di schieramento.": "",
  "Qui vedi il nemico: <b>livello</b>, <b>punti vita</b> e le <b>mosse</b> che può usare. Studiale prima di combattere!": "",
  "Qui vedi l'energia che ti resta. Si ricarica a ogni turno. Ogni carta ne consuma tanta quanto indicato dal suo costo.": "",
  "Recluta": "",

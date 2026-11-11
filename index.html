@@ -456,5 +456,27 @@ body.calm *::before,body.calm *::after{animation:none!important;transition:none!
 .vbig{position:relative;height:10px;border-radius:6px;background:#ffffff1c;overflow:hidden}.vbig i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,color-mix(in srgb,var(--vc) 55%,#000),var(--vc));box-shadow:0 0 8px var(--vc)}.vbig u{position:absolute;top:0;bottom:0;width:1px;background:#000a}
 .vcard small{font-size:12px;line-height:1.35;opacity:.9}.vperk{color:var(--gold)}.vnext b{color:var(--vc)}
 .epim{z-index:300;background:#000d}.epibox{width:min(94vw,520px);gap:10px;border:2px solid var(--gold);box-shadow:0 0 40px #ffc85755;text-align:center}.epibox h2{margin:0;color:var(--gold)}.epibox .tale{font-size:14px;line-height:1.5;text-align:left;margin:0}.epistats{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:4px 0}.epistats span{padding:3px 10px;border-radius:999px;border:1px solid var(--vc);background:color-mix(in srgb,var(--vc) 18%,#0008);font-size:12px}
+/* campo a 3 righe: nel turno del giocatore si vedono difesa nemica + offesa e difesa tue; nel turno nemico offesa/difesa nemiche + difesa tua. Le righe nascoste si chiudono con un'animazione. */
+body.fs{--rh:min(calc(var(--cw)*1.6),calc((100dvh - 160px - var(--cw)*1.6)/3 - 14px))}
+@supports (height:1cqh){body.fs .arena{--rh:max(44px,min(calc(var(--cw)*1.6),calc((100cqh - 68px)/3 - 14px)))}}
+.board{justify-content:flex-start}
+.rowf{transition:height .55s cubic-bezier(.4,0,.2,1),padding .55s cubic-bezier(.4,0,.2,1),opacity .45s ease,transform .55s cubic-bezier(.4,0,.2,1),border-width .55s,box-shadow .3s}
+.board.v-me .rowf.own-f.off,.board.v-foe .rowf.own-m.off{height:0!important;padding-top:0!important;padding-bottom:0!important;border-width:0;opacity:0;overflow:hidden!important;pointer-events:none;box-shadow:none}
+.board.v-me .rowf.own-f.off{transform:translateY(-35%)}.board.v-foe .rowf.own-m.off{transform:translateY(35%)}
+.board .mat{transition:transform .55s}
+body.calm .rowf{transition:none}
+body.fs .rowf .card .nm{font-size:clamp(10px,calc(var(--rh)*.075),13px)}
+body.fs .rowf .card .ef{font-size:clamp(8.5px,calc(var(--rh)*.066),11.5px)}
+body.fs .rowf .card .art{font-size:clamp(20px,calc(var(--rh)*.26),46px)}
+body.fs .rowf .card .catb{width:clamp(16px,calc(var(--rh)*.11),22px);height:clamp(16px,calc(var(--rh)*.11),22px);font-size:clamp(9px,calc(var(--rh)*.06),12px)}
+body.fs .rowf .card .cost{width:clamp(20px,calc(var(--rh)*.13),26px);height:clamp(20px,calc(var(--rh)*.13),26px)}
+/* Storia: barre Onore/Fama/Ambizione sotto il nome, dentro lo stesso riquadro, senza coprire il personaggio */
+.hfig{--ft:78px}
+.hfig .lyr{inset:0 0 var(--ft) 0}
+.hfig .hmiss{bottom:calc(var(--ft) + 4px)}
+.hfoot{position:absolute;left:0;right:0;bottom:0;height:var(--ft);display:flex;flex-direction:column;justify-content:center;gap:3px;padding:2px 0 4px;background:linear-gradient(#000b,#000e);border-top:1px solid var(--gold);z-index:3}
+.hfoot .hname{position:static;background:none;border:0;padding:0 6px}
+.hfoot .hvirt{position:static;padding:0 8px;background:none;border:0;border-radius:0;gap:3px}
+.vl{flex:0 0 auto;width:42px;font-size:9px;font-weight:800;line-height:1;color:#fff;text-shadow:0 0 3px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style></head>
 <body><div id="app"></div><script src="dist/game.js?v=20261105"></script></body></html>
