@@ -11,6 +11,7 @@ import { REGIONS, REGION_LIST, type Region } from './regions';
 import { banner, burst } from './fx';
 import { config as audioCfg, setMode, sfx, unlock } from './audio';
 import { clearRun, loadRun, saveRun } from './save';
+import { initDepth } from './depth';
 const app = document.getElementById('app')!;
 // Sfondo ambientale (bagliori + braci) dietro alle schermate non di combattimento: stessa atmosfera del menu principale, nei colori dell'isola
 const embersHtml = (n: number) => Array.from({ length: n }, () => `<i style="--x:${Math.round(Math.random() * 100)}%;--s:${(0.5 + Math.random() * 1.4).toFixed(2)};--d:${(7 + Math.random() * 9).toFixed(1)}s;--w:-${(Math.random() * 16).toFixed(1)}s"></i>`).join('');
@@ -470,4 +471,5 @@ app.addEventListener('change', ev => { // foto profilo caricata: ritagliata e ri
 });
 addEventListener('keydown', ev => { if (run?.phase !== 'combat' || !started || settingsOpen || pileView) return; if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); act('end'); } const u = run.combat?.hand[+ev.key - 1]; if (u) act('play', u); });
 startLocalizer();
+initDepth();
 render();

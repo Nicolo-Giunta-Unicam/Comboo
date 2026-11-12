@@ -1,0 +1,39 @@
+// Effetto semi-3D: parallasse a più livelli, leggera prospettiva su campo/mappa/eroe e riflesso di luce sulle carte.
+// Usa solo le proprietà individuali `translate` (compatibili con le animazioni CSS) e transform su elementi che NON contengono carte trascinabili
+// (il drag usa position:fixed, che si romperebbe dentro un antenato trasformato).
+const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+const still = () => reduce.matches || document.body.classList.contains('calm');
+const SHIFT: [string, number, number][] = [ // selettore, spostamento x/y massimo in px (profondità: più alto = più vicino)
+  ['.mlogo', -9, -6], ['.mcards', 15, 9], ['.maptitle', -4, -3],
+  ['.sbook', -3, -2], ['.chbox', -5, -3], ['.sbox', -8, -5],
+];
+let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0, bg: HTMLElement[] = [];
+const BG_DEPTH = [10, 24, 46]; // livelli di sfondo: lontano, medio, vicino
+
+function frame() {
+  raf = 0; const s = still(), gx = s ? 0 : tx, gy = s ? 0 : ty;
+  cx += (gx - cx) * 0.12; cy += (gy - cy) * 0.12;
+  if (Math.abs(gx - cx) < 0.01 && Math.abs(gy - cy) < 0.01) { cx = gx; cy = gy; }
+  bg.forEach((e, i) => { e.style.translate = `${(-cx * BG_DEPTH[i]).toFixed(2)}px ${(-cy * BG_DEPTH[i] * 0.7).toFixed(2)}px`; });
+  for (const [sel, px, py] of SHIFT) document.querySelectorAll<HTMLElement>(sel).forEach(e => { const v = `${(cx * px).toFixed(2)}px ${(cy * py).toFixed(2)}px`; if (e.style.translate !== v) e.style.translate = v; });
+  const set = (sel: string, t: string) => document.querySelectorAll<HTMLElement>(sel).forEach(e => { if (e.style.transform !== t) e.style.transform = t; });
+  set('.field', `perspective(1700px) rotateX(${(4.5 - cy * 0.9).toFixed(2)}deg) rotateY(${(cx * 1.3).toFixed(2)}deg)`);
+  set('.mapbox', `perspective(1500px) rotateX(${(7 - cy * 1.2).toFixed(2)}deg) rotateY(${(cx * 1.6).toFixed(2)}deg)`);
+  set('.hfig', `perspective(1100px) rotateY(${(cx * 7).toFixed(2)}deg) rotateX(${(-cy * 4).toFixed(2)}deg)`);
+  document.querySelectorAll<HTMLElement>('.hfig .lyr').forEach(e => { e.style.translate = `${(-cx * 6).toFixed(2)}px ${(-cy * 3).toFixed(2)}px`; });
+  if (Math.abs(gx - cx) > 0.01 || Math.abs(gy - cy) > 0.01) raf = requestAnimationFrame(frame);
+}
+const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+
+export function initDepth() {
+  const d = document.createElement('div'); d.id = 'depth'; d.innerHTML = '<i class="d1"></i><i class="d2"></i><i class="d3"></i>'; document.body.prepend(d);
+  bg = Array.from(d.querySelectorAll<HTMLElement>('i'));
+  addEventListener('pointermove', ev => {
+    tx = Math.max(-1, Math.min(1, (ev.clientX / innerWidth - 0.5) * 2)); ty = Math.max(-1, Math.min(1, (ev.clientY / innerHeight - 0.5) * 2)); kick();
+    const c = (ev.target as HTMLElement | null)?.closest?.('.card:not(.back)') as HTMLElement | null; // riflesso di luce che segue il mouse sulla carta
+    if (c) { const r = c.getBoundingClientRect(); c.style.setProperty('--px', ((ev.clientX - r.left) / r.width * 100).toFixed(0) + '%'); c.style.setProperty('--py', ((ev.clientY - r.top) / r.height * 100).toFixed(0) + '%'); }
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => { tx = 0; ty = 0; kick(); });
+  new MutationObserver(kick).observe(document.getElementById('app')!, { childList: true }); // dopo ogni render si riapplica la prospettiva ai nuovi elementi
+  kick();
+}
