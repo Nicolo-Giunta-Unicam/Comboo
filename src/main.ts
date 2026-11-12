@@ -84,7 +84,7 @@ function render0() { if (editorOpen) return; hideTip(); if (run) { run.god = set
   if (settingsOpen) app.insertAdjacentHTML('beforeend', modal()); else if (pileView && run?.combat) app.insertAdjacentHTML('beforeend', pileModal()); else if (godShop.open && run?.god) app.insertAdjacentHTML('beforeend', godModal());
   if (choicePop && run?.phase === 'store') app.insertAdjacentHTML('beforeend', chapterPopup()); else choicePop = null; if (virtOpen && run && !settingsOpen) app.insertAdjacentHTML('beforeend', virtModal()); if (run?.ended && !run.epiSeen && run.phase === 'store' && !tutActive() && !choicePop && !vs && !finalView && !endAnim && started) app.insertAdjacentHTML('beforeend', epiModal()); if (run?.pending && started && !settingsOpen) choiceModal(); if (run?.combat?.pick?.length && started && !settingsOpen) pickModal(); tick(); timerSync(); tutSync(); }
 function turnBanner(n: number) { // targhetta "Turno N" al centro del campo: compare, resta un attimo, poi rimpicciolisce verso l'etichetta del turno a sinistra
-  const f = app.querySelector('.field') as HTMLElement | null, done = () => { announcing = false; app.querySelectorAll('.mturn.wait').forEach(e => { e.classList.remove('wait'); e.classList.add('pop'); }); };
+  const f = app.querySelector('.field') as HTMLElement | null, done = () => { announcing = false; app.querySelectorAll('.mturn.wait').forEach(e => { e.classList.remove('wait'); e.classList.add('tpulse'); }); };
   if (!f) { done(); return; }
   const fr = f.getBoundingClientRect(), b = document.createElement('div'); b.className = 'tbanner'; b.textContent = `Turno ${n}`;
   Object.assign(b.style, { left: fr.left + fr.width / 2 + 'px', top: fr.top + fr.height / 2 + 'px' }); document.body.appendChild(b);
