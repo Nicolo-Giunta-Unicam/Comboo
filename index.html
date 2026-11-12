@@ -554,14 +554,37 @@ body.calm #depth{display:none}
 /* mappa: prospettiva leggera (il movimento col mouse lo imposta depth.ts) */
 .field{box-shadow:inset 0 0 40px #000a,0 26px 40px -14px #000d,0 0 24px var(--glowa)}
 .mapbox{transform:perspective(1500px) rotateX(7deg);transform-origin:50% 100%;will-change:transform;box-shadow:inset 0 0 40px #000a,0 30px 44px -16px #000d}
-.hfig{overflow:hidden}
+.hfig{overflow:hidden;perspective:900px}
+.hfig .lyr{transform-origin:50% 62%;will-change:transform}
 .hfig .lyr{scale:1.08}
-.storywrap .hfig{margin-right:-12px;z-index:2;box-shadow:0 0 18px #0008 inset,14px 8px 28px #000c}
+.storywrap .hfig{margin-right:6px;box-shadow:0 0 18px #0008 inset,14px 8px 28px #000c}
 /* carte sul campo: ombra a contatto */
 .rowf .card{box-shadow:0 14px 12px -8px #000d,0 0 0 1px #000a,inset 0 0 0 2px #0003,inset 0 2px 6px #fff4}
 /* riflesso di luce sulla carta sotto il mouse */
 .card:not(.back):hover::after{background:radial-gradient(circle at var(--px,30%) var(--py,20%),#ffffff42,#ffffff10 30%,transparent 58%),linear-gradient(115deg,transparent 38%,#ffffff1c 50%,transparent 62%)}
 /* pannelli in primo piano: ombra più profonda */
 .sbook,.sbox,.chbox{box-shadow:0 14px 26px -10px #000d,0 0 12px var(--glowa),inset 0 1px 0 #ffffff22}
+
+/* mappa: altezza fissa del riquadro informativo (la mappa non si sposta quando si seleziona un'isola) */
+.mapinfo{box-sizing:border-box;min-height:96px;display:flex;align-items:center;justify-content:center;gap:18px;flex-shrink:0}
+/* mappa: freccia di rotta ad arco, con ombra a terra e punta in 3D */
+.parrow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4;overflow:visible;transition:opacity .25s}
+.parrow.gone{opacity:0}
+.parrow .sh{fill:none;stroke:#000;stroke-opacity:.38;stroke-width:1.5;stroke-linecap:round;stroke-dasharray:.1 2.4}
+.parrow .arc0{fill:none;stroke:#3a2200;stroke-width:2.1;stroke-linecap:round;stroke-opacity:.8;filter:drop-shadow(0 .6px .5px #000a)}
+.parrow .arc{fill:none;stroke:#ffd25e;stroke-width:1.25;stroke-linecap:round}
+.parrow .flow{fill:none;stroke:#fffbe8;stroke-width:.55;stroke-linecap:round;stroke-dasharray:1.4 3.4;animation:pflow .8s linear infinite}
+.parrow .head{animation:pbob .7s ease-in-out infinite alternate}
+.parrow .hl{fill:#ffe48a;stroke:#3a2200;stroke-width:.45;stroke-linejoin:round}.parrow .hd{fill:#d9922a;stroke:#3a2200;stroke-width:.45;stroke-linejoin:round}
+.parrow.in .arc0,.parrow.in .arc{stroke-dasharray:100;stroke-dashoffset:100;animation:pdraw .55s ease-out forwards}
+.parrow.in .flow,.parrow.in .sh{opacity:0;animation:pshow .3s .5s forwards,pflow .8s linear infinite}
+.parrow.in .sh{animation:pshow .3s .15s forwards}
+.parrow.in .head{opacity:0;animation:pshow .25s .45s forwards,pbob .7s .7s ease-in-out infinite alternate}
+@keyframes pdraw{to{stroke-dashoffset:0}}@keyframes pshow{to{opacity:1}}@keyframes pflow{to{stroke-dashoffset:-4.8}}@keyframes pbob{to{translate:0 -.9px}}
+/* duello: targhetta del nuovo turno */
+.tbanner{position:fixed;z-index:300;pointer-events:none;padding:10px 46px;border-radius:14px;font-size:36px;font-weight:900;letter-spacing:.05em;white-space:nowrap;color:#fff4d6;text-shadow:0 2px 6px #000;border:3px solid transparent;background:linear-gradient(#3b2a52,#150c25) padding-box,linear-gradient(#fff3c8,#c9922e 50%,#fff3c8) border-box;box-shadow:0 0 0 2px #7a4b10,0 14px 36px #000c,0 0 46px #ffc85788,inset 0 1px 0 #ffffff40;transform:translate(-50%,-50%)}
+.tbanner::before,.tbanner::after{content:'';position:absolute;top:50%;width:14px;height:14px;background:linear-gradient(135deg,#fff3c8,#b9801f);border:2px solid #6a4310;transform:translateY(-50%) rotate(45deg);box-shadow:0 2px 4px #0008}
+.tbanner::before{left:-10px}.tbanner::after{right:-10px}
+.mturn{transition:opacity .2s}.mturn.wait{opacity:0}.mturn.pop{animation:tpop .5s ease-out}@keyframes tpop{40%{scale:1.35;color:#ffe48a}}
 </style></head>
 <body><div id="app"></div><script src="dist/game.js?v=20261105"></script></body></html>
