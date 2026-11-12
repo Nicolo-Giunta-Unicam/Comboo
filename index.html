@@ -544,19 +544,21 @@ body.fs .mat{border-bottom:0}
 #depth{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
 #depth i{position:absolute;inset:-70px;display:block;will-change:translate}
 #depth .d1{background:radial-gradient(ellipse at 50% 45%,transparent 52%,#000a 100%),radial-gradient(38% 34% at 18% 28%,#ffb54a24,transparent 70%),radial-gradient(44% 40% at 82% 72%,#7a4cff30,transparent 70%),radial-gradient(30% 26% at 70% 14%,#ff5a7a1c,transparent 70%)}
-#depth .d2{inset:-70px -70px -520px -70px;background-image:radial-gradient(circle,#ffd98a77 0 1.4px,transparent 2px),radial-gradient(circle,#ffffff4d 0 1px,transparent 1.6px);background-size:160px 160px,160px 160px;background-position:0 0,80px 90px;animation:dfl 70s linear infinite}
-#depth .d3{inset:-70px -70px -640px -70px;background-image:radial-gradient(circle,#ffc87a55 0 6px,#ffc87a18 12px,transparent 16px),radial-gradient(circle,#ff7a5c3a 0 8px,#ff7a5c12 15px,transparent 20px);background-size:320px 300px,320px 300px;background-position:60px 40px,220px 190px;animation:dfl 110s linear infinite}
-@keyframes dfl{to{transform:translateY(-300px)}}
+#depth .d2,#depth .d3{inset:0}
+#depth b{position:absolute;left:var(--x,50%);bottom:-50px;width:var(--s,3px);height:var(--s,3px);margin-left:calc(var(--s,3px)/-2);border-radius:50%;opacity:0;animation:rise var(--d,12s) linear infinite;will-change:transform,opacity}
+#depth .d2 b{background:radial-gradient(circle,#ffe6a8,#ffd98a88 60%,transparent 70%)}
+#depth .d3 b{background:radial-gradient(circle,#ffc87a66 0,#ffb05a30 55%,transparent 72%)}
+@keyframes rise{0%{transform:translate3d(0,0,0);opacity:0}12%{opacity:var(--o,.5)}85%{opacity:var(--o,.5)}100%{transform:translate3d(var(--sw,0px),-115vh,0);opacity:0}}
+@media (prefers-reduced-motion:reduce){#depth{display:none}}
 body.calm #depth{display:none}
-/* campo, mappa ed eroe: prospettiva leggera (il resto lo imposta depth.ts); niente transizione sul transform per non rallentare il movimento */
-.field{transform:perspective(1700px) rotateX(4.5deg);transform-origin:50% 100%;will-change:transform;transition:box-shadow .2s,border-color .2s;box-shadow:inset 0 0 40px #000a,0 26px 40px -14px #000d,0 0 24px var(--glowa)}
+/* mappa: prospettiva leggera (il movimento col mouse lo imposta depth.ts) */
+.field{box-shadow:inset 0 0 40px #000a,0 26px 40px -14px #000d,0 0 24px var(--glowa)}
 .mapbox{transform:perspective(1500px) rotateX(7deg);transform-origin:50% 100%;will-change:transform;box-shadow:inset 0 0 40px #000a,0 30px 44px -16px #000d}
-.hfig{transform-origin:50% 60%;will-change:transform}
-.hfig .lyr{scale:1.05}
+.hfig{overflow:hidden}
+.hfig .lyr{scale:1.08}
 .storywrap .hfig{margin-right:-12px;z-index:2;box-shadow:0 0 18px #0008 inset,14px 8px 28px #000c}
-/* carte sul campo: leggermente inclinate all'indietro, con ombra a contatto (la prospettiva è sulla riga, che non contiene carte trascinabili) */
-.rowf{perspective:560px}
-.rowf .card{rotate:1 0 0 9deg;transform-origin:50% 100%;box-shadow:0 14px 12px -8px #000d,0 0 0 1px #000a,inset 0 0 0 2px #0003,inset 0 2px 6px #fff4}
+/* carte sul campo: ombra a contatto */
+.rowf .card{box-shadow:0 14px 12px -8px #000d,0 0 0 1px #000a,inset 0 0 0 2px #0003,inset 0 2px 6px #fff4}
 /* riflesso di luce sulla carta sotto il mouse */
 .card:not(.back):hover::after{background:radial-gradient(circle at var(--px,30%) var(--py,20%),#ffffff42,#ffffff10 30%,transparent 58%),linear-gradient(115deg,transparent 38%,#ffffff1c 50%,transparent 62%)}
 /* pannelli in primo piano: ombra più profonda */
