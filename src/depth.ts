@@ -32,6 +32,7 @@ function frame() {
 const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
 
 export function initDepth() {
+  if (matchMedia('(max-width:640px)').matches) return; // telefono: niente particelle, parallasse né prospettiva (touch e prestazioni)
   const d = document.createElement('div'); d.id = 'depth'; d.innerHTML = '<i class="d1"></i><i class="d2"></i><i class="d3"></i>'; document.body.prepend(d);
   bg = Array.from(d.querySelectorAll<HTMLElement>('i'));
   spawn(bg[1], 120, [2, 4.5], [7, 18], [0.35, 0.9]); spawn(bg[2], 34, [16, 40], [12, 26], [0.12, 0.34]);
