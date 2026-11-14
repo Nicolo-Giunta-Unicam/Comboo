@@ -84,6 +84,9 @@ const silhouette = (skin: string) => `<img class="ic" alt="" draggable="false" s
 export const bodyImg = (avatarId: string) => custom('body-' + avatarId) ?? custom('body-default') ?? silhouette(SKIN[avatarId] ?? '#c9b9e8');
 /** Livello di un equipaggiamento sul personaggio: `layer-<id>` (undefined se non esiste ancora l'immagine). */
 export const layerImg = (eqId: string) => custom('layer-' + eqId);
+/** Ordine di sovrapposizione dei livelli sul corpo (dal basso verso l'alto): effetti/pelle -> vestiti -> pezzi indossati -> oggetti impugnati -> teste e fiamme. Gli id non elencati stanno a 50. */
+export const LAYER_Z: Record<string, number> = { aura: 10, stand: 12, dash: 14, regen: 20, fruit: 22, titan: 24, hide: 26, plating: 28, servo: 30, reflex: 32, senses: 34, capoeira: 40, footwork: 42, gravboots: 44, knives: 46, muaythai: 50, reactor: 52, revolver: 54, blade: 56, grenades: 58, grimoire: 60, wraps: 62, stance: 64, shotgun: 66, oath: 68, rift: 70, aegis: 72, thunder: 74, phoenix: 76, parkour: 80 };
+export const layerZ = (eqId: string) => LAYER_Z[eqId] ?? 50;
 
 /** Cicatrici sul corpo (`scar-1` … `scar-6`, stessa tela 400x800 della sagoma, PNG trasparente): la n-esima si applica dopo il n-esimo duello chiuso sotto la soglia di salute. In mancanza dell'immagine si usa un segno provvisorio. */
 const SCAR_PATHS = ['M172 96L198 136M178 102l-9 5M184 112l-9 5M190 122l-9 5', 'M150 242L222 334M168 262l11-6M186 286l11-6M204 310l11-6', 'M78 336L100 404M82 350l12-5M88 368l12-5M94 386l12-5', 'M286 236L314 306M292 252l12 5M300 272l12 5M306 290l12 5', 'M146 520L186 612M154 538l14 3M166 566l14 3M176 590l14 3', 'M214 330L252 394M222 346l13 6M232 364l13 6M242 380l13 6'];

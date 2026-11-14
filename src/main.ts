@@ -5,7 +5,7 @@ import { applyPalette } from './theme';
 import { LANG, LANGS, setLang, startLocalizer, tr } from './i18n';
 import { openEditor } from './editor';
 import { CUSTOM } from './gamedata';
-import { ART, bodyImg, customImg, eqIcon, layerImg, scarImg } from './art';
+import { ART, bodyImg, customImg, eqIcon, layerImg, layerZ, scarImg } from './art';
 import { tutActive, tutPatchCombat, tutPatchEnemy, tutStart, tutSync } from './tutorial';
 import { REGIONS, REGION_LIST, type Region } from './regions';
 import { banner, burst } from './fx';
@@ -261,7 +261,7 @@ function draw() {
   const tale = (nme.story ?? `${esc(nme.name)} ti aspetta a ${rg.name}.`).replace(/\{nome\}/g, heroName()), chap = islandIndex(rg.id) * CONFIG.matchesPerIsland + idx + 1;
   // Personaggio a livelli: sagoma + un livello per ogni equipaggiamento installato (stessa tela, sovrapposti nell'ordine di data/game.json)
   if (layersSeen.run !== r) layersSeen = { run: r, ids: new Set([...r.equipped, ...Array.from({ length: r.scars ?? 0 }, (_, i) => 'scar-' + (i + 1))]) };
-  const eqOrder = Object.keys(EQUIPMENT).filter(id => r.equipped.includes(id)), withArt = eqOrder.filter(id => layerImg(id)), noArt = eqOrder.filter(id => !layerImg(id)), aid = (r.hero?.avatar ?? 'a0').startsWith('data:') ? 'default' : r.hero?.avatar ?? 'a0';
+  const eqOrder = Object.keys(EQUIPMENT).filter(id => r.equipped.includes(id)).sort((a, b) => layerZ(a) - layerZ(b)), withArt = eqOrder.filter(id => layerImg(id)), noArt = eqOrder.filter(id => !layerImg(id)), aid = (r.hero?.avatar ?? 'a0').startsWith('data:') ? 'default' : r.hero?.avatar ?? 'a0';
   const figHtml = `<div class="hfig${startHp(r) / maxHp(r) < CONFIG.woundedBelow ? ' crit' : ''}" title="${heroName()}${r.scars ? ` · cicatrici: ${r.scars}` : ''}"><div class="lyr body">${bodyImg(aid)}</div>${Array.from({ length: r.scars ?? 0 }, (_, i) => `<div class="lyr scar ${layersSeen.ids.has('scar-' + (i + 1)) ? '' : 'new'}" data-layer="scar-${i + 1}">${scarImg(i + 1)}</div>`).join('')}${withArt.map(id => `<div class="lyr ${layersSeen.ids.has(id) ? '' : 'new'}" data-layer="${id}">${layerImg(id)}</div>`).join('')}${noArt.length ? `<div class="hmiss">${noArt.map(id => `<span title="${EQUIPMENT[id].name}">${ICON[id]}</span>`).join('')}</div>` : ''}<div class="hfoot"><div class="hname">${heroName()}</div>${virtBars(r)}</div></div>`;
   r.equipped.forEach(id => layersSeen.ids.add(id)); for (let i = 1; i <= (r.scars ?? 0); i++) layersSeen.ids.add('scar-' + i);
   // Scelta di capitolo: finché non è fatta (e l'impostazione è attiva) si resta nella Storia, senza Store, Mazzo, Avanti o Mappa
