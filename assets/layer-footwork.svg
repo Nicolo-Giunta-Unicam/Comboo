@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800">
+  <title>Gioco di gambe - scarpe da ginnastica</title>
+  <g stroke="#26313b" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Sneaker sinistra -->
+    <path d="M113 752L190 752L195 777Q192 787 178 788L111 788Q101 786 106 775Z" fill="#e9edf0"/>
+    <path d="M112 771Q145 779 193 771L195 781Q190 788 178 788L111 788Q103 786 106 778Z" fill="#4d91c9"/>
+    <path d="M120 754L124 739Q129 732 140 737L161 751L185 755L190 766Q157 771 116 763Z" fill="#f5f7f8"/>
+    <path d="M127 744L151 755M136 740L160 753M145 738L168 753" fill="none" stroke="#4d91c9" stroke-width="4"/>
+    <path d="M116 765L190 765" fill="none" stroke="#26313b" stroke-width="3"/>
+    <path d="M169 758L180 758" fill="none" stroke="#e5b64c" stroke-width="5"/>
+    <!-- Sneaker destra -->
+    <path d="M287 752L210 752L205 777Q208 787 222 788L289 788Q299 786 294 775Z" fill="#e9edf0"/>
+    <path d="M288 771Q255 779 207 771L205 781Q210 788 222 788L289 788Q297 786 294 778Z" fill="#4d91c9"/>
+    <path d="M280 754L276 739Q271 732 260 737L239 751L215 755L210 766Q243 771 284 763Z" fill="#f5f7f8"/>
+    <path d="M273 744L249 755M264 740L240 753M255 738L232 753" fill="none" stroke="#4d91c9" stroke-width="4"/>
+    <path d="M284 765L210 765" fill="none" stroke="#26313b" stroke-width="3"/>
+    <path d="M231 758L220 758" fill="none" stroke="#e5b64c" stroke-width="5"/>
+  </g>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800">
+  <title>Muay Thai - gomitiere e ginocchiere</title>
+  <g stroke="#303039" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Gomitiere: posizione sui gomiti -->
+    <path d="M73 302Q84 290 100 298L119 310Q126 319 119 333L105 349Q95 355 83 346L70 331Q64 316 73 302Z" fill="#c84b3f"/>
+    <path d="M327 302Q316 290 300 298L281 310Q274 319 281 333L295 349Q305 355 317 346L330 331Q336 316 327 302Z" fill="#c84b3f"/>
+    <path d="M75 316Q94 305 117 326M325 316Q306 305 283 326" fill="none" stroke="#f18b73" stroke-width="5"/>
+    <path d="M79 335L105 346M321 335L295 346" fill="none" stroke="#7e2e2c" stroke-width="4"/>
+    <!-- Ginocchiere -->
+    <path d="M132 538Q151 526 174 538L181 565Q178 585 157 590Q137 586 129 568Z" fill="#c84b3f"/>
+    <path d="M268 538Q249 526 226 538L219 565Q222 585 243 590Q263 586 271 568Z" fill="#c84b3f"/>
+    <path d="M137 549Q155 537 175 550M263 549Q245 537 225 550" fill="none" stroke="#f18b73" stroke-width="5"/>
+    <path d="M136 571Q155 583 174 571M264 571Q245 583 226 571" fill="none" stroke="#7e2e2c" stroke-width="4"/>
+    <path d="M151 542L157 553L163 542M249 542L243 553L237 542" fill="none" stroke="#f4d5b0" stroke-width="3"/>
+    <!-- Cinghie laterali -->
+    <path d="M129 548L119 545M181 550L190 547M271 548L281 545M219 550L210 547" fill="none" stroke="#d9c49a" stroke-width="5"/>
+  </g>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800">
+  <title>Capoeira - pantaloni bianchi</title>
+  <g stroke="#34313a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Pantaloni ampi, sagomati sulle due gambe della silhouette -->
+    <path d="M113 399Q153 411 196 410L190 754L128 754Q126 683 124 620Q120 535 113 399Z" fill="#f3f1e9"/>
+    <path d="M287 399Q247 411 204 410L210 754L272 754Q274 683 276 620Q280 535 287 399Z" fill="#f3f1e9"/>
+    <!-- Cuciture esterne e pieghe -->
+    <path d="M121 423Q132 500 137 574L140 744M279 423Q268 500 263 574L260 744" fill="none" stroke="#c9c7c0" stroke-width="3"/>
+    <path d="M181 426Q170 470 174 520M219 426Q230 470 226 520" fill="none" stroke="#d8d6ce" stroke-width="4"/>
+    <path d="M130 610L158 624M270 610L242 624M132 690L160 700M268 690L240 700" fill="none" stroke="#d8d6ce" stroke-width="4"/>
+    <!-- Fascia in vita e cordoncino -->
+    <path d="M113 399Q200 419 287 399L289 424Q200 444 111 424Z" fill="#e6e3da"/>
+    <path d="M116 410Q200 430 284 410" fill="none" stroke="#aaa79f" stroke-width="3"/>
+    <path d="M194 428L190 453M206 428L210 453" fill="none" stroke="#b13e38" stroke-width="4"/>
+    <path d="M187 452L193 459M213 452L207 459" fill="none" stroke="#b13e38" stroke-width="3"/>
+    <!-- Orlo -->
+    <path d="M128 742Q158 750 190 742M210 742Q242 750 272 742" fill="none" stroke="#c9c7c0" stroke-width="4"/>
+  </g>
+</svg>
