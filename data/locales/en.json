@@ -728,5 +728,10 @@
  "Carte base": "Base cards",
  "Senza arena": "No arena",
  "Sotto il nome ci sono le <b>3 statistiche</b> del protagonista: <b>Onore</b>, <b>Fama</b> e <b>Ambizione</b> (da 0 a 100). Le scelte della storia le fanno salire o scendere. Ogni livello raggiunto dà un <b>vantaggio o un malus</b> nei duelli (scudo iniziale, più oro dalle vittorie, energia o carte extra) e può <b>aprire o chiudere opzioni</b> nelle scelte future. Toccale per vedere i dettagli.": "Under the name are the hero's <b>3 stats</b>: <b>Honor</b>, <b>Fame</b> and <b>Ambition</b> (0 to 100). Story choices raise or lower them. Each level reached gives a <b>perk or a penalty</b> in duels (starting shield, more gold from wins, extra energy or cards) and can <b>open or close options</b> in future choices. Tap them to see the details.",
- "📊 Onore, Fama e Ambizione": "📊 Honor, Fame and Ambition"
+ "📊 Onore, Fama e Ambizione": "📊 Honor, Fame and Ambition",
+ "Acquista": "Buy",
+ "Tocca una carta per spostarla; tienila premuta per venderla o toglierla dal mazzo.": "Tap a card to move it; press and hold to sell it or take it out of the deck.",
+ "Vendi": "Sell",
+ "Fuori dal mazzo": "Out of the deck",
+ "Nel mazzo": "In the deck"
 }

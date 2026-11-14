@@ -653,5 +653,53 @@ body.fs .matr{grid-template-columns:auto 1fr auto;gap:4px}
 .og,.offers{--sw:clamp(84px,27vw,120px)}
 .ilabel{font-size:10px;padding:0 6px}
 }
+
+/* targhetta del prezzo cliccabile (acquisto senza trascinare) */
+.ptag[data-a]{cursor:pointer;transition:transform .12s,filter .12s}.ptag[data-a]:hover{filter:brightness(1.12);transform:translateY(-1px)}.ptag[data-a]:active{transform:scale(.94)}
+.phonehint{display:none}
+/* pressione lunga (telefono): barra con le icone di destinazione e anteprima completa */
+.card.grab{box-shadow:0 14px 30px #000c,0 0 0 2px #ffe48a!important}
+.dbar{position:fixed;left:0;right:0;bottom:0;z-index:400;display:flex;gap:12px;justify-content:center;padding:26px 12px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(#0000,#000d 38%);pointer-events:none}
+.dbtn{pointer-events:auto;flex:1;max-width:190px;height:78px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:2px dashed #ffe3a099;background:#1a1230ee;color:#fff4d6;transition:transform .12s,background .12s,border-color .12s}
+.dbtn span{font-size:26px;line-height:1}.dbtn b{font-size:12px;font-weight:800}
+.dbtn.hot{transform:scale(1.07);border:2px solid #ffe48a;background:#4a3510;box-shadow:0 0 20px #ffc857aa}
+.fullprev{position:fixed;inset:0;z-index:380;display:grid;place-items:center;background:#000b;pointer-events:none}
+.fullprev .card{transform:none;margin:0;position:relative;left:auto;top:auto;scale:1;animation:none}
+@media (max-width:640px){
+.deskhint{display:none}.phonehint{display:block}
+.card,.hand .card{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+/* mazzo: carte grandi (2 per riga) */
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;justify-items:center}
+.cards .card{--cw:min(calc(50vw - 36px),175px);width:var(--cw);touch-action:pan-y}
+.sellz,.deckz{display:none}
+/* negozio: solo l'equipaggiamento, a tutta larghezza, carte grandi con scorrimento laterale */
+.eqline{display:block}
+.eqwrap small{display:none}
+.eqwrap{--sw:clamp(96px,29vw,124px)}
+.eqrow{scroll-snap-type:x proximity;padding:6px 2px 10px}
+.eqrow .card,.eqrow .ph{scroll-snap-align:start}
+.eqrow .card{touch-action:pan-x}
+/* mano in formato compatto (tenendo premuta una carta si vede quella completa) */
+.handrow{--rh:116px;--cw:calc(var(--rh)*.625);height:calc(var(--rh) + 30px)}
+.hand .card{width:calc(var(--rh)*.625);height:var(--rh);aspect-ratio:auto;overflow:visible;padding:3px;gap:2px}
+.hand .card .nm{font-size:10px;line-height:1.1;padding:1px;margin:0 3px;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hand .card .art{min-height:26px;flex:1 0 26px;font-size:clamp(20px,calc(var(--rh)*.26),40px)}
+.hand .card .ef{font-size:8.5px;line-height:1.12;padding:1px 3px}
+.hand .card .src,.hand .card .efs::before{display:none}
+.hand .card .cost{top:-7px;left:-7px;width:20px;height:20px;font-size:11px}
+.hand .card .catb{width:16px;height:16px;font-size:9px;top:2px;right:2px;border-width:1.5px}
+.hand .card .trgb{width:14px;height:14px;font-size:8px;bottom:2px;right:2px;border-width:1.5px}
+.hand .card .nm::before,.hand .card .nm::after{width:5px;height:5px}.hand .card .nm::before{left:-4px}.hand .card .nm::after{right:-4px}
+.hand{padding-bottom:12px}
+.hand .card,.hand .card:hover{transform:rotate(calc((var(--i) - (var(--n) - 1)/2) * 4deg)) translateY(calc((var(--i) - (var(--n) - 1)/2) * (var(--i) - (var(--n) - 1)/2) * 2px))}
+.hand .card:hover{z-index:auto}
+/* duello: icona e dati del giocatore a sinistra, barra della vita subito a destra */
+.side{grid-template-columns:56px max-content 12px minmax(0,1fr)}
+.face{grid-column:1}
+.nameplate,.side>b,.side .sh,.side>small{grid-column:2}
+.side>small{justify-self:end}
+.vbar{grid-column:3}
+.eqcol{grid-column:4;justify-self:end}
+}
 </style></head>
 <body><div id="app"></div><script src="dist/game.js?v=20261105"></script></body></html>

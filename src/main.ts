@@ -255,7 +255,7 @@ function draw() {
   const eqCard = (id: string, i: number) => { const e = EQUIPMENT[id], bn = [e.bonus.maxHp && `❤ +${e.bonus.maxHp} PV max`, e.bonus.dmg && `⚔️ +${e.bonus.dmg} danni`].filter(Boolean) as string[]; return `<div class="card eqc" data-eq="${id}" ${i >= 0 ? `data-drag="offer:eq:${i}"` : `data-drag="eqs:${id}"`}><div class="nm">${e.name}</div><div class="art">${ICON[id]}</div><div class="efs">${[...bn, ...(e.passives.length ? ['🔔 Passiva'] : []), ...e.moves.map(m => '🎴 ' + MOVES[m].name)].map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${i >= 0 ? 'Potenziamento · 1 slot' : '✔ Installato'}</div></div>`; };
   const slot = (x: string | null, f: (id: string, i: number) => string, i: number) => x ? f(x, i) : '<div class="soldx">Esaurita</div>';
   const go = `<button class="pri go" data-a="go" style="width:100%">⚔ Affronta arena ${r.arena}</button>`;
-  const offer = (h: string, p: number) => `<div class="offer">${h}<div class="ptag">💰 ${p}</div></div>`;
+  const offer = (h: string, p: number, a = '', j = 0) => `<div class="offer">${h}<div class="ptag"${a ? ` data-a="${a}" data-id="${j}" role="button" title="Acquista"` : ''}>💰 ${p}</div></div>`;
   const rg = REGIONS[r.region ?? 'boxing'] ?? REGION_LIST[0], w = wins(r, rg.id), idx = w % CONFIG.matchesPerIsland, nme = rg.enemies[idx], pre = enemyFor(r.arena, rg.id, idx), boss = idx === CONFIG.matchesPerIsland - 1;
   const emv = (nme.moves?.length ? [...new Set(nme.moves)] : rg.enemyMoves).map(id => ENEMY_MOVES.find(x => x.id === id)?.name).filter(Boolean).join(', ');
   const tale = (nme.story ?? `${esc(nme.name)} ti aspetta a ${rg.name}.`).replace(/\{nome\}/g, heroName()), chap = islandIndex(rg.id) * CONFIG.matchesPerIsland + idx + 1;
@@ -273,11 +273,11 @@ function draw() {
     <div class="sbox foe${boss ? ' boss' : ''}"><div class="sface">${foeArt(rg.id, rg.level, nme.id)}</div><div><b>${boss ? 'BOSS · ' : ''}${esc(nme.name)}</b><br><small>${rg.level} · partita ${idx + 1}/${CONFIG.matchesPerIsland} · ❤ ${pre.maxHp}</small><br><small>Mosse: ${emv}</small></div></div></div></div>`;
   const healRow = r.wounded ? `<div class="energyrow"><b>🩹 Ferite gravi: parti all'${Math.round(CONFIG.woundedStart * 100)}% dei PV</b><button class="ebtn" data-a="heal">Cura <span class="price">💰${CONFIG.healCost}</span></button></div>` : '';
   const rerollBtn = `<div class="srow"><button class="ebtn rrbtn" data-a="reroll">Ricarica Store <span class="price">💰${CONFIG.rerollCost}</span></button>${healRow}</div>`;
-  const back = (k: 'eq' | 'mv', p: number) => `<div class="offer"><div class="card back" data-drag="offer:${k}:2"><div class="bk">?<span class="pd"></span></div></div><div class="ptag mys">🎁 ${p}</div></div>`;
+  const back = (k: 'eq' | 'mv', p: number) => `<div class="offer"><div class="card back" data-drag="offer:${k}:2"><div class="bk">?<span class="pd"></span></div></div><div class="ptag mys" data-a="${k === 'eq' ? 'offerEq' : 'offerMv'}" data-id="2" role="button" title="Acquista">🎁 ${p}</div></div>`;
   const en = maxEnergy(r), energy = `<div class="energyrow"><b>⚡ ENERGIA ${en}/${CONFIG.maxEnergy}</b><div class="eticks">${Array.from({ length: CONFIG.maxEnergy }, (_, i) => `<div class="tick ${i < en ? 'fill' : ''}"></div>`).join('')}</div>${en >= CONFIG.maxEnergy ? '<small>✔ MAX</small>' : `<button class="ebtn" data-a="buyEn">+1 <span class="price">💰${energyPrice(r)}</span></button>`}</div>`;
   const store = `<div class="store"><div class="sl">${rerollBtn}<div class="og6">
-    <div class="og"><small class="lbl">⚙ POTENZIAMENTI</small><div class="offers">${r.offers.eq.map((x, i) => i === 2 && x ? back('eq', r.offers.eqPrice) : slot(x, (id, j) => offer(eqCard(id, j), EQUIPMENT[id].price), i)).join('')}</div></div>
-    <div class="og"><small class="lbl">✦ MOSSE</small><div class="offers">${r.offers.mv.map((x, i) => i === 2 && x ? back('mv', r.offers.mvPrice) : slot(x, (id, j) => offer(card('buy:' + id, { attr: `data-drag="offer:mv:${j}"` }), MOVES[id].price), i)).join('')}</div></div></div>
+    <div class="og"><small class="lbl">⚙ POTENZIAMENTI</small><div class="offers">${r.offers.eq.map((x, i) => i === 2 && x ? back('eq', r.offers.eqPrice) : slot(x, (id, j) => offer(eqCard(id, j), EQUIPMENT[id].price, 'offerEq', j), i)).join('')}</div></div>
+    <div class="og"><small class="lbl">✦ MOSSE</small><div class="offers">${r.offers.mv.map((x, i) => i === 2 && x ? back('mv', r.offers.mvPrice) : slot(x, (id, j) => offer(card('buy:' + id, { attr: `data-drag="offer:mv:${j}"` }), MOVES[id].price, 'offerMv', j), i)).join('')}</div></div></div>
     <div class="eqline"><div class="eqleft"><div class="zone dz" data-zone="eqbar"><div class="eqwrap"><b>Equipaggiamento ${r.equipped.length}/${r.slots}</b><small> · ⬆ trascina qui un potenziamento</small><div class="eqrow">${r.equipped.map(id => eqCard(id, -1)).join('')}${Array.from({ length: Math.max(0, r.slots - r.equipped.length) }, () => '<div class="ph">slot libero</div>').join('')}</div></div></div>
     <div class="zone dz sellz" data-zone="sell"><div><b>💰 Vendita</b> <small>Trascina qui un equipaggiamento (50%)</small></div></div></div>
     <div class="zone dz deckz" data-zone="deck"><div class="card back"><div class="bk">${r.deck.length}<span class="pd"></span></div></div><b>Mazzo ${r.deck.length}/${CONFIG.maxDeck}</b><small>⬆ trascina qui una mossa</small></div></div>${energy}</div></div>`;
@@ -285,7 +285,7 @@ function draw() {
     const inn = own.filter(c => r.deck.includes(c.uid)), out = own.filter(c => !r.deck.includes(c.uid));
     const cs = (l: typeof own) => l.map(c => card(c.uid, { attr: `data-drag="${c.uid}"`, sell: cardValue(r, c.uid) })).join('');
     body = `<div class="zone sellz" data-zone="sell"><b>🗑 Vendita</b> · trascina qui una carta per venderla (nel mazzo ne restano almeno ${CONFIG.minDeck})</div>
-    <h3>Mazzo attivo ${inn.length}/${CONFIG.maxDeck}</h3><small>Trascina (o tocca) le carte tra le due aree.</small><div class="zone" data-zone="in"><div class="cards">${cs(inn)}</div></div>
+    <h3>Mazzo attivo ${inn.length}/${CONFIG.maxDeck}</h3><small class="deskhint">Trascina (o tocca) le carte tra le due aree.</small><small class="phonehint">Tocca una carta per spostarla; tienila premuta per venderla o toglierla dal mazzo.</small><div class="zone" data-zone="in"><div class="cards">${cs(inn)}</div></div>
     <h3>Fuori dal mazzo (${out.length})</h3><div class="zone" data-zone="out"><div class="cards">${cs(out)}</div></div>`;
   }
   flushMsg(r);
@@ -426,7 +426,7 @@ function act(a: string, id = '') {
   if (a === 'play' && err === 'Energia insufficiente.') { sfx('warn'); const pe = app.querySelector('.pips') as HTMLElement | null; if (pe) { pe.classList.add('lowen'); setTimeout(() => pe.classList.remove('lowen'), 1000); } } // energia insufficiente: lampeggia l'energia residua
   if (flashChoice) { flashChoice = false; sfx('warn'); const bx = app.querySelector('.chbox') as HTMLElement | null; bx?.classList.add('flash'); bx?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 }
-app.addEventListener('click', ev => { const b = (ev.target as HTMLElement).closest('button[data-a], g[data-a], .pile[data-a], .hvirt[data-a]') as HTMLButtonElement | null; if (b && !b.disabled) { sfx('click'); act(b.dataset.a!, b.dataset.id); } else if ((ev.target as HTMLElement).classList.contains('pilem')) act('closePile'); else if ((ev.target as HTMLElement).classList.contains('chpopm')) act('closeChoice'); });
+app.addEventListener('click', ev => { const b = (ev.target as HTMLElement).closest('button[data-a], g[data-a], .pile[data-a], .hvirt[data-a], .ptag[data-a]') as HTMLButtonElement | null; if (b && !b.disabled) { sfx('click'); act(b.dataset.a!, b.dataset.id); } else if ((ev.target as HTMLElement).classList.contains('pilem')) act('closePile'); else if ((ev.target as HTMLElement).classList.contains('chpopm')) act('closeChoice'); });
 // ---- Drag & drop (pointer events: mouse + touch) ----
 let el: HTMLElement | null = null, sx = 0, sy = 0, moved = false, ph: HTMLElement | null = null;
 /** Durante il trascinamento la carta passa a position:fixed (con segnaposto): non viene più tagliata dai contenitori con overflow. */
@@ -438,14 +438,40 @@ function clearTargets() { document.querySelectorAll('.target').forEach(z => z.cl
 function unlift(c: HTMLElement) { ph?.remove(); ph = null; ['position', 'left', 'top', 'width', 'height', 'margin', 'z-index'].forEach(p => c.style.removeProperty(p)); }
 const zoneAt = (ev: PointerEvent) => document.elementsFromPoint(ev.clientX, ev.clientY).filter(n => !(el && el.contains(n)) && n !== ph).map(e => e.closest('[data-zone]')).find(Boolean) as HTMLElement | undefined;
 const clearHot = () => document.querySelectorAll('.hot').forEach(z => z.classList.remove('hot'));
-app.addEventListener('pointerdown', ev => { const c = (ev.target as HTMLElement).closest('[data-drag]') as HTMLElement | null; if (!c) return; el = c; sx = ev.clientX; sy = ev.clientY; moved = false; c.setPointerCapture(ev.pointerId); });
+const phone = () => matchMedia('(max-width:640px)').matches;
+let hold = 0, grabbed = false, held = false, dbar: HTMLElement | null = null, fullEl: HTMLElement | null = null;
+const needHold = (c: HTMLElement) => phone() && !c.closest('.hand'); // mazzo ed equipaggiamenti: si trascina solo dopo una pressione lunga (altrimenti il dito scorre la pagina)
+function hideFull() { fullEl?.remove(); fullEl = null; }
+function showFull(c: HTMLElement) { // pressione lunga su una carta della mano: formato completo
+  hideFull(); const k = c.cloneNode(true) as HTMLElement; k.className = k.className.replace(/\b(dealt|rdy|bst|drag|grab|off)\b/g, '').replace(/\s+/g, ' ').trim(); k.removeAttribute('data-drag'); k.removeAttribute('style');
+  const w = document.createElement('div'); w.className = 'fullprev'; w.style.setProperty('--cw', 'min(58vw,230px)'); w.appendChild(k); document.body.appendChild(w); fullEl = w;
+}
+function showDropBar(c: HTMLElement) { // icone in basso dove trascinare la carta tenuta premuta
+  const u = c.dataset.drag ?? '', inDeck = !!run?.deck.includes(u);
+  const b = (z: string, ic: string, t: string) => `<div class="dbtn" data-zone="${z}"><span>${ic}</span><b>${t}</b></div>`;
+  dbar = document.createElement('div'); dbar.className = 'dbar';
+  dbar.innerHTML = u.startsWith('eqs:') ? b('sell', '💰', 'Vendi') : b('sell', '🗑', 'Vendi') + (inDeck ? b('out', '📤', 'Fuori dal mazzo') : b('in', '📥', 'Nel mazzo'));
+  document.body.appendChild(dbar);
+}
+function endHold() { clearTimeout(hold); grabbed = false; held = false; hideFull(); dbar?.remove(); dbar = null; }
+function grab(c: HTMLElement) { grabbed = true; lift(c); markTarget(c); c.classList.add('drag', 'grab'); c.style.transform = 'scale(1.08)'; showDropBar(c); navigator.vibrate?.(14); }
+document.addEventListener('touchmove', e => { if (grabbed && e.cancelable) e.preventDefault(); }, { passive: false }); // dopo la pressione lunga il dito trascina la carta e non scorre la pagina
+app.addEventListener('contextmenu', ev => { if (phone() && (ev.target as HTMLElement).closest('.card')) ev.preventDefault(); });
+app.addEventListener('pointerdown', ev => {
+  const c = (ev.target as HTMLElement).closest('[data-drag]') as HTMLElement | null; if (!c) return;
+  if (phone() && (c.dataset.drag ?? '').startsWith('offer:')) return; // su telefono si compra toccando la targhetta del prezzo
+  el = c; sx = ev.clientX; sy = ev.clientY; moved = false; endHold(); c.setPointerCapture(ev.pointerId);
+  if (phone()) hold = window.setTimeout(() => { if (!el || moved) return; if (needHold(el)) grab(el); else { held = true; showFull(el); } }, 380);
+});
 app.addEventListener('pointermove', ev => {
-  if (!el) return; const dx = ev.clientX - sx, dy = ev.clientY - sy; if (!moved && Math.hypot(dx, dy) < 8) return;
-  if (!moved) { lift(el); markTarget(el); } moved = true; el.classList.add('drag'); el.style.transform = `translate(${dx}px,${dy}px) scale(1.15)`; clearHot(); zoneAt(ev)?.classList.add('hot');
+  if (!el) return; const dx = ev.clientX - sx, dy = ev.clientY - sy;
+  if (needHold(el) && !grabbed) { if (Math.hypot(dx, dy) > 10) clearTimeout(hold); return; } // senza pressione lunga il movimento è solo scorrimento
+  if (!moved && Math.hypot(dx, dy) < 8) return;
+  if (!moved) { clearTimeout(hold); hideFull(); if (!grabbed) { lift(el); markTarget(el); } } moved = true; el.classList.add('drag'); el.style.transform = `translate(${dx}px,${dy}px) scale(1.15)`; clearHot(); zoneAt(ev)?.classList.add('hot');
 });
 const endDrag = (ev: PointerEvent, cancel: boolean) => {
-  if (!el) return; const c = el, uid = c.dataset.drag!, z = cancel ? undefined : zoneAt(ev)?.dataset.zone; el = null; clearHot();
-  c.classList.remove('drag'); c.style.transform = ''; unlift(c); clearTargets(); if (!run) return;
+  if (!el) return; const c = el, uid = c.dataset.drag!, z = cancel ? undefined : zoneAt(ev)?.dataset.zone; el = null; clearHot(); const wasGrab = grabbed || held; endHold();
+  c.classList.remove('drag', 'grab'); c.style.transform = ''; unlift(c); clearTargets(); if (!run) return;
   if (uid.startsWith('offer:')) { // acquisto solo con drag & drop: potenziamenti -> barra equipaggiamenti, mosse -> mazzo
     const [, k, i] = uid.split(':'); if (z === (k === 'eq' ? 'eqbar' : 'deck')) act(k === 'eq' ? 'offerEq' : 'offerMv', i);
     else if (!cancel) act('hint', k === 'eq' ? 'Trascina il potenziamento sulla barra equipaggiamenti.' : 'Trascina la mossa sul mazzo.'); return;
@@ -453,7 +479,7 @@ const endDrag = (ev: PointerEvent, cancel: boolean) => {
   if (uid.startsWith('eqs:')) { if (z === 'sell') act('sellE', uid.slice(4)); else if (moved && !cancel) act('hint', 'Trascina la carta sulla zona vendita per venderla.'); return; } // vendita equipaggiamento
   if (z === 'sell' && run.phase === 'store') { act('sellcard', uid); return; }
   const inDeck = run.deck.includes(uid);
-  if (!moved && !cancel) { act(run.phase === 'combat' ? 'play' : 'deck', uid); return; } // tap = scorciatoia
+  if (!moved && !cancel) { if (!wasGrab) act(run.phase === 'combat' ? 'play' : 'deck', uid); return; } // tap = scorciatoia (non dopo una pressione lunga)
   if (z === 'field' && run.phase === 'combat') act('play', uid);
   else if ((z === 'in' && !inDeck) || (z === 'out' && inDeck)) act('deck', uid);
 };
