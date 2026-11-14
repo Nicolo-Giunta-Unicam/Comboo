@@ -694,7 +694,10 @@ body.fs .matr{grid-template-columns:auto 1fr auto;gap:4px}
 .hand .card,.hand .card:hover{transform:rotate(calc((var(--i) - (var(--n) - 1)/2) * 4deg)) translateY(calc((var(--i) - (var(--n) - 1)/2) * (var(--i) - (var(--n) - 1)/2) * 2px))}
 .hand .card:hover{z-index:auto}
 /* duello: icona e dati del giocatore a sinistra, barra della vita subito a destra */
-.side{grid-template-columns:56px max-content 12px minmax(0,1fr)}
+.side{grid-template-columns:56px max-content 12px minmax(0,1fr);column-gap:18px}
+.nameplate{margin-left:4px}.side>b,.side .sh,.side>small{margin-left:4px}
+body.fs .side .face{width:56px;height:56px;min-width:0}
+body.fs .side .vbar{width:12px}
 .face{grid-column:1}
 .nameplate,.side>b,.side .sh,.side>small{grid-column:2}
 .side>small{justify-self:end}
