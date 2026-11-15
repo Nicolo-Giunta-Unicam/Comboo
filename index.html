@@ -574,12 +574,12 @@ body.calm #depth{display:none}
 .parrow .arc0{fill:none;stroke:#3a2200;stroke-width:2.1;stroke-linecap:round;stroke-opacity:.8;filter:drop-shadow(0 .6px .5px #000a)}
 .parrow .arc{fill:none;stroke:#ffd25e;stroke-width:1.25;stroke-linecap:round}
 .parrow .flow{fill:none;stroke:#fffbe8;stroke-width:.55;stroke-linecap:round;stroke-dasharray:1.4 3.4;animation:pflow .8s linear infinite}
-.parrow .head{animation:pbob .7s ease-in-out infinite alternate}
+
 .parrow .hl{fill:#ffe48a;stroke:#3a2200;stroke-width:.45;stroke-linejoin:round}.parrow .hd{fill:#d9922a;stroke:#3a2200;stroke-width:.45;stroke-linejoin:round}
 .parrow.in .arc0,.parrow.in .arc{stroke-dasharray:100;stroke-dashoffset:100;animation:pdraw .55s ease-out forwards}
 .parrow.in .flow,.parrow.in .sh{opacity:0;animation:pshow .3s .5s forwards,pflow .8s linear infinite}
 .parrow.in .sh{animation:pshow .3s .15s forwards}
-.parrow.in .head{opacity:0;animation:pshow .25s .45s forwards,pbob .7s .7s ease-in-out infinite alternate}
+.parrow.in .head{opacity:0;animation:pshow .25s .45s forwards}
 @keyframes pdraw{to{stroke-dashoffset:0}}@keyframes pshow{to{opacity:1}}@keyframes pflow{to{stroke-dashoffset:-4.8}}@keyframes pbob{to{translate:0 -.9px}}
 /* duello: targhetta del nuovo turno */
 .tbanner{position:fixed;z-index:300;pointer-events:none;padding:10px 46px;border-radius:14px;font-size:36px;font-weight:900;letter-spacing:.05em;white-space:nowrap;color:#fff4d6;text-shadow:0 2px 6px #000;border:3px solid transparent;background:linear-gradient(#3b2a52,#150c25) padding-box,linear-gradient(#fff3c8,#c9922e 50%,#fff3c8) border-box;box-shadow:0 0 0 2px #7a4b10,0 14px 36px #000c,0 0 46px #ffc85788,inset 0 1px 0 #ffffff40;transform:translate(-50%,-50%)}
