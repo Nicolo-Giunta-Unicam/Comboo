@@ -85,7 +85,7 @@ export const bodyImg = (avatarId: string) => custom('body-' + avatarId) ?? custo
 /** Livello di un equipaggiamento sul personaggio: `layer-<id>` (undefined se non esiste ancora l'immagine). */
 export const layerImg = (eqId: string) => custom('layer-' + eqId);
 /** Ordine di sovrapposizione dei livelli sul corpo (dal basso verso l'alto): effetti/pelle -> vestiti -> pezzi indossati -> oggetti impugnati -> teste e fiamme. Gli id non elencati stanno a 50. */
-export const LAYER_Z: Record<string, number> = { aura: 10, stand: 12, dash: 14, regen: 20, fruit: 22, titan: 24, hide: 26, plating: 28, servo: 30, reflex: 32, senses: 34, capoeira: 40, footwork: 42, gravboots: 44, knives: 46, muaythai: 50, reactor: 52, revolver: 54, blade: 56, grenades: 58, grimoire: 60, wraps: 62, stance: 64, shotgun: 66, oath: 68, rift: 70, aegis: 72, thunder: 74, phoenix: 76, parkour: 80 };
+export const LAYER_Z: Record<string, number> = { aura: 10, stand: 12, dash: 14, regen: 20, fruit: 22, titan: 24, hide: 26, plating: 28, servo: 30, reflex: 32, senses: 34, capoeira: 40, footwork: 42, gravboots: 44, knives: 46, muaythai: 50, reactor: 65, revolver: 54, blade: 56, grenades: 53, grimoire: 60, wraps: 62, stance: 64, shotgun: 66, oath: 68, rift: 70, aegis: 72, thunder: 74, phoenix: 76, parkour: 80 };
 export const layerZ = (eqId: string) => LAYER_Z[eqId] ?? 50;
 
 /** Cicatrici sul corpo (`scar-1` … `scar-6`, stessa tela 400x800 della sagoma, PNG trasparente): la n-esima si applica dopo il n-esimo duello chiuso sotto la soglia di salute. In mancanza dell'immagine si usa un segno provvisorio. */
