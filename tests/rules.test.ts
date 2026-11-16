@@ -1,6 +1,6 @@
 import { test } from 'node:test'; import assert from 'node:assert/strict';
 import { newRun, maxHp, askMercy, healRun, setStyle, effCost, choosePick, drawDiscard, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, rerollOffers, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
-import { EQUIPMENT, MOVES, STYLES } from '../src/data'; import { REGIONS } from '../src/regions'; import { CONFIG } from '../src/config'; import { saveRun, loadRun, SAVE_KEY, type KV } from '../src/save';
+import { EQUIPMENT, MOVES, STYLES } from '../src/data'; import { REGIONS } from '../src/regions'; import { CONFIG } from '../src/config'; import { saveRun, loadRun, SAVE_KEY, loadBest, saveBest, runScore, type KV } from '../src/save';
 const kv = (): KV & { m: Map<string, string> } => { const m = new Map<string, string>(); return { m, getItem: k => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v), removeItem: k => void m.delete(k) }; };
 const settle = (r: Run) => { const c = r.combat!; for (let i = 0; i < 10 && c.phase === 'resolve'; i++) enemyStep(r); };
 const rich = (): Run => { const r = newRun(1); r.gold = 9999; return r; };
@@ -38,6 +38,11 @@ test('mazzo attivo max 30, collezione può superarlo', () => {
 test('persistenza e ripristino', () => {
   const s = kv(), r = rich(); buyEquipment(r, 'blade'); beginArena(r); saveRun(r, s);
   assert.deepEqual(loadRun(s), r); s.m.set(SAVE_KEY, '{"v":1}'); assert.equal(loadRun(s), null); s.m.set(SAVE_KEY, 'x'); assert.equal(loadRun(s), null);
+});
+test('punteggio migliore: si salva solo il più alto e resiste ai dati rovinati', () => {
+  const s = kv(), r = rich(); r.arena = 6; assert.equal(runScore(r), 5); assert.equal(loadBest(s), 0);
+  assert.equal(saveBest(5, s), true); assert.equal(loadBest(s), 5); assert.equal(saveBest(3, s), false); assert.equal(saveBest(5, s), false); assert.equal(loadBest(s), 5);
+  assert.equal(saveBest(9, s), true); assert.equal(loadBest(s), 9); s.setItem('cardrogue.best.v1', 'x'); assert.equal(loadBest(s), 0); s.setItem('cardrogue.best.v1', '-4'); assert.equal(loadBest(s), 0);
 });
 test('mano: 5 iniziali, +1 a turno, la mano persiste; il nemico gioca una carta per volta', () => {
   const r = newRun(3); beginArena(r); const c = r.combat!; assert.equal(c.hand.length, 5); const keep = [...c.hand];
@@ -220,7 +225,8 @@ test('scelte di capitolo: ogni capitolo di ogni isola ha eventi suoi, coerenti c
   assert.deepEqual(pendingChoice(r)!.options.map(x => x.id), p.options.map(x => x.id)); assert.equal(pendingChoice(r)!.ev.id, p.ev.id);
   // l'incontro successivo dell'isola pesca un evento del capitolo 2, diverso dal primo
   makeChoice(r, p.options[0].id); r.progress = { ...r.progress, desert: 1 }; const q = pendingChoice(r)!; assert.equal(q.ev.at, 1); assert.notEqual(q.ev.id, p.ev.id);
-  const W: Record<string, number> = { gold: 1, block: 1 / 6, energy: 1.5, draw: 1, foeHp: -0.15, hp: 0.2 };
+  // pesi misurati col simulatore (effetto di ogni bonus sui PV residui a fine duello): 1 punto ~ 7 punti % di PV; l'energia al 1° turno vale poco, scudo e PV nemici molto
+  const W: Record<string, number> = { gold: 1, block: 1 / 6, energy: 0.2, draw: 0.35, foeHp: -0.06, hp: 0.2 };
   for (const e of CHOICES) { assert.ok(e.options.length >= 3 && e.options.length <= 4, e.id); assert.ok(e.options.some(o => !o.req), `${e.id}: serve almeno un'opzione sempre disponibile`); const pts = e.options.map(o => Object.entries(o.fx).reduce((s, [k, v]) => s + W[k] * (v as number), 0)); assert.ok(Math.min(...pts) >= 1.1 && Math.max(...pts) <= 1.9 && Math.max(...pts) - Math.min(...pts) <= 0.5, `${e.id}: ${pts}`); for (const o of e.options) assert.ok(Object.values(o.fx).filter(Boolean).length <= 2, `${e.id}/${o.id}: più di 2 effetti`); }
   // il livello conta: oro, scudo e malus crescono con l'arena
   const a = newRun(1), b = newRun(1); b.arena = 20; assert.ok(goldUnit(b) > goldUnit(a)); assert.ok(scaledFx(b, { block: 12 }).block! > scaledFx(a, { block: 12 }).block!); assert.ok(scaledFx(b, { hp: -4 }).hp! < scaledFx(a, { hp: -4 }).hp!);

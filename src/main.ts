@@ -10,7 +10,7 @@ import { tutActive, tutPatchCombat, tutPatchEnemy, tutStart, tutSync } from './t
 import { REGIONS, REGION_LIST, type Region } from './regions';
 import { banner, burst } from './fx';
 import { config as audioCfg, setMode, sfx, unlock } from './audio';
-import { clearRun, loadRun, saveRun } from './save';
+import { clearRun, loadBest, loadRun, runScore, saveBest, saveRun } from './save';
 import { initDepth } from './depth';
 const app = document.getElementById('app')!;
 // Sfondo ambientale (bagliori + braci) dietro alle schermate non di combattimento: stessa atmosfera del menu principale, nei colori dell'isola
@@ -42,6 +42,7 @@ audioCfg(settings.music, settings.sfx, settings.mv, settings.sv); addEventListen
 let virtOpen = false; const virtShown: Record<string, number> = {};
 let settingsOpen = false, sure = false, pileView: 'draw' | 'discard' | null = null;
 let boardView: 'me' | 'foe' | null = null, flipAt = 0, lastTurn = 0, announcing = false, announceTurn = 0, arrowFor = ''; // lastTurn/announcing: targhetta del nuovo turno; arrowFor: freccia di rotta sulla mappa // vista del campo: 'me' = turno del giocatore, 'foe' = turno nemico
+let best = loadBest(localStorage), newBest = false; // punteggio migliore (arene superate) e flag "nuovo record" della schermata di sconfitta
 let run = loadRun(localStorage), tab: 'sto' | 'st' | 'me' = 'sto', note = '', started = !!run && run.phase === 'combat', pop = { e: 0, p: 0 }, shownMsg = run?.msg ?? '';
 const kind = (m: Move) => m.effect.syn ? 'syn' : (m.effect.dmg || m.effect.scale?.dmg) ? 'atk' : m.effect.block ? 'def' : 'utl';
 /** Pallino della categoria (Corpo a corpo, Lame, Armi da fuoco, Magia) in alto a destra della carta. */
@@ -202,9 +203,9 @@ function draw() {
   if (run?.phase !== 'combat' && !finalView) { boardView = null; lastTurn = 0; announcing = false; pileView = null; bars = null; prevHand = []; prevDraw = -1; lastCombo = ''; lastEv = null; lastSynN = 0; }
   const r = run; if (note) { pushToast(note); note = ''; } if (!r?.msg) shownMsg = ''; // le notifiche sono popup (non fanno parte del layout)
   if (!r || (!started && r.phase !== 'over')) {
-    lastScr = 'menu'; app.innerHTML = `<div class="menu"><div class="mfx" aria-hidden="true">${Array.from({ length: 28 }, () => `<i style="--x:${Math.round(Math.random() * 100)}%;--s:${(0.5 + Math.random() * 1.4).toFixed(2)};--d:${(7 + Math.random() * 9).toFixed(1)}s;--w:-${(Math.random() * 14).toFixed(1)}s"></i>`).join('')}</div><div class="mcards" aria-hidden="true"><span style="--r:-14deg;--x:-84px">👊</span><span style="--r:0deg;--x:0px;--y:-10px">🛡️</span><span style="--r:14deg;--x:84px">⚡</span></div><div class="mlogo">COMB<span class="inf">∞</span></div>${CUSTOM ? `<p class="mcustom"><span class="edtag">Dati personalizzati (Editor) attivi</span></p>` : ''}<div class="mbtns">${r ? `<button class="mbtn pri" style="--i:0" data-a="cont"><span class="mi">▶</span><span>Continua run (arena ${r.arena})</span></button>` : ''}<button class="mbtn ${r ? '' : 'pri'}" style="--i:1" data-a="new"><span class="mi">⚔</span><span>Nuova run</span></button><button class="mbtn" style="--i:2" data-a="tutorial"><span class="mi">📘</span><span>Tutorial</span></button><button class="mbtn" style="--i:3" data-a="editor"><span class="mi">🛠</span><span>Editor</span></button><button class="mbtn" style="--i:4" data-a="set"><span class="mi">⚙</span><span>Impostazioni</span></button></div><div class="langrow">${LANGS.map(l => `<button class="${l.code === LANG ? 'on' : ''}" data-a="lang" data-id="${l.code}" data-notr>${l.name}</button>`).join('')}</div></div>`; return;
+    lastScr = 'menu'; app.innerHTML = `<div class="menu"><div class="mfx" aria-hidden="true">${Array.from({ length: 28 }, () => `<i style="--x:${Math.round(Math.random() * 100)}%;--s:${(0.5 + Math.random() * 1.4).toFixed(2)};--d:${(7 + Math.random() * 9).toFixed(1)}s;--w:-${(Math.random() * 14).toFixed(1)}s"></i>`).join('')}</div><div class="mcards" aria-hidden="true"><span style="--r:-14deg;--x:-84px">👊</span><span style="--r:0deg;--x:0px;--y:-10px">🛡️</span><span style="--r:14deg;--x:84px">⚡</span></div><div class="mlogo">COMB<span class="inf">∞</span></div>${best > 0 ? `<div class="mbest">🏆 Record: <b>${best}</b> ${best === 1 ? 'arena superata' : 'arene superate'}</div>` : ''}${CUSTOM ? `<p class="mcustom"><span class="edtag">Dati personalizzati (Editor) attivi</span></p>` : ''}<div class="mbtns">${r ? `<button class="mbtn pri" style="--i:0" data-a="cont"><span class="mi">▶</span><span>Continua run (arena ${r.arena})</span></button>` : ''}<button class="mbtn ${r ? '' : 'pri'}" style="--i:1" data-a="new"><span class="mi">⚔</span><span>Nuova run</span></button><button class="mbtn" style="--i:2" data-a="tutorial"><span class="mi">📘</span><span>Tutorial</span></button><button class="mbtn" style="--i:3" data-a="editor"><span class="mi">🛠</span><span>Editor</span></button><button class="mbtn" style="--i:4" data-a="set"><span class="mi">⚙</span><span>Impostazioni</span></button></div><div class="langrow">${LANGS.map(l => `<button class="${l.code === LANG ? 'on' : ''}" data-a="lang" data-id="${l.code}" data-notr>${l.name}</button>`).join('')}</div></div>`; return;
   }
-  if (r.phase === 'over' && !finalView) { lastScr = 'over'; app.innerHTML = `<div class="overscr"><div class="logo" style="font-size:36px">SCONFITTA</div><div class="item"><div class="big">💀</div>Arene superate: <b>${r.arena - 1}</b><small>Regola provvisoria: la sconfitta termina la run.</small></div><br><button class="pri" data-a="new" style="width:100%">Nuova run</button><br><br><button data-a="menu" style="width:100%">🏠 Menu principale</button></div>`; return; }
+  if (r.phase === 'over' && !finalView) { lastScr = 'over'; if (!tutActive()) { const sc = runScore(r); if (saveBest(sc, localStorage)) { best = sc; newBest = true; } } app.innerHTML = `<div class="overscr"><div class="logo" style="font-size:36px">SCONFITTA</div><div class="item"><div class="big">💀</div>Arene superate: <b>${r.arena - 1}</b><small>Regola provvisoria: la sconfitta termina la run.</small></div><div class="mbest" style="margin-top:12px">🏆 ${newBest ? 'Nuovo record!' : 'Record'}: <b>${best}</b></div><br><button class="pri" data-a="new" style="width:100%">Nuova run</button><br><br><button data-a="menu" style="width:100%">🏠 Menu principale</button></div>`; return; }
   if (r.phase === 'combat' || finalView) {
     lastScr = 'combat';
     const c = finalView ?? r.combat!, php = finalView ? finalHp : r.hp, e = c.enemy, n = c.hand.length, busy = c.phase !== 'player', me = maxEnergy(r), ev = c.ev;
@@ -401,8 +402,8 @@ function ui(a: string, id: string) {
   else if (a === 'set') settingsOpen = true; else if (a === 'closeSet') { settingsOpen = false; sure = false; }
   else if (a === 'story') settings.story = !settings.story;
   else if (a === 'speed') settings.speed = +id; else if (a === 'theme') settings.theme = id; else if (a === 'timer') { settings.timer = !settings.timer; tTurn = -1; } else if (a === 'tmode') { settings.tmode = +id; tTurn = -1; } else if (a === 'skipvs') vs = null; else if (a === 'god') { settings.god = !settings.god; if (!settings.god && run) { run.god = false; run.gold = 100; } } else if (a === 'sail') { sail(); return; } else if (a === 'calm') settings.calm = !settings.calm; else if (a === 'music' || a === 'sfx') { settings[a] = !settings[a]; audioCfg(settings.music, settings.sfx, settings.mv, settings.sv); }
-  else if (a === 'menu') { if (run?.phase === 'over') { run = null; clearRun(localStorage); } started = false; settingsOpen = false; sure = false; }
-  else if (a === 'abandon') { if (!sure) sure = true; else { run = null; clearRun(localStorage); started = false; settingsOpen = false; sure = false; } }
+  else if (a === 'menu') { newBest = false; if (run?.phase === 'over') { run = null; clearRun(localStorage); } started = false; settingsOpen = false; sure = false; }
+  else if (a === 'abandon') { if (!sure) sure = true; else { if (run && !tutActive()) { const sc = runScore(run); if (saveBest(sc, localStorage)) best = sc; } run = null; clearRun(localStorage); started = false; settingsOpen = false; sure = false; } }
   try { localStorage.setItem(SET_KEY, JSON.stringify(settings)); } catch { /* ignora */ }
   render();
 }
@@ -410,7 +411,7 @@ function act(a: string, id = '') {
   if (sailing) return;
   if (UIA.includes(a)) { ui(a, id); return; }
   let err: Err = null; note = '';
-  if (a === 'new') { creating = true; draft = { name: run?.hero?.name ?? '', av: run?.hero?.avatar ?? 'a0', style: run?.style ?? 'boxing' }; }
+  if (a === 'new') { newBest = false; creating = true; draft = { name: run?.hero?.name ?? '', av: run?.hero?.avatar ?? 'a0', style: run?.style ?? 'boxing' }; }
   else if (a === 'startrun') { run = newRun(); run.hero = { name: draft.name.trim() || tr('Protagonista'), avatar: draft.av }; setStyle(run, draft.style); started = true; tab = 'sto'; mapSel = null; creating = false; }
   else if (a === 'avatar') draft.av = id; else if (a === 'style') draft.style = id; else if (a === 'cancelnew') creating = false; else if (a === 'cont') started = true; else if (a === 'tutorial') startTutorial();
   else if (run) {
@@ -430,7 +431,13 @@ function act(a: string, id = '') {
   if (a === 'play' && err === 'Energia insufficiente.') { sfx('warn'); const pe = app.querySelector('.pips') as HTMLElement | null; if (pe) { pe.classList.add('lowen'); setTimeout(() => pe.classList.remove('lowen'), 1000); } } // energia insufficiente: lampeggia l'energia residua
   if (flashChoice) { flashChoice = false; sfx('warn'); const bx = app.querySelector('.chbox') as HTMLElement | null; bx?.classList.add('flash'); bx?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 }
-app.addEventListener('click', ev => { const b = (ev.target as HTMLElement).closest('button[data-a], g[data-a], .pile[data-a], .hvirt[data-a], .ptag[data-a]') as HTMLButtonElement | null; if (b && !b.disabled) { sfx('click'); act(b.dataset.a!, b.dataset.id); } else if ((ev.target as HTMLElement).classList.contains('pilem')) act('closePile'); else if ((ev.target as HTMLElement).classList.contains('chpopm')) act('closeChoice'); });
+/** Carte decorative del menu: al clic la carta gira come una moneta, rimbalza e lancia scintille. */
+function popMenuCard(c: HTMLElement) {
+  c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); sfx('click');
+  for (let i = 0; i < 8; i++) { const s = document.createElement('i'), a = (i / 8) * Math.PI * 2 + Math.random() * 0.5, d = 46 + Math.random() * 30; s.className = 'spk'; s.textContent = i % 2 ? '✦' : '✨'; s.style.setProperty('--dx', Math.round(Math.cos(a) * d) + 'px'); s.style.setProperty('--dy', Math.round(Math.sin(a) * d) + 'px'); c.appendChild(s); setTimeout(() => s.remove(), 800); }
+  setTimeout(() => c.classList.remove('pop'), 950);
+}
+app.addEventListener('click', ev => { const mc = (ev.target as HTMLElement).closest('.mcards span') as HTMLElement | null; if (mc) { popMenuCard(mc); return; } const b = (ev.target as HTMLElement).closest('button[data-a], g[data-a], .pile[data-a], .hvirt[data-a], .ptag[data-a]') as HTMLButtonElement | null; if (b && !b.disabled) { sfx('click'); act(b.dataset.a!, b.dataset.id); } else if ((ev.target as HTMLElement).classList.contains('pilem')) act('closePile'); else if ((ev.target as HTMLElement).classList.contains('chpopm')) act('closeChoice'); });
 // ---- Drag & drop (pointer events: mouse + touch) ----
 let el: HTMLElement | null = null, sx = 0, sy = 0, moved = false, ph: HTMLElement | null = null;
 /** Durante il trascinamento la carta passa a position:fixed (con segnaposto): non viene più tagliata dai contenitori con overflow. */

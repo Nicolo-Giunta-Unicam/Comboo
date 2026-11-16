@@ -3246,41 +3246,47 @@
           "name": "Mummia guerriera",
           "story": "Tra le rovine di un tempio sepolto, una guerriera avvolta in bende secolari ti sfida a un duello rituale. Ogni colpo che incassi ti rende più duro, e lei lo sa.",
           "id": "desert-3",
-          "hpMul": 0.67,
-          "atkMul": 0.83,
+          "hpMul": 0.7,
+          "atkMul": 0.85,
           "moves": [
             "drain",
             "heavy",
-            "mend",
-            "guard"
+            "direct",
+            "guard",
+            "heavy",
+            "mend"
           ]
         },
         {
           "name": "Colosso di sabbia",
           "story": "La tempesta prende la forma di un gigante. Resistere non serve: il colosso crolla e si ricompone, e solo un colpo capace di spezzare la roccia può fermarlo.",
           "id": "desert-4",
-          "hpMul": 0.8,
-          "atkMul": 0.9,
+          "hpMul": 0.68,
+          "atkMul": 0.82,
           "moves": [
             "crush",
             "bulwark",
             "heavy",
-            "regen"
+            "direct",
+            "regen",
+            "direct",
+            "direct"
           ]
         },
         {
           "name": "Faraone solare",
-          "hpMul": 1,
-          "atkMul": 1.02,
+          "hpMul": 0.82,
+          "atkMul": 0.94,
           "lore": "Il sole stesso sembra inchinarsi a lui; la sabbia obbedisce a ogni suo gesto.",
           "story": "All'orizzonte una piramide brilla come un secondo sole. Il Faraone ti attende sul trono: «Hai attraversato il mio regno senza inchinarti. Mostrami di cosa è fatto il tuo corpo».",
           "id": "desert-5",
           "moves": [
             "rocket",
             "bite",
-            "mend",
+            "heavy",
             "sting",
-            "bulwark"
+            "bulwark",
+            "heavy"
           ]
         }
       ],
@@ -3622,7 +3628,7 @@
           "label": "Gli chiedi chi sia quello girato",
           "text": "Gorin esita, poi dice un solo nome: «Idris». Non è un ricordo che voleva dividere con te, ma ti ringrazia di non aver distolto lo sguardo.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -3648,7 +3654,8 @@
           "label": "Dici che il tuo nome starà più in alto di tutti",
           "text": "Gorin sorride appena. È il sorriso di chi ha già sentito queste parole, e non gli è mai piaciuto come finivano.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "ambition": 6,
@@ -3697,7 +3704,7 @@
           "label": "Passi oltre senza rispondere",
           "text": "Lia ti guarda allontanarti. Non insiste, ma chiude il taccuino con una lentezza che sembra una promessa: la rivedrai.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -3727,7 +3734,7 @@
           "label": "Accetti: un colpo basso e il titolo è tuo",
           "text": "Stringi la mano senza guardarlo. È facile, anche troppo: il campione è più lento ancora prima del gong. Qualcosa, però, si sposta dentro di te e non torna più a posto.",
           "fx": {
-            "foeHp": -10
+            "foeHp": -25
           },
           "v": {
             "honor": -7,
@@ -3785,8 +3792,8 @@
           "label": "Stringi i denti: non è mai stato quello il punto",
           "text": "Gorin non ribatte. Ti fascia il ginocchio in silenzio, stretto, e non ti guarda in faccia.",
           "fx": {
-            "energy": 1,
-            "hp": -1
+            "block": 12,
+            "hp": -4
           },
           "v": {
             "ambition": 6,
@@ -3812,7 +3819,7 @@
           "label": "Gli chiedi di raccontarti tutto di Idris e dell'uomo in nero",
           "text": "Gorin parla finché il ghiaccio non si scioglie. Ti racconta di contratti, di nomi cancellati, di un ragazzo che salì e non scese più. Esci dallo spogliatoio sapendo contro cosa stai salendo.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -3869,7 +3876,7 @@
           "label": "Non firmi, ma chiedi che cosa scriva davvero",
           "text": "Lui sorride, quasi compiaciuto. «Fai la domanda giusta.» Non risponde, ma lascia cadere il taccuino per un istante: prima che lo richiuda, hai il tempo di leggere un'altra riga, e un'altra ancora.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -3951,8 +3958,8 @@
           "label": "Chiedi di essere assegnato ai test più duri",
           "text": "«Come vuoi», dice Vance, e ti dà il turno più pesante del campo. Una fame così non passa inosservata, né a lui né a chi guarda dall'alto.",
           "fx": {
-            "energy": 1,
-            "hp": -1
+            "foeHp": -35,
+            "hp": -4
           },
           "v": {
             "ambition": 6,
@@ -3973,8 +3980,8 @@
           "label": "Strisci fino a lui e lo trascini al riparo",
           "text": "Il proiettile ti sfiora la schiena due volte, ma lo porti dietro il muro. Il ragazzo ti stringe il polso: «Non dimenticherò chi sei.» Non ti serviva, ma ti scalda.",
           "fx": {
-            "gold": 1.5,
-            "hp": -1
+            "block": 12,
+            "hp": -4
           },
           "v": {
             "honor": 6,
@@ -3988,7 +3995,7 @@
           "label": "Lo usi come diversivo per attraversare la linea",
           "text": "Passi mentre il cecchino spara al ragazzo, e il boato copre il resto. Dietro di te nessuno chiama il tuo nome, e per un po' non vorresti sentirlo.",
           "fx": {
-            "foeHp": -10
+            "foeHp": -25
           },
           "v": {
             "ambition": 6,
@@ -4037,7 +4044,7 @@
           "label": "Accetti la sua mano e i suoi consigli",
           "text": "Idris ti mostra un paio di scorciatoie che Gorin non ti avrebbe mai insegnato. Funzionano. Le usi con una punta di vergogna e un'ottima ragione per non fermarti.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -4051,7 +4058,8 @@
           "label": "Lo sfidi: Gorin non ti ha insegnato a obbedire",
           "text": "Idris ride, finalmente. «Allora dimostramelo, quando saliremo.» Ti volta le spalle con un cenno secco: non è un'amicizia, è una scommessa tra due persone sole.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "fame": 4,
@@ -4064,7 +4072,7 @@
           "label": "Gli chiedi perché se n'è andato da Gorin",
           "text": "Idris non risponde subito. «Perché fermarmi a quel livello era come invecchiare in una gabbia.» Poi, quasi senza voce: «E perché lui aveva ragione, e io non volevo sentirlo.»",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "block": 3
           },
           "v": {
@@ -4100,7 +4108,7 @@
           "label": "Chiedi di parlare con lui prima dello scontro",
           "text": "Dietro il vetro c'è un uomo stanco che ti chiede, quasi in un sussurro, di non ammazzarlo. Quando esci, nessuno ti domanda cosa vi siete detti.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "block": 3
           },
           "v": {
@@ -4127,7 +4135,7 @@
           "label": "Studi il mech da lontano e non fai altro",
           "text": "Passi la notte a guardare come si muove, come perde il tempo a ogni terzo passo. Non dici nulla a nessuno: ti sembra il modo più onesto di non sbagliare.",
           "fx": {
-            "foeHp": -6,
+            "foeHp": -15,
             "gold": 0.5
           },
           "v": {
@@ -4190,7 +4198,7 @@
           "label": "Lo mostri ai soldati: devono sapere",
           "text": "Alla mensa si fa silenzio. Poi qualcuno comincia a leggere ad alta voce. Nel giro di un'ora la voce corre per tutto il campo, e il tuo nome con lei.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -4234,8 +4242,8 @@
           "label": "Dividi la tua acqua con tutta la carovana",
           "text": "La tua borraccia dura meno di mezza giornata. Nuhra ti stringe la mano senza una parola e traccia sulla sabbia una linea: la via più breve per l'oasi.",
           "fx": {
-            "gold": 1.5,
-            "hp": -1
+            "block": 12,
+            "hp": -4
           },
           "v": {
             "honor": 6,
@@ -4260,7 +4268,8 @@
           "label": "Prosegui da solo senza fermarti",
           "text": "Risparmi acqua e forze. Dietro di te, per un po', senti dei passi che si fermano. Non ti volti.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "ambition": 6,
@@ -4298,7 +4307,8 @@
           "label": "La conservi senza rispondere",
           "text": "La infili nello zaino insieme alle fasce. Non è mancanza d'affetto: rispondere vorrebbe dire fermarsi, e non puoi.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "ambition": 4,
@@ -4310,7 +4320,7 @@
           "label": "La bruci: non è più il momento",
           "text": "Il foglio brucia in pochi secondi, e con lui la tua unica scusa per tornare indietro. Il cavaliere non ti guarda: ha già visto altri farlo.",
           "fx": {
-            "foeHp": -10
+            "foeHp": -25
           },
           "v": {
             "ambition": 6,
@@ -4361,7 +4371,8 @@
           "label": "Dici che non ti riguarda più",
           "text": "Il mercante annuisce senza giudicarti. Più tardi, da solo, ti accorgi di aver ripetuto quella frase tre volte e nessuna è suonata vera.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "ambition": 6,
@@ -4397,8 +4408,8 @@
           "label": "Accetti il rito: il segno è tuo",
           "text": "Il taglio è netto e breve. Il dolore diventa qualcosa di duro che non ti abbandona: sai già che ti resterà per sempre.",
           "fx": {
-            "energy": 1,
-            "hp": -1
+            "block": 12,
+            "hp": -4
           },
           "v": {
             "honor": 4,
@@ -4423,7 +4434,7 @@
           "label": "Rifiuti il rito e combatti con le tue regole",
           "text": "La Mummia abbassa il coltello. «Come vuoi.» Per un attimo senti sulla pelle gli occhi di tutto il tempio, e non è una sensazione piacevole.",
           "fx": {
-            "foeHp": -10
+            "foeHp": -25
           },
           "v": {
             "ambition": 4,
@@ -4461,7 +4472,7 @@
           "label": "Le racconti del Notaio e del Registro: che lo sappiano tutti",
           "text": "Lia ti ascolta senza respirare. Quando se ne va ha nel taccuino una storia che qualcuno vorrà far tacere. Il tuo nome è dentro, e non dalla parte dei vincitori.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -4514,8 +4525,8 @@
           "label": "Lo affronti a viso aperto, sul suo terreno",
           "text": "Ogni colpo è un'onda, e ti ritrovi a ridere per il dolore. Quando smette, la carovana ha già smesso di contare.",
           "fx": {
-            "energy": 1,
-            "hp": -1
+            "foeHp": -35,
+            "hp": -4
           },
           "v": {
             "honor": 3,
@@ -4540,7 +4551,7 @@
           "label": "Usi la tempesta per sparire e colpirlo di sorpresa",
           "text": "Nessuno ti vede entrare, né uscire. Qualcuno giura di aver visto il Colosso inciampare da solo, e non è del tutto falso.",
           "fx": {
-            "foeHp": -10
+            "foeHp": -25
           },
           "v": {
             "ambition": 5,
@@ -4588,7 +4599,7 @@
           "label": "Rifiuti: ti inchini solo a chi ti ha insegnato",
           "text": "La sala trattiene il fiato. Il Faraone ride, e il suono rimbomba come un tuono basso. «Hai un maestro, allora. Spero che sia vivo.»",
           "fx": {
-            "foeHp": -10
+            "foeHp": -25
           },
           "v": {
             "honor": 3,
@@ -4647,8 +4658,8 @@
           "label": "Salvi i marinai prima di pensare allo Squalo",
           "text": "Li porti a uno a uno sulla banchina, con le onde che ti mordono le caviglie. Lo Squalo aspetta, paziente: adesso è lui ad avere fretta.",
           "fx": {
-            "energy": 1,
-            "hp": -1
+            "block": 12,
+            "hp": -4
           },
           "v": {
             "honor": 6,
@@ -4672,7 +4683,7 @@
           "label": "Incidi il tuo nome sul relitto e prosegui",
           "text": "Per un attimo ti senti ridicolo. Poi vedi una barca di pescatori rallentare per leggerlo, e capisci che funziona.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -4714,7 +4725,7 @@
           "label": "Ascolti fino in fondo, senza difenderti",
           "text": "Il canto finisce e resti in ginocchio sulle assi. Quello che hai sentito non è piacevole, ma è tuo. Hai capito che cosa significa davvero quel nome.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "block": 3
           },
           "v": {
@@ -4727,7 +4738,8 @@
           "label": "Tappi le orecchie e insegui il suono per puro istinto",
           "text": "Corri nel vuoto, senza sentire. Quando raggiungi la Sirena, è lei a sorprendersi: nessuno aveva mai ignorato il suo canto per arrivarle addosso.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "ambition": 5,
@@ -4774,7 +4786,7 @@
           "label": "Dividi il nucleo in parti uguali",
           "text": "Ci vogliono mani ferme e un po' di coraggio. Quando hai finito, nessuno dei due ha la tempesta intera. Entrambi la sentono.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "block": 3
           },
           "v": {
@@ -4788,7 +4800,8 @@
           "label": "Prendi tutto: ti serve più di chiunque altro",
           "text": "Il nucleo ti riempie come una scarica. Per un momento l'oceano ti sembra piccolo. Poi guardi dove si trova Idris, e capisci che hai scelto.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "ambition": 7,
@@ -4838,8 +4851,8 @@
           "label": "Liberi l'equipaggio prima di ogni altra cosa",
           "text": "Tre tentacoli, un ponte che si inclina, un uomo che ti passa un bambino. Quando il Kraken si volta, sei già al centro dello scontro, a mani nude e con meno fiato.",
           "fx": {
-            "energy": 1,
-            "hp": -1
+            "foeHp": -35,
+            "hp": -4
           },
           "v": {
             "honor": 6,
@@ -4852,7 +4865,7 @@
           "label": "Colpisci l'occhio del Kraken: chi vince, salva tutti",
           "text": "Il colpo arriva pulito. Il mostro urla e lascia la presa, e il ponte si ferma. Nessuno parla di che cosa sarebbe successo se avessi sbagliato.",
           "fx": {
-            "foeHp": -10
+            "foeHp": -25
           },
           "v": {
             "ambition": 5,
@@ -4936,7 +4949,7 @@
           "label": "Prendi la rotta in silenzio e non dici niente a nessuno",
           "text": "Non c'è gloria, non c'è inganno. Sael ti guarda sparire all'orizzonte come se non ti avesse mai incontrato, e ti sembra giusto così.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -4967,7 +4980,8 @@
           "label": "Ne mangi un altro: vuoi sapere fin dove arrivi",
           "text": "Il sapore è identico, ma il corpo reagisce prima della mente: le dita si allungano, il battito accelera. Oru scuote la testa, e nel gesto c'è pietà.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "ambition": 7,
@@ -5067,7 +5081,8 @@
           "label": "Abbracci ciò che hai visto",
           "text": "Lo Spirito sorride e le ferite si chiudono più in fretta. La visione smette di essere un avvertimento e diventa una promessa.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "ambition": 4,
@@ -5091,7 +5106,7 @@
           "label": "Gli chiedi di mostrarti il futuro di qualcun altro",
           "text": "Vedi un vecchio che lucida un sacco da boxe, una cronista che scrive, un uomo con un braccio d'acciaio che cammina verso una luce. Non sai quali siano verità e quali desideri.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "block": 3
           },
           "v": {
@@ -5155,7 +5170,7 @@
           "label": "Cancelli un nome: non meritava di restare",
           "text": "La corteccia sanguina resina. Nessuno ti ferma e nessuno ti ringrazia. Ti chiedi se hai deciso tu, o se ti hanno lasciato decidere.",
           "fx": {
-            "foeHp": -10
+            "foeHp": -25
           },
           "v": {
             "ambition": 6,
@@ -5191,7 +5206,7 @@
           "label": "Ascolti la sua storia e ti fermi ad aiutarlo",
           "text": "Passi la notte a raccontargli ogni dettaglio, anche quelli che ti fanno male. All'alba non è più un nemico, ma neanche un amico: è una persona che ti ha creduto.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "block": 3
           },
           "v": {
@@ -5205,7 +5220,7 @@
           "label": "Lo colpisci per primo: non puoi permetterti il dubbio",
           "text": "È veloce, ma tu lo sei di più. Mentre cade ti guarda come se avesse atteso proprio questo.",
           "fx": {
-            "foeHp": -10
+            "foeHp": -25
           },
           "v": {
             "ambition": 6,
@@ -5255,7 +5270,8 @@
           "label": "Ne prendi la forza fino in fondo",
           "text": "L'Albero non si ribella. Per ore, il bosco intorno a te appassisce con lentezza, mentre tu cresci. Quando te ne vai, non hai più bisogno di chiedere nulla.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "ambition": 7,
@@ -5336,7 +5352,7 @@
           "label": "Gli chiedi tutta la verità sul Registro",
           "text": "«Il Registro non registra i vincitori», dice. «Registra chi viene ricordato, perché i Titani vivono di nomi. Io ne ho dati a molti. Non tutti sono usciti interi.» Per la prima volta non sembra un uomo in nero: sembra un uomo.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -5419,7 +5435,7 @@
           "label": "Chiedi a Lia di raccontare la sua storia al mondo",
           "text": "Lia scrive tutta la notte, e il mattino dopo il Golem è una voce, non solo una montagna che cammina. Il tuo nome sta accanto al suo.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -5454,7 +5470,8 @@
           "label": "Accetti: ti serve ogni scintilla",
           "text": "Il fuoco ti attraversa e per un momento sei più alto della montagna. Poi ti lascia con un vuoto che non sai ancora nominare.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "ambition": 7,
@@ -5546,7 +5563,7 @@
           "label": "Lo lasci passare per primo: se cade, la strada è tua",
           "text": "Idris corre in avanti senza voltarsi. Capisci che non gli hai mentito, e nemmeno detto la verità.",
           "fx": {
-            "foeHp": -10
+            "foeHp": -25
           },
           "v": {
             "ambition": 6,
@@ -5559,7 +5576,8 @@
           "label": "Lo sfidi qui e ora per decidere chi sale",
           "text": "Sopra di voi il drago osserva due persone scegliere di non essere alleate. Vince chi ha più fiato; il resto lo giudicherà il tempo.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "fame": 5,
@@ -5654,7 +5672,7 @@
           "label": "Lasci che il tuo nome vada oltre di te",
           "text": "«Sarà più grande di te», dice il Titano. «Lo sai?» Rispondi di sì, e la montagna sembra annuire.",
           "fx": {
-            "draw": 1,
+            "draw": 3,
             "gold": 0.5
           },
           "v": {
@@ -5675,7 +5693,8 @@
           "label": "Lo affronti e basta, senza chiedere niente a nessuno",
           "text": "Il Titano sorride come sorride la roccia quando incontra l'acqua. «Allora comincia.» Non è la scelta più grande: è la tua.",
           "fx": {
-            "energy": 1
+            "energy": 2,
+            "block": 6
           },
           "v": {
             "honor": 2,
