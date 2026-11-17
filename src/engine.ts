@@ -446,6 +446,18 @@ export function moveCard(r: Run, id: number, dir: -1 | 1): Err {
   const e = moveErr(r, id, dir); if (e) return e; const c = r.combat!, [g] = findPlaced(c, id)!, row = c.field[g], gr = groupsOf(row), i = gr.findIndex(x => x[0].id === id), j = i + dir;
   [gr[i], gr[j]] = [gr[j], gr[i]]; row.splice(0, row.length, ...gr.flat()); bump(c, 'reorder'); rebuild(r, c, g); syncShieldAtk(c); c.log.push('Ordine del campo cambiato.'); return null;
 }
+/** Riordino col trascinamento: sposta la carta (id) davanti alla carta beforeId, oppure in fondo alla riga (beforeId = 0). Un solo spostamento = un uso dell'azione. */
+export function moveToErr(r: Run, id: number, beforeId: number): Err {
+  const g0 = actGuard(r, 'reorder'); if (g0) return g0; const c = r.combat!, f = findPlaced(c, id); if (!f) return 'Carta non sul campo.';
+  const [g, p] = f; if (!p.cx || p.t !== c.turn || p.cl) return 'Puoi riordinare solo le carte schierate in questo turno.';
+  const gr = groupsOf(c.field[g]), i = gr.findIndex(x => x[0].id === id), j = beforeId ? gr.findIndex(x => x.some(q => q.id === beforeId)) : gr.length; if (i < 0 || j < 0) return 'Carta non sul campo.';
+  if (beforeId && (!gr[j][0].cx || gr[j][0].t !== c.turn)) return 'Puoi spostarla solo tra le carte schierate in questo turno.';
+  if ((j > i ? j - 1 : j) === i) return 'È già in questa posizione.'; return null;
+}
+export function moveCardTo(r: Run, id: number, beforeId: number): Err {
+  const e = moveToErr(r, id, beforeId); if (e) return e; const c = r.combat!, [g] = findPlaced(c, id)!, row = c.field[g], gr = groupsOf(row), i = gr.findIndex(x => x[0].id === id), j = beforeId ? gr.findIndex(x => x.some(q => q.id === beforeId)) : gr.length;
+  const [x] = gr.splice(i, 1); gr.splice(j > i ? j - 1 : j, 0, x); row.splice(0, row.length, ...gr.flat()); bump(c, 'reorder'); rebuild(r, c, g); syncShieldAtk(c); c.log.push('Ordine del campo cambiato.'); return null;
+}
 /** 3) Recupera dagli scarti: per config.actions.retrieve.cost energia una carta scelta dagli scarti torna in mano. */
 export function retrieveErr(r: Run, uid: string): Err {
   const g = actGuard(r, 'retrieve'); if (g) return g; const c = r.combat!; if (!c.discard.includes(uid)) return 'Carta non negli scarti.';

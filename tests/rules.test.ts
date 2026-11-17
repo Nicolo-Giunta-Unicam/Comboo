@@ -1,6 +1,6 @@
 import { test } from 'node:test'; import assert from 'node:assert/strict';
 import { newRun, maxHp, askMercy, healRun, setStyle, effCost, choosePick, drawDiscard, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, rerollOffers, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
-import { actionOn, recallCard, moveCard, moveErr, retrieveCard, dismissIntro, shieldsOf } from '../src/engine'; import type { ActionId } from '../src/engine';
+import { actionOn, recallCard, moveCard, moveErr, retrieveCard, dismissIntro, shieldsOf, moveCardTo, moveToErr } from '../src/engine'; import type { ActionId } from '../src/engine';
 import { EQUIPMENT, MOVES, STYLES } from '../src/data'; import { REGIONS } from '../src/regions'; import { CONFIG } from '../src/config'; import { saveRun, loadRun, SAVE_KEY, loadBest, saveBest, runScore, type KV } from '../src/save';
 const kv = (): KV & { m: Map<string, string> } => { const m = new Map<string, string>(); return { m, getItem: k => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v), removeItem: k => void m.delete(k) }; };
 const settle = (r: Run) => { const c = r.combat!; for (let i = 0; i < 10 && c.phase === 'resolve'; i++) enemyStep(r); };
@@ -405,4 +405,13 @@ test('recupera dagli scarti: costa energia, serve spazio in mano', () => {
   assert.match(retrieveCard(r, 'base:jab:0') ?? '', /sbloccata/); r.region = 'ocean'; const cost = CONFIG.actions.retrieve.cost;
   assert.match(retrieveCard(r, 'base:nonc:9') ?? '', /scarti/); assert.equal(retrieveCard(r, 'base:jab:0'), null); assert.deepEqual(c.hand, ['base:jab:0']); assert.deepEqual(c.discard, ['base:guard:1']); assert.equal(c.energy, 3 - cost);
   c.energy = cost - 1; assert.equal(retrieveCard(r, 'base:guard:1'), 'Energia insufficiente.'); c.energy = 10; c.hand = Array(CONFIG.maxHand).fill('base:jab:0'); assert.match(retrieveCard(r, 'base:guard:1') ?? '', /Mano piena/);
+});
+
+test('riordina col trascinamento: sposta la carta davanti a un\'altra o in fondo, ricalcolando le combo', () => {
+  const r = newRun(3); r.region = 'battlefield'; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['base:jab:0', 'eq:wraps:1', 'base:jab:1'];
+  [...c.hand].forEach(u => playCard(r, u)); const [j1, w, j2] = c.field.off, before = j2.dmg; assert.match(moveToErr(r, j2.id!, w.id!) ?? '', /sbloccata/);
+  r.region = 'desert'; assert.equal(moveToErr(r, j2.id!, 0), 'È già in questa posizione.'); assert.equal(moveToErr(r, w.id!, j2.id!), 'È già in questa posizione.'); assert.match(moveToErr(r, j2.id!, 9999) ?? '', /campo/);
+  assert.equal(moveCardTo(r, j2.id!, w.id!), null); assert.deepEqual(c.field.off.map(p => p.mv), ['jab', 'jab', 'wraps_1']); assert.ok(j2.dmg > before, 'doppio jab dopo il trascinamento');
+  assert.equal(moveCardTo(r, j1.id!, 0), null); assert.deepEqual(c.field.off.map(p => p.id), [j2.id, w.id, j1.id]); assert.equal(j2.dmg, before, 'senza carte uguali vicine il bonus sparisce'); assert.equal(c.lastBy!.off, 'jab');
+  c.hand = ['base:guard:1']; playCard(r, 'base:guard:1'); assert.match(moveToErr(r, j1.id!, c.field.def[0].id!) ?? '', /campo|riga|sposta/i);
 });

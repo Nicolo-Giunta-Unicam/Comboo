@@ -1,6 +1,6 @@
 import { CONFIG } from './config';
 import { CAT_INFO, CATS, CHOICES, ENEMY_MOVES, EQUIPMENT, MOVES, STYLES, catLabel, effectLines, moveOf, passiveLines, type ChoiceFx, type VirtId, type VirtMap, VIRTUES, type Move } from './data';
-import { actionOn, recallCard, recallErr, moveCard, moveErr, retrieveCard, retrieveErr, dismissIntro, evParas, condOk, virtOf, virtDef, rankOf, rankName, perkOf, VIRT_IDS, epilogueOf, makeChoice, pendingChoice, choiceGold, chapterKey, scaledFx, beginArena, buyEnergy, rerollOffers, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, arenaEquipment, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, cardValue, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, cardInfo, godGiveCard, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
+import { actionOn, recallCard, recallErr, moveCard, moveCardTo, moveErr, retrieveCard, retrieveErr, dismissIntro, evParas, condOk, virtOf, virtDef, rankOf, rankName, perkOf, VIRT_IDS, epilogueOf, makeChoice, pendingChoice, choiceGold, chapterKey, scaledFx, beginArena, buyEnergy, rerollOffers, buyOfferEq, buyOfferMv, buyEquipment, buyMove, endTurn, energyPrice, enemyStep, maxEnergy, maxHp, slotsFor, enemyFor, islandIndex, arenaEquipment, askMercy, setStyle, effCost, choosePick, drawDiscard, healRun, startHp, resolvePending, chooseRegion, unlocked, openMap, wins, sellCard, cardValue, newRun, ownedCards, playCard, sellEquipment, sellMove, toggleDeck, cardInfo, godGiveCard, type Combat, type EnemyCard, type Placed, type Err, type Run } from './engine';
 import { applyPalette } from './theme';
 import { LANG, LANGS, setLang, startLocalizer, tr } from './i18n';
 import { openEditor } from './editor';
@@ -216,7 +216,7 @@ function draw() {
     const pcard = (p: Placed, k: 'off' | 'def', extra = '', own = false) => {
       const m = p.mv ? MOVES[p.mv] : null;
       const lines = [k === 'off' ? `⚔️ Danni ${p.dmg}${p.hits > 1 ? '×' + p.hits : ''}` : `🛡️ Guardia ${p.block}`, k === 'def' ? `⏳ ${p.ttl < 0 ? 'Finché abbattuta' : (p.ttl > 1 ? `${p.ttl} turni` : '1 turno')}` : '', p.tag ?? ''].filter(Boolean); // versione compatta: gli altri effetti stanno nella scheda completa (passaggio del mouse)
-      return `<div class="card ${m ? kind(m) : k === 'off' ? 'atk' : 'def'} ${m ? '' : 'foe'} ${extra} ${p.id === c.fresh ? 'new' : ''} ${own && p.id === fsel ? 'fsel' : ''}" data-pc="${p.id}">${m ? `<span class="cost">${m.cost}</span>` : ''}<div class="nm">${p.name}</div><div class="art">${ico(p)}${m ? catBadge(m) : ''}${p.trg ? '<span class="trgb">🔔</span>' : ''}</div><div class="efs">${lines.map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${m ? (m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name) : 'Nemico'}</div></div>`;
+      return `<div class="card ${m ? kind(m) : k === 'off' ? 'atk' : 'def'} ${m ? '' : 'foe'} ${extra} ${p.id === c.fresh ? 'new' : ''} ${own && p.id === fsel ? 'fsel' : ''}" data-pc="${p.id}"${own && !busy && !finalView && !p.cl && ((actionOn(r, 'recall') && p.uid) || (actionOn(r, 'reorder') && p.cx && p.t === c.turn)) ? ` data-drag="field:${p.id}"${actionOn(r, 'reorder') && p.cx && p.t === c.turn ? ' data-mv="1"' : ''}` : ''}>${m ? `<span class="cost">${m.cost}</span>` : ''}<div class="nm">${p.name}</div><div class="art">${ico(p)}${m ? catBadge(m) : ''}${p.trg ? '<span class="trgb">🔔</span>' : ''}</div><div class="efs">${lines.map(l => `<div class="ef">${l}</div>`).join('')}</div><div class="src">${m ? (m.source === 'base' ? 'Base' : EQUIPMENT[m.source].name) : 'Nemico'}</div></div>`;
     };
     const rw = (a: Placed[], k: 'off' | 'def', who: 'f' | 'm', fl = false) => `<div class="rowf ${k} own-${who} ${a.length > 3 ? 'rt' : ''} ${fl ? 'flash' : ''}"><i>${k === 'off' ? 'OFFESA' : 'DIFESA'}</i>${a.map(p => pcard(p, k, '', who === 'm')).join('')}</div>`;
     const sh = (a: Placed[]) => a.reduce((s, p) => s + p.block, 0);
@@ -234,7 +234,7 @@ function draw() {
       ${rw(c.field.off, 'off', 'm')}${rw(c.field.def, 'def', 'm', ev?.by === 'foe' && ev.absorbed > 0)}</div>
       ${side(false, e.hp, e.maxHp, sh(c.foeField.def), pop.e, foeArt(e.art, e.tier, e.id), `${(wins(r, r.region ?? '') % CONFIG.matchesPerIsland) + 1}/${CONFIG.matchesPerIsland}`, e.tier, bar0.foe, eqf)}
     </div></div>
-    <div class="handrow"><div class="hand">${c.hand.map((u, i) => card(u, { cls: busy ? 'off' : (() => { const ci = cardInfo(r, u); return ci.playable && reqOk(MOVES[moveOf(u)]) ? (ci.boosted ? 'rdy bst' : 'rdy') : 'off lck'; })(), cost: effCost(c, u), badge: busy ? '' : badge(c, u), attr: `data-drag="${u}" style="--i:${i};--n:${n}"` })).join('')}</div><div class="pile disc ${!busy && actionOn(r, 'retrieve') ? 'buy' : ''}" data-a="pile" data-id="discard" title="${!busy && actionOn(r, 'retrieve') ? `Carte già giocate · puoi recuperarne una (${CONFIG.actions.retrieve.cost}⚡)` : 'Carte già giocate'}"><b>${c.discard.length}</b><small>Scarti</small></div><div class="pile draw ${c.draw.length ? '' : 'empty'}" data-a="pile" data-id="draw" title="Carte rimaste nel mazzo"><b>${c.draw.length}</b><small>Mazzo</small></div>${c.phase === 'player' && (c.mods?.combos ?? 0) > 0 ? `<div class="cbd" title="Hai fatto una combo: peschi +${CONFIG.comboDraw} carta al prossimo turno">🂠 +${CONFIG.comboDraw} al prossimo turno</div>` : ''}</div>`;
+    <div class="handrow" data-zone="hand"><div class="hand">${c.hand.map((u, i) => card(u, { cls: busy ? 'off' : (() => { const ci = cardInfo(r, u); return ci.playable && reqOk(MOVES[moveOf(u)]) ? (ci.boosted ? 'rdy bst' : 'rdy') : 'off lck'; })(), cost: effCost(c, u), badge: busy ? '' : badge(c, u), attr: `data-drag="${u}" style="--i:${i};--n:${n}"` })).join('')}</div><div class="pile disc ${!busy && actionOn(r, 'retrieve') ? 'buy' : ''}" data-a="pile" data-id="discard" title="${!busy && actionOn(r, 'retrieve') ? `Carte già giocate · puoi recuperarne una (${CONFIG.actions.retrieve.cost}⚡)` : 'Carte già giocate'}"><b>${c.discard.length}</b><small>Scarti</small></div><div class="pile draw ${c.draw.length ? '' : 'empty'}" data-a="pile" data-id="draw" title="Carte rimaste nel mazzo"><b>${c.draw.length}</b><small>Mazzo</small></div>${c.phase === 'player' && (c.mods?.combos ?? 0) > 0 ? `<div class="cbd" title="Hai fatto una combo: peschi +${CONFIG.comboDraw} carta al prossimo turno">🂠 +${CONFIG.comboDraw} al prossimo turno</div>` : ''}</div>`;
     if (fromView !== view) { const bd = app.querySelector('.board') as HTMLElement | null; if (bd) { void bd.offsetHeight; requestAnimationFrame(() => requestAnimationFrame(() => { bd.classList.remove('v-' + fromView); bd.classList.add('v-' + view); })); } }
     if (fsel !== null) { if (c.phase !== 'player' || finalView) fsel = null; else fieldBar(r, c); }
     if (announceTurn) { const n = announceTurn; announceTurn = 0; turnBanner(n); }
@@ -423,7 +423,7 @@ function act(a: string, id = '') {
     else if (a === 'tab') tab = id as typeof tab; else if (a === 'next') tab = tab === 'sto' ? 'st' : 'me'; else if (a === 'region') { if (unlocked(run).includes(id)) mapSel = id; else err = '🔒 Isola bloccata: vinci le 5 partite dell\'isola precedente.'; } else if (a === 'openmap') err = openMap(run);
     else if (a === 'mercy') { const c = run.combat; if (c?.mercy) err = 'Hai già chiesto pietà in questo duello.'; else if (c?.phase !== 'player') err = 'Non è il tuo turno.'; else slotMachine('mercy', '', () => { const res = askMercy(run!); if (res.err) { note = res.err; render(); return null; } persist(run!); return res.spared ? 'ok' : 'no'; }); } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'heal') err = healRun(run); else if (a === 'ddraw') { err = drawDiscard(run); if (!err) sfx('shuffle'); } else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
     else if (a === 'buyM') err = buyMove(run, id); else if (a === 'buyEn') err = buyEnergy(run); else if (a === 'reroll') err = rerollOffers(run); else if (a === 'offerEq') err = buyOfferEq(run, +id); else if (a === 'offerMv') err = buyOfferMv(run, +id); else if (a === 'hint') err = id; else if (a === 'sellM') err = sellMove(run, id); else if (a === 'deck') err = toggleDeck(run, id);
-    else if (a === 'recall') { err = recallCard(run, +id); if (!err) { fsel = null; sfx('click'); } } else if (a === 'mvL' || a === 'mvR') { err = moveCard(run, +id, a === 'mvL' ? -1 : 1); if (!err) sfx('deal'); } else if (a === 'retrieve') { err = retrieveCard(run, id); if (!err) { pileView = null; sfx('deal'); } } else if (a === 'introOk') err = dismissIntro(run);
+    else if (a === 'recall') { err = recallCard(run, +id); if (!err) { fsel = null; sfx('click'); } } else if (a === 'moveto') { const [i, b] = id.split(':'); err = moveCardTo(run, +i, +b); if (!err) sfx('deal'); } else if (a === 'mvL' || a === 'mvR') { err = moveCard(run, +id, a === 'mvL' ? -1 : 1); if (!err) sfx('deal'); } else if (a === 'retrieve') { err = retrieveCard(run, id); if (!err) { pileView = null; sfx('deal'); } } else if (a === 'introOk') err = dismissIntro(run);
     else if (a === 'go') err = beginArena(run); else if (a === 'play') err = playCard(run, id); else if (a === 'end') { fsel = null; err = endTurn(run); }
     if (!['tab', 'next', 'play', 'end'].includes(a)) run.msg = '';
     if (!err) { if (a === 'end') sfx('turn'); if (run.gold !== g0 && !settings.god) coinFx(g0, run.gold); if (mys) slotMachine(a === 'offerEq' ? 'eq' : 'mv', mys);
@@ -435,7 +435,9 @@ function act(a: string, id = '') {
   if (flashChoice) { flashChoice = false; sfx('warn'); const bx = app.querySelector('.chbox') as HTMLElement | null; bx?.classList.add('flash'); bx?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 }
 /** Clic su una propria carta schierata: la seleziona e mostra le azioni sbloccate (↩ riprendi in mano, ◀ ▶ riordina). */
+let noClick = 0; // un trascinamento di una carta del campo non deve contare anche come clic (selezione)
 function fieldPick(t: HTMLElement): boolean {
+  if (Date.now() - noClick < 400 && t.closest('.rowf.own-m [data-pc]')) return true;
   const el = t.closest('.rowf.own-m [data-pc]') as HTMLElement | null, c = run?.combat; if (!el || !run || !c || c.phase !== 'player' || finalView || sailing) return false;
   const id = +el.dataset.pc!, p = [...c.field.off, ...c.field.def].find(x => x.id === id); if (!p) return false;
   if (!((actionOn(run, 'recall') && !!p.uid && !p.cl) || (actionOn(run, 'reorder') && !!p.cx && p.t === c.turn))) return false;
@@ -472,14 +474,28 @@ let el: HTMLElement | null = null, sx = 0, sy = 0, moved = false, ph: HTMLElemen
 function lift(c: HTMLElement) { const q = c.getBoundingClientRect(); ph = document.createElement('div'); ph.style.cssText = `width:${q.width}px;height:${q.height}px;flex:none;margin:${getComputedStyle(c).margin}`; c.before(ph); Object.assign(c.style, { position: 'fixed', left: q.left + 'px', top: q.top + 'px', width: q.width + 'px', height: q.height + 'px', margin: '0', zIndex: '300' });
   const q2 = c.getBoundingClientRect(), ox = q2.left - q.left, oy = q2.top - q.top; if (Math.abs(ox) > 0.5 || Math.abs(oy) > 0.5) Object.assign(c.style, { left: q.left - ox + 'px', top: q.top - oy + 'px' }); // se un contenitore è trasformato/animato, position:fixed è relativo a lui: si compensa lo scarto
 }
-function markTarget(c: HTMLElement) { const u = c.dataset.drag ?? ''; if (u.startsWith('offer:')) document.querySelector(`[data-zone="${u.split(':')[1] === 'eq' ? 'eqbar' : 'deck'}"]`)?.classList.add('target'); } // evidenzia dove trascinare la carta da acquistare
-function clearTargets() { document.querySelectorAll('.target').forEach(z => z.classList.remove('target')); }
+function markTarget(c: HTMLElement) { const u = c.dataset.drag ?? ''; if (u.startsWith('field:') && actionOn(run!, 'recall') && (c.dataset.drag ?? '').length) document.querySelector('.handrow')?.classList.add('target'); if (u.startsWith('offer:')) document.querySelector(`[data-zone="${u.split(':')[1] === 'eq' ? 'eqbar' : 'deck'}"]`)?.classList.add('target'); } // evidenzia dove trascinare la carta da acquistare
+function clearTargets() { document.querySelectorAll('.target').forEach(z => z.classList.remove('target')); insMark?.remove(); insMark = null; }
 function unlift(c: HTMLElement) { ph?.remove(); ph = null; ['position', 'left', 'top', 'width', 'height', 'margin', 'z-index'].forEach(p => c.style.removeProperty(p)); }
 const zoneAt = (ev: PointerEvent) => document.elementsFromPoint(ev.clientX, ev.clientY).filter(n => !(el && el.contains(n)) && n !== ph).map(e => e.closest('[data-zone]')).find(Boolean) as HTMLElement | undefined;
 const clearHot = () => document.querySelectorAll('.hot').forEach(z => z.classList.remove('hot'));
+let insMark: HTMLElement | null = null;
+/** Riga di partenza di una carta del campo trascinata (il segnaposto è rimasto lì) e punto di inserimento sotto il puntatore: id della carta davanti a cui metterla (0 = in fondo). */
+function fieldIns(ev: PointerEvent, id: number): { row: HTMLElement; before: number; x: number } | null {
+  const row = ph?.parentElement as HTMLElement | null; if (!row || !row.classList.contains('rowf') || !(el?.dataset.mv)) return null;
+  if (!document.elementsFromPoint(ev.clientX, ev.clientY).filter(n => !(el && el.contains(n)) && n !== ph).some(n => n === row || n.closest('.rowf') === row)) return null;
+  const cs = Array.from(row.querySelectorAll<HTMLElement>('[data-pc][data-mv]')).filter(n => +n.dataset.pc! !== id && !n.classList.contains('drag'));
+  for (const n of cs) { const q = n.getBoundingClientRect(); if (ev.clientX < q.left + q.width / 2) return { row, before: +n.dataset.pc!, x: q.left - 2 }; }
+  const l = cs[cs.length - 1]?.getBoundingClientRect(); return { row, before: 0, x: l ? l.right + 2 : row.getBoundingClientRect().left + 6 };
+}
+function showIns(ev: PointerEvent) {
+  const u = el?.dataset.drag ?? ''; if (!u.startsWith('field:')) return; const t = fieldIns(ev, +u.slice(6));
+  if (!t) { insMark?.remove(); insMark = null; return; } if (!insMark) { insMark = document.createElement('div'); insMark.className = 'insmark'; document.body.appendChild(insMark); }
+  const q = t.row.getBoundingClientRect(); Object.assign(insMark.style, { left: t.x + 'px', top: q.top + 4 + 'px', height: q.height - 8 + 'px' });
+}
 const phone = () => matchMedia('(max-width:640px)').matches;
 let hold = 0, grabbed = false, held = false, dbar: HTMLElement | null = null, fullEl: HTMLElement | null = null;
-const needHold = (c: HTMLElement) => phone() && !c.closest('.hand'); // mazzo ed equipaggiamenti: si trascina solo dopo una pressione lunga (altrimenti il dito scorre la pagina)
+const needHold = (c: HTMLElement) => phone() && !c.closest('.hand') && !c.closest('.rowf'); // mazzo ed equipaggiamenti: si trascina solo dopo una pressione lunga (altrimenti il dito scorre la pagina)
 function hideFull() { fullEl?.remove(); fullEl = null; }
 function showFull(c: HTMLElement) { // pressione lunga su una carta della mano: formato completo
   hideFull(); const k = c.cloneNode(true) as HTMLElement; k.className = k.className.replace(/\b(dealt|rdy|bst|drag|grab|off)\b/g, '').replace(/\s+/g, ' ').trim(); k.removeAttribute('data-drag'); k.removeAttribute('style');
@@ -500,17 +516,20 @@ app.addEventListener('pointerdown', ev => {
   const c = (ev.target as HTMLElement).closest('[data-drag]') as HTMLElement | null; if (!c) return;
   if (phone() && (c.dataset.drag ?? '').startsWith('offer:')) return; // su telefono si compra toccando la targhetta del prezzo
   el = c; sx = ev.clientX; sy = ev.clientY; moved = false; endHold(); c.setPointerCapture(ev.pointerId);
-  if (phone()) hold = window.setTimeout(() => { if (!el || moved) return; if (needHold(el)) grab(el); else { held = true; showFull(el); } }, 380);
+  if (phone()) hold = window.setTimeout(() => { if (!el || moved) return; if (needHold(el)) grab(el); else if (!(el.dataset.drag ?? '').startsWith('field:')) { held = true; showFull(el); } }, 380);
 });
 app.addEventListener('pointermove', ev => {
   if (!el) return; const dx = ev.clientX - sx, dy = ev.clientY - sy;
   if (needHold(el) && !grabbed) { if (Math.hypot(dx, dy) > 10) clearTimeout(hold); return; } // senza pressione lunga il movimento è solo scorrimento
   if (!moved && Math.hypot(dx, dy) < 8) return;
-  if (!moved) { clearTimeout(hold); hideFull(); if (!grabbed) { lift(el); markTarget(el); } } moved = true; el.classList.add('drag'); el.style.transform = `translate(${dx}px,${dy}px) scale(1.15)`; clearHot(); zoneAt(ev)?.classList.add('hot');
+  if (!moved) { clearTimeout(hold); hideFull(); if (!grabbed) { lift(el); markTarget(el); } } moved = true; el.classList.add('drag'); el.style.transform = `translate(${dx}px,${dy}px) scale(1.15)`; clearHot(); zoneAt(ev)?.classList.add('hot'); showIns(ev);
 });
 const endDrag = (ev: PointerEvent, cancel: boolean) => {
-  if (!el) return; const c = el, uid = c.dataset.drag!, z = cancel ? undefined : zoneAt(ev)?.dataset.zone; el = null; clearHot(); const wasGrab = grabbed || held; endHold();
+  if (!el) return; const c = el, uid = c.dataset.drag!, z = cancel ? undefined : zoneAt(ev)?.dataset.zone, ins = uid.startsWith('field:') && !cancel && moved ? fieldIns(ev, +uid.slice(6)) : null; el = null; clearHot(); const wasGrab = grabbed || held; endHold();
   c.classList.remove('drag', 'grab'); c.style.transform = ''; unlift(c); clearTargets(); if (!run) return;
+  if (uid.startsWith('field:')) { // carta del proprio campo: trascinata sulla mano = riprendi in mano; trascinata lungo la sua riga = riordina (il semplice tocco la seleziona, vedi fieldPick)
+    if (!moved || cancel) return; noClick = Date.now(); const id = +uid.slice(6); if (z === 'hand') act('recall', String(id)); else if (ins) act('moveto', `${id}:${ins.before}`); return;
+  }
   if (uid.startsWith('offer:')) { // acquisto solo con drag & drop: potenziamenti -> barra equipaggiamenti, mosse -> mazzo
     const [, k, i] = uid.split(':'); if (z === (k === 'eq' ? 'eqbar' : 'deck')) act(k === 'eq' ? 'offerEq' : 'offerMv', i);
     else if (!cancel) act('hint', k === 'eq' ? 'Trascina il potenziamento sulla barra equipaggiamenti.' : 'Trascina la mossa sul mazzo.'); return;
