@@ -191,6 +191,32 @@
           }
         }
       ]
+    },
+    "actions": {
+      "recall": {
+        "unlock": "battlefield",
+        "cost": 0,
+        "perTurn": 1,
+        "icon": "↩️",
+        "name": "Riprendi in mano",
+        "desc": "Ora puoi ritirare una carta che hai schierato sul tuo campo: toccala e scegli ↩ per rimetterla in mano. L'energia che hai già speso non viene rimborsata."
+      },
+      "reorder": {
+        "unlock": "desert",
+        "cost": 0,
+        "perTurn": 0,
+        "icon": "🔀",
+        "name": "Riordina il campo",
+        "desc": "Ora puoi cambiare l'ordine delle carte che hai schierato in questo turno: toccane una e usa ◀ ▶ per spostarla. Le combo a sequenza (la stessa carta due volte, o una carta che ne concatena un'altra, come Jab → Cross) vengono ricalcolate con il nuovo ordine. Le combo miste tra carte offensive e difensive non cambiano."
+      },
+      "retrieve": {
+        "unlock": "ocean",
+        "cost": 2,
+        "perTurn": 0,
+        "icon": "♻️",
+        "name": "Recupera dagli scarti",
+        "desc": "Ora puoi comprare con l'energia una carta dalla pila degli scarti e rimetterla in mano: tocca gli Scarti e scegli la carta da recuperare."
+      }
     }
   },
   "baseMoves": [
@@ -6463,7 +6489,13 @@
       "virtue.ambition.rank4": "Insatiable",
       "virtue.ambition.perk0.text": "Content: no hurry, no risk. You start each duel with 3 block.",
       "virtue.ambition.perk3.text": "Hungry: +1 energy on the first turn.",
-      "virtue.ambition.perk4.text": "Insatiable: +1 energy and +1 card on the first turn, but you start with 4 less HP."
+      "virtue.ambition.perk4.text": "Insatiable: +1 energy and +1 card on the first turn, but you start with 4 less HP.",
+      "action.recall.name": "Take a card back",
+      "action.recall.desc": "You can now pull a card you placed on your field back into your hand: tap it and choose ↩. The energy you already spent is not refunded.",
+      "action.reorder.name": "Reorder your field",
+      "action.reorder.desc": "You can now change the order of the cards you placed this turn: tap one and use ◀ ▶ to move it. Sequence combos (the same card twice, or a card that chains from another, like Jab → Cross) are recalculated with the new order. Mixed combos between offensive and defensive cards do not change.",
+      "action.retrieve.name": "Recover from the discard pile",
+      "action.retrieve.desc": "You can now buy a card back from the discard pile with energy and return it to your hand: tap the Discard pile and choose the card to recover."
     }
   },
   "epilogues": [

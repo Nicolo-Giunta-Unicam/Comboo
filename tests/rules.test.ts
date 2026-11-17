@@ -1,5 +1,6 @@
 import { test } from 'node:test'; import assert from 'node:assert/strict';
 import { newRun, maxHp, askMercy, healRun, setStyle, effCost, choosePick, drawDiscard, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, rerollOffers, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
+import { actionOn, recallCard, moveCard, moveErr, retrieveCard, dismissIntro, shieldsOf } from '../src/engine'; import type { ActionId } from '../src/engine';
 import { EQUIPMENT, MOVES, STYLES } from '../src/data'; import { REGIONS } from '../src/regions'; import { CONFIG } from '../src/config'; import { saveRun, loadRun, SAVE_KEY, loadBest, saveBest, runScore, type KV } from '../src/save';
 const kv = (): KV & { m: Map<string, string> } => { const m = new Map<string, string>(); return { m, getItem: k => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v), removeItem: k => void m.delete(k) }; };
 const settle = (r: Run) => { const c = r.combat!; for (let i = 0; i < 10 && c.phase === 'resolve'; i++) enemyStep(r); };
@@ -363,4 +364,45 @@ test('storia: ogni flag richiesto da una condizione viene impostato da almeno un
   for (const e of CHOICES) { need(e.needs, e.id); (e.extra ?? []).forEach(x => need(x.if, e.id + '/extra')); for (const o of e.options) { need(o.req, `${e.id}/${o.id}`); if (o.req) assert.ok(o.lock, `${e.id}/${o.id}: manca la frase di blocco`); } }
   for (const x of EPILOGUES) { need(x.needs, 'epilogo ' + x.id); (x.extra ?? []).forEach(y => need(y.if, 'epilogo ' + x.id)); }
   assert.equal(EPILOGUES[EPILOGUES.length - 1].needs, undefined, 'l\'ultimo epilogo vale sempre');
+});
+
+// ---- azioni sbloccabili per isola ----
+const ACTS: ActionId[] = ['recall', 'reorder', 'retrieve'];
+test('azioni: si sbloccano dalla 2ª, 3ª e 4ª isola e l\'isola si può personalizzare', () => {
+  const r = newRun(1), at = (id: string) => { r.region = id; return ACTS.map(a => actionOn(r, a)); };
+  assert.deepEqual(at('boxing'), [false, false, false]); assert.deepEqual(at('battlefield'), [true, false, false]); assert.deepEqual(at('desert'), [true, true, false]); assert.deepEqual(at('ocean'), [true, true, true]); assert.deepEqual(at('volcano'), [true, true, true]);
+  const old = CONFIG.actions.recall.unlock;
+  try { CONFIG.actions.recall.unlock = 'ocean'; assert.deepEqual(at('desert'), [false, true, false]); CONFIG.actions.recall.unlock = 'off'; assert.deepEqual(at('volcano'), [false, true, true]); CONFIG.actions.recall.unlock = 'nonesiste'; assert.equal(actionOn(r, 'recall'), false); } finally { CONFIG.actions.recall.unlock = old; }
+});
+test('azioni: popup di sblocco una sola volta per azione, entrando nell\'isola', () => {
+  const r = newRun(1); r.phase = 'store'; r.progress = { boxing: 5, battlefield: 5, desert: 5 };
+  const enter = (id: string) => { r.needsMap = true; assert.equal(chooseRegion(r, id), null); };
+  enter('boxing'); assert.equal(r.intro, undefined); enter('battlefield'); assert.deepEqual(r.intro, ['recall']); assert.equal(dismissIntro(r), null); assert.equal(r.intro, undefined); assert.deepEqual(r.seen, ['recall']);
+  enter('battlefield'); assert.equal(r.intro, undefined); enter('desert'); assert.deepEqual(r.intro, ['reorder']); dismissIntro(r); assert.deepEqual(r.seen, ['recall', 'reorder']);
+  const g = newRun(1); g.god = true; g.phase = 'store'; g.needsMap = true; g.progress = { boxing: 5 }; chooseRegion(g, 'battlefield'); assert.equal(g.intro, undefined, 'in god mode niente popup');
+});
+test('riprendi in mano: la carta torna in mano senza rimborso, una volta per turno', () => {
+  const r = newRun(3); r.region = 'boxing'; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 5; c.hand = ['base:jab:0'];
+  assert.equal(playCard(r, 'base:jab:0'), null); const id = c.field.off[0].id!; assert.match(recallCard(r, id) ?? '', /sbloccata/);
+  r.region = 'battlefield'; assert.match(recallCard(r, 9999) ?? '', /campo/); const e0 = c.energy, sh = shieldsOf(c);
+  assert.equal(recallCard(r, id), null); assert.deepEqual(c.hand, ['base:jab:0']); assert.equal(c.field.off.length, 0); assert.equal(c.energy, e0, 'nessun rimborso'); assert.equal(shieldsOf(c), sh);
+  c.hand.push('base:guard:1'); assert.equal(playCard(r, 'base:guard:1'), null); assert.match(recallCard(r, c.field.def[0].id!) ?? '', /una sola volta/);
+  endTurn(r); for (let i = 0; i < 60 && c.phase !== 'player'; i++) enemyStep(r); assert.equal(c.turn, 2); c.energy = 5; c.hand = ['base:guard:2']; playCard(r, 'base:guard:2'); const gid = c.field.def.find(p => p.uid === 'base:guard:2')!.id!;
+  c.hand = Array(CONFIG.maxHand).fill('base:jab:0'); assert.match(recallCard(r, gid) ?? '', /Mano piena/); c.hand = []; assert.equal(recallCard(r, gid), null); assert.deepEqual(c.hand, ['base:guard:2']);
+});
+test('riordina il campo: le combo a sequenza si ricalcolano (concatenazione e stessa carta)', () => {
+  const r = newRun(3); r.region = 'battlefield'; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['eq:wraps:2', 'base:jab:0'];
+  playCard(r, 'eq:wraps:2'); playCard(r, 'base:jab:0'); const w = c.field.off[0], base = w.dmg; assert.equal(w.mv, 'wraps_2'); assert.match(moveErr(r, w.id!, 1) ?? '', /sbloccata/);
+  r.region = 'desert'; assert.equal(moveErr(r, w.id!, -1), 'Non si può spostare oltre.');
+  assert.equal(moveCard(r, w.id!, 1), null); assert.deepEqual(c.field.off.map(p => p.mv), ['jab', 'wraps_2']); assert.equal(w.dmg, base + 5, 'Jab → wraps_2: concatenazione attiva'); assert.ok(w.tag?.includes('🔗'));
+  assert.equal(moveCard(r, w.id!, -1), null); assert.equal(w.dmg, base, 'tornando all\'ordine di prima la combo si disattiva'); assert.equal(c.lastBy!.off, 'jab');
+  const r2 = newRun(3); r2.region = 'desert'; beginArena(r2); const d = r2.combat!; d.enemy.hp = d.enemy.maxHp = 1000; d.energy = 10; d.hand = ['base:jab:0', 'eq:wraps:1', 'base:jab:1'];
+  [...d.hand].forEach(u => playCard(r2, u)); const j2 = d.field.off[2], before = j2.dmg; assert.equal(j2.mv, 'jab'); assert.equal(moveCard(r2, j2.id!, -1), null);
+  assert.deepEqual(d.field.off.map(p => p.mv), ['jab', 'jab', 'wraps_1']); assert.ok(j2.dmg > before, 'doppio jab: bonus della stessa carta ripetuta'); assert.equal(d.runs!.off, 1); assert.equal(d.lastBy!.off, 'wraps_1');
+});
+test('recupera dagli scarti: costa energia, serve spazio in mano', () => {
+  const r = newRun(3); r.region = 'desert'; beginArena(r); const c = r.combat!; c.energy = 3; c.discard = ['base:jab:0', 'base:guard:1']; c.hand = [];
+  assert.match(retrieveCard(r, 'base:jab:0') ?? '', /sbloccata/); r.region = 'ocean'; const cost = CONFIG.actions.retrieve.cost;
+  assert.match(retrieveCard(r, 'base:nonc:9') ?? '', /scarti/); assert.equal(retrieveCard(r, 'base:jab:0'), null); assert.deepEqual(c.hand, ['base:jab:0']); assert.deepEqual(c.discard, ['base:guard:1']); assert.equal(c.energy, 3 - cost);
+  c.energy = cost - 1; assert.equal(retrieveCard(r, 'base:guard:1'), 'Energia insufficiente.'); c.energy = 10; c.hand = Array(CONFIG.maxHand).fill('base:jab:0'); assert.match(retrieveCard(r, 'base:guard:1') ?? '', /Mano piena/);
 });

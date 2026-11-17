@@ -5,7 +5,7 @@ import { defeatOutcome, movesRetainedAfterRemoval } from './policies';
 export type Phase = 'store' | 'combat' | 'over';
 export type Err = string | null;
 export interface Enemy { name: string; tier: string; hp: number; maxHp: number; block: number; gear: string[]; art?: string; id?: string; atk: number }
-export interface Combat { pu?: Record<string, number>; foeDealt?: number; enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; lastBy?: Rec2<string | null>; mods?: { off: number; bypass: boolean; freeNext: boolean; dupNext: boolean; combos: number }; cardCost?: Record<string, number>; lastUid?: string; pick?: string[] | null; syn?: { n: number; text: string }; runs?: Rec2<number>; chains?: Rec2<number>; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
+export interface Combat { act?: Record<string, number>; pu?: Record<string, number>; foeDealt?: number; enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; lastBy?: Rec2<string | null>; mods?: { off: number; bypass: boolean; freeNext: boolean; dupNext: boolean; combos: number }; cardCost?: Record<string, number>; lastUid?: string; pick?: string[] | null; syn?: { n: number; text: string }; runs?: Rec2<number>; chains?: Rec2<number>; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
 /** Effetti di una scelta di capitolo che valgono solo per il prossimo duello. */
 export interface Boon { block?: number; energy?: number; draw?: number; foeHp?: number; hp?: number }
 export interface Run {
@@ -20,12 +20,16 @@ export interface Run {
   cs?: number; chapters?: Record<string, { ev: string; opt: string; gold: number; fx?: ChoiceFx; v?: VirtMap; rk?: Partial<Record<VirtId, [number, number]>> }>; boon?: Boon;
   /** Onore, Fama e Ambizione (se assenti valgono i valori iniziali di config.virtues), flag di storia, fine del viaggio e epilogo già letto. */
   virt?: VirtMap; flags?: string[]; ended?: boolean; epiSeen?: boolean;
+  /** Azioni sbloccabili: quelle già spiegate al giocatore (seen) e quelle da spiegare ora (intro, mostrate entrando nell'isola). */
+  seen?: string[]; intro?: string[];
   v: 1; rng: number; arena: number; gold: number; hp: number; slots: number;
   equipped: string[]; bought: string[]; retained: string[]; energyBonus: number; offers: Offers; paid: Record<string, number>;
   deck: string[]; phase: Phase; combat: Combat | null; msg: string;
 }
 type Rec2<T> = { off: T; def: T };
-export interface Placed { trg?: Trigger; uid: string; name: string; icon: string; src: string; dmg: number; hits: number; block: number; ttl: number; sh?: number; id?: number; mv?: string; fx?: string; tag?: string }
+/** Stato delle combo a sequenza di una carta schierata (permette di ricalcolarle quando il campo viene riordinato). cd/cb = quota di danni/guardia dovuta alla combo. */
+export interface Cx { g: 'off' | 'def'; link?: { from: string; dmg?: number; block?: number; draw?: number; energy?: number }; mixed: boolean; on: boolean; paid: boolean; n: number; ch: number; cd: number; cb: number }
+export interface Placed { cx?: Cx; t?: number; gd?: number; cl?: number; trg?: Trigger; uid: string; name: string; icon: string; src: string; dmg: number; hits: number; block: number; ttl: number; sh?: number; id?: number; mv?: string; fx?: string; tag?: string }
 export interface Ev { by: 'me' | 'foe'; card: Placed; absorbed: number; dmg: number }
 export interface Side { off: Placed[]; def: Placed[] }
 /** Slot 0-1: carte visibili; slot 2: carta MISTERIOSA (id nascosto) a prezzo ridotto (eqPrice/mvPrice). */
@@ -95,7 +99,7 @@ export function healRun(r: Run): Err {
 export function setStyle(r: Run, id: string): Err { if (!STYLES.some(x => x.id === id)) return 'Stile sconosciuto.'; r.style = id; r.deck = ownedCards(r).map(c => c.uid); return null; }
 export function chooseRegion(r: Run, id: string): Err {
   if (r.phase !== 'store' || !r.needsMap) return 'Non puoi scegliere ora.'; const g = REGIONS[id]; if (!g) return 'Regione sconosciuta.'; if (!unlocked(r).includes(id)) return 'Isola bloccata.';
-  const changed = islandIndex(id) !== storeIsland(r); r.region = id; r.needsMap = false; r.msg = `Arena: ${g.name}.`; if (changed) genOffers(r); return null;
+  const changed = islandIndex(id) !== storeIsland(r); r.region = id; r.needsMap = false; r.msg = `Arena: ${g.name}.`; if (changed) genOffers(r); introActions(r); return null;
 }
 // ---- Scelte di capitolo ----
 const seeded = (seed: number) => () => { seed = (seed + 0x6D2B79F5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -298,7 +302,7 @@ function boostFor(r: Run, c: Combat, cat?: Cat, consume = true): number { // ris
   });
   return sum;
 }
-function startTurn(r: Run) { const c = r.combat!; c.turn++; const comboBonus = (c.mods?.combos ?? 0) > 0 ? CONFIG.comboDraw : 0; /* almeno una combo nel turno concluso: +carte in questo */ c.field.def = decay(c, c.field.def); c.block = 0; c.combo = ''; c.played = {}; c.prev = null; c.mods = { off: 0, bypass: false, freeNext: false, dupNext: false, combos: 0 }; c.cardCost = {}; c.pu = {}; delete c.lastUid; c.pick = null; c.lastBy = { off: null, def: null }; c.runs = { off: 0, def: 0 }; c.chains = { off: 0, def: 0 }; c.ev = null; c.energy = maxEnergy(r); c.phase = 'player'; c.foeDealt = 0; drawCards(c, r, c.turn === 1 ? CONFIG.startHand : Math.max(CONFIG.drawPerTurn, CONFIG.handTarget - c.hand.length) + comboBonus); fireAll(r, c, 'turnStart'); foeDownCheck(c); }
+function startTurn(r: Run) { const c = r.combat!; c.turn++; const comboBonus = (c.mods?.combos ?? 0) > 0 ? CONFIG.comboDraw : 0; /* almeno una combo nel turno concluso: +carte in questo */ c.field.def = decay(c, c.field.def); c.block = 0; c.combo = ''; c.played = {}; c.prev = null; c.mods = { off: 0, bypass: false, freeNext: false, dupNext: false, combos: 0 }; c.cardCost = {}; c.pu = {}; c.act = {}; delete c.lastUid; c.pick = null; c.lastBy = { off: null, def: null }; c.runs = { off: 0, def: 0 }; c.chains = { off: 0, def: 0 }; c.ev = null; c.energy = maxEnergy(r); c.phase = 'player'; c.foeDealt = 0; drawCards(c, r, c.turn === 1 ? CONFIG.startHand : Math.max(CONFIG.drawPerTurn, CONFIG.handTarget - c.hand.length) + comboBonus); fireAll(r, c, 'turnStart'); foeDownCheck(c); }
 /** Scudi attivi del giocatore: guardia delle carte offensive del turno + difese schierate. */
 export const shieldsOf = (c: Combat) => c.block + c.field.def.reduce((s, p) => s + p.block, 0);
 /** Le carte "Scudo d'assalto" già schierate seguono gli scudi attivi (se ne giochi altri dopo, il loro danno cresce). */
@@ -339,14 +343,16 @@ export function playCard(r: Run, uid: string): Err {
   const lk = f.link && L[fg] === f.link.from ? f.link : null, mul = (x: number) => Math.round(x * (1 + pct)), chain = same ? C[g] + 1 : lk ? C[fg] + 1 : 1;
   c.played[m.id] = (c.played[m.id] ?? 0) + 1; R[g] = n; C[g] = chain; L[g] = m.id; c.prev = m.id; c.tier = chain >= 3 ? 2 : chain === 2 ? 1 : 0;
   const total = Object.values(c.played).reduce((a, b) => a + b, 0), dmgBase = (S?.k === 'momentum' ? (S.n ?? 1) * total : S?.k === 'shieldAtk' ? shieldsOf(c) : f.dmg ?? 0) + (sc?.dmg ?? 0) * sn + (off ? bst : 0);
-  const p: Placed = { uid: keep, name: m.name, icon: '', src: m.source, dmg: off ? mul(dmgBase + dmgBonus(r) + (lk?.dmg ?? 0) + mods.off) : 0, hits: f.hits ?? 1, block: 0, ttl: 1, id: ++c.seq, mv: m.id, ...(f.trigger && !off ? { trg: { ...f.trigger } } : {}), ...(S?.k === 'shieldAtk' ? { sh: shieldsOf(c) } : {}) };
-  const blk = mul((f.block ?? 0) + (lk?.block ?? 0) + (sc?.block ?? 0) * sn + (!off && (f.block || sc?.block) ? bst : 0) + (S?.k === 'flow' ? (S.n ?? 0) * mods.combos : 0));
+  const preD = dmgBase + dmgBonus(r) + mods.off, preB = (f.block ?? 0) + (sc?.block ?? 0) * sn + (!off && (f.block || sc?.block) ? bst : 0) + (S?.k === 'flow' ? (S.n ?? 0) * mods.combos : 0); // valori prima del moltiplicatore di combo
+  const p: Placed = { t: c.turn, uid: keep, name: m.name, icon: '', src: m.source, dmg: off ? mul(preD + (lk?.dmg ?? 0)) : 0, hits: f.hits ?? 1, block: 0, ttl: 1, id: ++c.seq, mv: m.id, ...(f.trigger && !off ? { trg: { ...f.trigger } } : {}), ...(S?.k === 'shieldAtk' ? { sh: shieldsOf(c) } : {}) };
+  const blk = mul(preB + (lk?.block ?? 0));
+  p.cx = { g, link: f.link ? { ...f.link } : undefined, mixed: !!f.link && fg !== g, on: !!lk, paid: !!lk, n, ch: chain, cd: off ? p.dmg - preD : 0, cb: blk - preB }; if (off) p.gd = blk;
   if (chain >= 2) mods.combos++;
   if (off) c.block += blk; else { p.block = blk; p.ttl = f.dur === 0 ? -1 : f.dur ?? 1; } // guardia di una carta offensiva: temporanea
   row.push(p); c.fresh = p.id!; c.log.push(`${m.name} schierata.`);
   const dr = (f.draw ?? 0) + (lk?.draw ?? 0) + (sc?.draw ?? 0) * sn, en = (f.energy ?? 0) + (lk?.energy ?? 0) + (sc?.energy ?? 0) * sn, hl = (f.heal ?? 0) + (sc?.heal ?? 0) * sn, heal = hl ? mul(hl) : 0, fx = () => { if (heal) r.hp = Math.min(maxHp(r), r.hp + heal); if (dr) drawCards(c, r, dr); if (en) c.energy += en; };
   fx();
-  if (mods.dupNext) { mods.dupNext = false; if (row.length < CONFIG.rowSize) row.push({ ...p, id: ++c.seq, uid: '' }); if (off) c.block += blk; fx(); } // Duplicazione: schierata due volte
+  if (mods.dupNext) { mods.dupNext = false; if (row.length < CONFIG.rowSize) row.push({ ...p, id: ++c.seq, uid: '', cx: undefined, cl: p.id }); if (off) c.block += blk; fx(); } // Duplicazione: schierata due volte
   c.lastUid = uid; syncShieldAtk(c); fireAll(r, c, 'play', m.cat, p.id); foeDownCheck(c);
   const tag = [pct ? `${m.name} ×${n} (+${Math.round(pct * 100)}%)` : '', lk ? `${MOVES[lk.from].name} → ${m.name}` : ''].filter(Boolean).join(' · '); c.combo = tag;
   p.fx = [dr && `✦${dr}`, en && `⚡+${en}`, heal && `✚${heal}`, off && blk && `🛡️${blk}`].filter(Boolean).join(' '); p.tag = [pct ? `🔥+${Math.round(pct * 100)}%` : '', lk ? '🔗' : ''].filter(Boolean).join(' ');
@@ -378,6 +384,80 @@ export function drawDiscard(r: Run): Err {
   if (c.draw.length) return 'Hai ancora carte da pescare nel mazzo.'; if (!c.discard.length) return 'Nessuna carta negli scarti.'; if (c.hand.length >= CONFIG.maxHand) return `Mano piena (${CONFIG.maxHand}).`; if (c.energy < CONFIG.discardDrawCost) return 'Energia insufficiente.';
   c.energy -= CONFIG.discardDrawCost; c.draw = shuffle(r, c.discard); c.discard = []; drawCards(c, r, CONFIG.discardDrawCards); c.log.push('Mazzo rimescolato: peschi 1 carta.'); return null;
 }
+// ---- Azioni sbloccabili per isola (config.actions): riprendere una carta dal campo, riordinare il campo, recuperare dagli scarti ----
+export const ACTION_IDS = ['recall', 'reorder', 'retrieve'] as const;
+export type ActionId = typeof ACTION_IDS[number];
+/** Un'azione è disponibile dall'isola indicata in config.actions.<id>.unlock in poi ("off" = disattivata). */
+export function actionOn(r: Run, id: ActionId): boolean {
+  const u = CONFIG.actions[id]?.unlock; if (!u || u === 'off') return false; const need = islandIndex(u); if (need < 0) return false;
+  return !!r.god || islandIndex(r.region ?? REGION_LIST[0].id) >= need;
+}
+function actGuard(r: Run, id: ActionId): Err {
+  const c = r.combat; if (r.phase !== 'combat' || !c) return 'Nessun combattimento.'; if (c.phase !== 'player') return 'Non è il tuo turno.'; if (c.pick?.length) return 'Scegli prima una carta (Stratega).';
+  if (!actionOn(r, id)) return 'Azione non ancora sbloccata.';
+  const lim = CONFIG.actions[id].perTurn; if (lim && (c.act?.[id] ?? 0) >= lim) return lim === 1 ? 'Puoi farlo una sola volta per turno.' : `Limite di ${lim} volte per turno raggiunto.`;
+  return null;
+}
+const bump = (c: Combat, id: ActionId) => { c.act ??= {}; c.act[id] = (c.act[id] ?? 0) + 1; };
+const findPlaced = (c: Combat, id: number): ['off' | 'def', Placed] | null => { for (const g of ['off', 'def'] as const) { const p = c.field[g].find(x => x.id === id); if (p) return [g, p]; } return null; };
+/** Raggruppa una riga: una carta duplicata (Duplicazione) segue sempre l'originale. */
+const groupsOf = (row: Placed[]) => { const gr: Placed[][] = []; for (const p of row) { const h = p.cl ? gr.find(x => x[0].id === p.cl) : null; if (h) h.push(p); else gr.push([p]); } return gr; };
+/** Ricalcola le combo a sequenza (stessa carta ripetuta, concatenazioni tra carte dello stesso genere) delle carte giocate in questo turno nella riga indicata,
+ *  dopo un riordino o un ritiro. Le combo miste (offensiva+difensiva) restano quelle ottenute giocando; pesca/energia di una concatenazione si ottengono una sola volta per carta. */
+function rebuild(r: Run, c: Combat, g: 'off' | 'def') {
+  const row = c.field[g], L = c.lastBy ?? (c.lastBy = { off: null, def: null }), R = c.runs ?? (c.runs = { off: 0, def: 0 }), C = c.chains ?? (c.chains = { off: 0, def: 0 });
+  let prev: string | null = null, run = 0, chain = 0;
+  for (const p of row) {
+    const x = p.cx; if (!x || p.t !== c.turn || p.cl || !p.mv) continue;
+    const m = MOVES[p.mv], same = prev === m.id, n = same ? run + 1 : 1, pct = CONFIG.combo.same[Math.min(n, CONFIG.combo.max) - 1] ?? 0;
+    const on = x.mixed ? x.on : !!x.link && prev === x.link.from, ch = same ? chain + 1 : on ? (x.mixed ? x.ch : chain + 1) : 1, ld = on ? x.link?.dmg ?? 0 : 0, lb = on ? x.link?.block ?? 0 : 0;
+    if (g === 'off') { const pre = p.dmg - x.cd, nd = Math.round((pre + ld) * (1 + pct)) - pre; p.dmg = pre + nd; x.cd = nd; }
+    const cur = g === 'off' ? p.gd ?? 0 : p.block, preB = cur - x.cb, nb = Math.round((preB + lb) * (1 + pct)); x.cb = nb - preB;
+    if (g === 'off') { c.block += nb - (p.gd ?? 0); p.gd = nb; } else p.block = nb;
+    if (on && !x.mixed && !x.paid && x.link) { x.paid = true; if (x.link.draw) drawCards(c, r, x.link.draw); if (x.link.energy) c.energy += x.link.energy; }
+    x.on = on; x.n = n; x.ch = ch; p.tag = [pct ? `🔥+${Math.round(pct * 100)}%` : '', on ? '🔗' : ''].filter(Boolean).join(' ');
+    prev = m.id; run = n; chain = ch;
+  }
+  L[g] = prev; R[g] = run; C[g] = chain;
+  const all = [...c.field.off, ...c.field.def].filter(p => p.cx && p.t === c.turn && !p.cl), last = all.reduce<Placed | null>((a, p) => !a || (p.id ?? 0) > (a.id ?? 0) ? p : a, null);
+  modsOf(c).combos = all.filter(p => p.cx!.ch >= 2).length; c.tier = last ? (last.cx!.ch >= 3 ? 2 : last.cx!.ch === 2 ? 1 : 0) : 0;
+  if (last?.cx) { const x = last.cx, pct = CONFIG.combo.same[Math.min(x.n, CONFIG.combo.max) - 1] ?? 0, name = MOVES[last.mv!].name; c.combo = [pct ? `${name} ×${x.n} (+${Math.round(pct * 100)}%)` : '', x.on && x.link ? `${MOVES[x.link.from]?.name ?? ''} → ${name}` : ''].filter(Boolean).join(' · '); } else c.combo = '';
+}
+/** 1) Riprendi in mano: ritira una carta dal proprio campo e la rimette in mano (l'energia spesa non viene rimborsata). */
+export function recallErr(r: Run, id: number): Err {
+  const g = actGuard(r, 'recall'); if (g) return g; const c = r.combat!, f = findPlaced(c, id); if (!f) return 'Carta non sul campo.'; if (!f[1].uid) return 'Questa carta non si può rimettere in mano.';
+  if (c.hand.length >= CONFIG.maxHand) return `Mano piena (${CONFIG.maxHand}).`; if (c.energy < (CONFIG.actions.recall.cost ?? 0)) return 'Energia insufficiente.'; return null;
+}
+export function recallCard(r: Run, id: number): Err {
+  const e = recallErr(r, id); if (e) return e; const c = r.combat!, [g, p] = findPlaced(c, id)!, row = c.field[g];
+  c.energy -= CONFIG.actions.recall.cost ?? 0; bump(c, 'recall');
+  if (g === 'off') for (const q of row) if (q.id === id || q.cl === id) c.block = Math.max(0, c.block - (q.gd ?? 0)); // la guardia delle carte offensive del turno se ne va con la carta
+  row.splice(0, row.length, ...row.filter(q => q.id !== id && q.cl !== id)); c.hand.push(p.uid);
+  rebuild(r, c, g); syncShieldAtk(c); c.log.push(`${p.name} rimessa in mano.`); return null;
+}
+/** 2) Riordina il campo: scambia una carta schierata in questo turno con la vicina (dir = -1 a sinistra, +1 a destra) e ricalcola le combo a sequenza. */
+export function moveErr(r: Run, id: number, dir: -1 | 1): Err {
+  const g0 = actGuard(r, 'reorder'); if (g0) return g0; const c = r.combat!, f = findPlaced(c, id); if (!f) return 'Carta non sul campo.';
+  const [g, p] = f; if (!p.cx || p.t !== c.turn || p.cl) return 'Puoi riordinare solo le carte schierate in questo turno.';
+  const gr = groupsOf(c.field[g]), i = gr.findIndex(x => x[0].id === id), j = i + dir; if (i < 0 || j < 0 || j >= gr.length) return 'Non si può spostare oltre.';
+  const q = gr[j][0]; if (!q.cx || q.t !== c.turn) return 'Puoi scambiare solo con carte schierate in questo turno.'; return null;
+}
+export function moveCard(r: Run, id: number, dir: -1 | 1): Err {
+  const e = moveErr(r, id, dir); if (e) return e; const c = r.combat!, [g] = findPlaced(c, id)!, row = c.field[g], gr = groupsOf(row), i = gr.findIndex(x => x[0].id === id), j = i + dir;
+  [gr[i], gr[j]] = [gr[j], gr[i]]; row.splice(0, row.length, ...gr.flat()); bump(c, 'reorder'); rebuild(r, c, g); syncShieldAtk(c); c.log.push('Ordine del campo cambiato.'); return null;
+}
+/** 3) Recupera dagli scarti: per config.actions.retrieve.cost energia una carta scelta dagli scarti torna in mano. */
+export function retrieveErr(r: Run, uid: string): Err {
+  const g = actGuard(r, 'retrieve'); if (g) return g; const c = r.combat!; if (!c.discard.includes(uid)) return 'Carta non negli scarti.';
+  if (c.hand.length >= CONFIG.maxHand) return `Mano piena (${CONFIG.maxHand}).`; if (c.energy < CONFIG.actions.retrieve.cost) return 'Energia insufficiente.'; return null;
+}
+export function retrieveCard(r: Run, uid: string): Err {
+  const e = retrieveErr(r, uid); if (e) return e; const c = r.combat!;
+  c.energy -= CONFIG.actions.retrieve.cost; c.discard.splice(c.discard.indexOf(uid), 1); c.hand.push(uid); bump(c, 'retrieve'); c.log.push(`${MOVES[moveOf(uid)].name} recuperata dagli scarti.`); return null;
+}
+/** Entrando in un'isola si spiegano (una volta per run) le azioni che da lì in poi sono disponibili. */
+function introActions(r: Run) { if (r.god) return; const seen = r.seen ?? []; const fresh = ACTION_IDS.filter(id => actionOn(r, id) && !seen.includes(id)); if (fresh.length) r.intro = fresh; }
+export function dismissIntro(r: Run): Err { if (r.intro?.length) r.seen = Array.from(new Set([...(r.seen ?? []), ...r.intro])); r.intro = undefined; return null; }
 /** Stratega: sceglie una delle 3 carte mostrate; entra in mano e, se giocata nel turno, costa 1. */
 export function choosePick(r: Run, uid: string): Err {
   const c = r.combat; if (r.phase !== 'combat' || !c || !c.pick?.length) return 'Nessuna scelta in corso.'; if (!c.pick.includes(uid)) return 'Carta non valida.';

@@ -174,13 +174,20 @@ function imagesView(): [string, string] {
 }
 
 // ---- generale ----
-function configFields(o: any, p: string): string { return Object.entries(o).map(([k, v]) => typeof v === 'number' ? field(`${p.replace(/^config\.?/, '')}${p === 'config' ? '' : '.'}${k}`, `${p}.${k}`, 'n', { step: 'any' as any, cls: 'edsm' }) : typeof v === 'object' && v ? configFields(v, `${p}.${k}`) : '').join(''); }
+function configFields(o: any, p: string): string { return Object.entries(o).filter(([k]) => !(p === 'config' && k === 'actions')).map(([k, v]) => typeof v === 'number' ? field(`${p.replace(/^config\.?/, '')}${p === 'config' ? '' : '.'}${k}`, `${p}.${k}`, 'n', { step: 'any' as any, cls: 'edsm' }) : typeof v === 'object' && v ? configFields(v, `${p}.${k}`) : '').join(''); }
+/** Azioni del giocatore che si sbloccano da una certa isola in poi: isola di sblocco, costi, limiti e testo del popup mostrato entrando nell'isola. */
+function actionsBlock(): string {
+  const regs: [string, string][] = (S.data.regions ?? []).map((r: any, i: number) => [r.id, `${i + 1}ª isola · ${r.name}`]);
+  const acts = Object.keys(S.data.config?.actions ?? {}); if (!acts.length) return '';
+  return `<h4>Azioni sbloccabili per isola</h4><p class="edhint">Ogni azione è disponibile dall'isola scelta in poi (l'ordine è quello della scheda Isole). Entrando per la prima volta in un'isola che sblocca un'azione, il giocatore vede un popup che la spiega. "Max per turno" 0 = nessun limite.</p>${acts.map(id => { const b = `config.actions.${id}`; return `<div class="edgrid">${field(`${S.data.config.actions[id].icon ?? ''} ${id}: sbloccata dalla`, `${b}.unlock`, 'sel', { opts: [...regs, ['off', '— disattivata —']] })}${field('Costo in energia', `${b}.cost`, 'n', { min: 0, step: 1, cls: 'edsm' })}${field('Max per turno', `${b}.perTurn`, 'n', { min: 0, step: 1, cls: 'edsm' })}${field('Icona', `${b}.icon`, 's', { cls: 'edsm' })}${field('Nome (popup)', `${b}.name`, 's', { tk: `action.${id}.name` })}${field('Spiegazione (popup)', `${b}.desc`, 's', { tk: `action.${id}.desc`, ml: true })}</div>`; }).join('')}`;
+}
 function generalView(): [string, string] {
   const iss = validate(S.data), cur = langs();
   return ['', `<h4>Controlli <small>${iss.filter(i => i.level === 'err').length} errori · ${iss.filter(i => i.level === 'warn').length} avvisi</small></h4>${iss.length ? `<div class="edissues">${iss.slice(0, 120).map(i => `<div class="${i.level}">${i.level === 'err' ? '⛔' : '⚠'} ${esc(i.msg)}</div>`).join('')}${iss.length > 120 ? `<div class="warn">… e altri ${iss.length - 120}</div>` : ''}</div>` : '<p class="ok">✓ Nessun problema trovato.</p>'}
     <h4>Lingue dei contenuti</h4><p class="edhint">Lingua base: <b>${esc(langName(BASE_LANG))}</b> (testi nei campi). Le altre lingue salvano le traduzioni nel JSON sotto "i18n". Scegli la lingua di modifica in alto per tradurre i testi di carte, storie e scelte. Per mostrare una lingua anche nei menu serve il file dell'interfaccia (vedi data/locales/README).</p>
     <table class="edtab">${cur.map(l => { const [n, t] = translated(l); return `<tr><td><b>${esc(langName(l))}</b> <code>${esc(l)}</code></td><td>${n}/${t} testi</td><td>${l !== BASE_LANG ? btn('Rimuovi', 'dellang', { id: l, cls: 'danger' }) : 'base'}</td></tr>`; }).join('')}</table>
     <div class="edtools"><input data-newlang type="text" placeholder="codice (es. es, fr, de)" maxlength="5">${btn('+ Aggiungi lingua', 'addlang')}</div>
+    ${actionsBlock()}
     <h4>Bilanciamento e regole</h4><div class="edgrid">${configFields(S.data.config, 'config')}</div>`];
 }
 

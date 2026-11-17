@@ -61,3 +61,10 @@ test('contenuti nuovi: tutte le carte con trigger sono difese permanenti e ogni 
   const d = fresh(); for (const r of allMoves(d)) if (r.m.effect.trigger) { assert.ok(r.m.effect.block > 0 && !r.m.effect.dmg, r.m.id); assert.equal(r.m.effect.dur, 0, r.m.id + ': permanente'); }
   assert.equal(validate(d).filter(i => i.level !== 'err' && /trigger|passiva/.test(i.msg)).length, 0);
 });
+
+test('editor: isola di sblocco delle azioni controllata e aggiornata alla rinomina; testi traducibili', () => {
+  const d = fresh() as any; assert.equal(d.config.actions.recall.unlock, 'battlefield'); assert.equal(renameId(d, 'region', 'battlefield', 'campo'), null); assert.equal(d.config.actions.recall.unlock, 'campo');
+  assert.deepEqual(validate(d).filter(i => i.level === 'err'), []); d.config.actions.reorder.unlock = 'nope'; assert.ok(validate(d).some(i => i.level === 'err' && /reorder/.test(i.msg)));
+  d.config.actions.reorder.unlock = 'off'; assert.deepEqual(validate(d).filter(i => i.level === 'err'), []);
+  const keys: string[] = []; forEachText(fresh(), k => keys.push(k)); for (const id of ['recall', 'reorder', 'retrieve']) assert.ok(keys.includes(`action.${id}.name`) && keys.includes(`action.${id}.desc`));
+});

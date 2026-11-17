@@ -709,5 +709,14 @@ body.fs .side .vbar{width:12px}
 .vbar{grid-column:3}
 .eqcol{grid-column:4;justify-self:end}
 }
+
+.pact{position:fixed;z-index:80;display:flex;gap:6px;transform:translate(-50%,-100%);padding:4px;border-radius:999px;background:#000c;border:1px solid #ffd27a99;box-shadow:0 4px 14px #000a}.pact[data-up=""]{transform:translate(-50%,0)}
+.pab{width:36px;height:36px;min-height:0;padding:0;border-radius:50%;font-size:18px;line-height:1;display:grid;place-items:center}.pab:disabled{opacity:.35}
+.rowf .card.fsel{outline:3px solid #ffd27a;outline-offset:1px;box-shadow:0 0 16px #ffd27acc;z-index:30}.rowf.own-m .card[data-pc]{cursor:pointer}
+.pile.buy::after{content:'♻';position:absolute;top:-10px;right:-8px;width:22px;height:22px;display:grid;place-items:center;font-size:14px;border-radius:50%;background:#000c;border:1px solid var(--gold)}
+.rbuy{display:flex;flex-direction:column;align-items:center;gap:6px}.rbuy button{min-height:32px;padding:3px 12px;font-size:13px}.rbhint{display:block;margin:4px 0 10px;color:#ffe29a}
+.introbox{max-width:420px;text-align:center}.introtag{display:inline-block;margin-bottom:8px;padding:4px 14px;border-radius:999px;background:#0006;border:1px solid #ffc85766;color:#ffe29a;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.introic{font-size:56px;line-height:1.1;animation:introPop .6s cubic-bezier(.3,1.6,.5,1)}@keyframes introPop{from{transform:scale(.2) rotate(-25deg);opacity:0}}
+.introit+.introit{margin-top:14px;padding-top:14px;border-top:1px solid #ffffff22}.introit p{margin:6px 0;line-height:1.4}.introit small{display:block;margin-bottom:10px;color:#ffe29a}
 </style></head>
 <body><div id="app"></div><script src="dist/game.js?v=20261105"></script></body></html>
