@@ -415,3 +415,10 @@ test('riordina col trascinamento: sposta la carta davanti a un\'altra o in fondo
   assert.equal(moveCardTo(r, j1.id!, 0), null); assert.deepEqual(c.field.off.map(p => p.id), [j2.id, w.id, j1.id]); assert.equal(j2.dmg, before, 'senza carte uguali vicine il bonus sparisce'); assert.equal(c.lastBy!.off, 'jab');
   c.hand = ['base:guard:1']; playCard(r, 'base:guard:1'); assert.match(moveToErr(r, j1.id!, c.field.def[0].id!) ?? '', /campo|riga|sposta/i);
 });
+
+test('riprendi in mano: la carta rientra nel punto della mano scelto', () => {
+  const r = newRun(3); r.region = 'battlefield'; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 9;
+  const back = (at?: number) => { c.hand = ['base:guard:1', 'base:guard:2', 'base:guard:3', 'base:jab:0']; playCard(r, 'base:jab:0'); c.act = {}; assert.equal(recallCard(r, c.field.off.at(-1)!.id!, at), null); return c.hand.slice(); };
+  assert.deepEqual(back(), ['base:guard:1', 'base:guard:2', 'base:guard:3', 'base:jab:0']); assert.deepEqual(back(0), ['base:jab:0', 'base:guard:1', 'base:guard:2', 'base:guard:3']);
+  assert.deepEqual(back(2), ['base:guard:1', 'base:guard:2', 'base:jab:0', 'base:guard:3']); assert.deepEqual(back(99), ['base:guard:1', 'base:guard:2', 'base:guard:3', 'base:jab:0']);
+});

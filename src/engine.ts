@@ -428,11 +428,12 @@ export function recallErr(r: Run, id: number): Err {
   const g = actGuard(r, 'recall'); if (g) return g; const c = r.combat!, f = findPlaced(c, id); if (!f) return 'Carta non sul campo.'; if (!f[1].uid) return 'Questa carta non si può rimettere in mano.';
   if (c.hand.length >= CONFIG.maxHand) return `Mano piena (${CONFIG.maxHand}).`; if (c.energy < (CONFIG.actions.recall.cost ?? 0)) return 'Energia insufficiente.'; return null;
 }
-export function recallCard(r: Run, id: number): Err {
+/** at = posizione della mano in cui rimettere la carta (la più vicina al punto di rilascio); senza, in fondo. */
+export function recallCard(r: Run, id: number, at?: number): Err {
   const e = recallErr(r, id); if (e) return e; const c = r.combat!, [g, p] = findPlaced(c, id)!, row = c.field[g];
   c.energy -= CONFIG.actions.recall.cost ?? 0; bump(c, 'recall');
   if (g === 'off') for (const q of row) if (q.id === id || q.cl === id) c.block = Math.max(0, c.block - (q.gd ?? 0)); // la guardia delle carte offensive del turno se ne va con la carta
-  row.splice(0, row.length, ...row.filter(q => q.id !== id && q.cl !== id)); c.hand.push(p.uid);
+  row.splice(0, row.length, ...row.filter(q => q.id !== id && q.cl !== id)); if (at !== undefined && at >= 0 && at < c.hand.length) c.hand.splice(at, 0, p.uid); else c.hand.push(p.uid);
   rebuild(r, c, g); syncShieldAtk(c); c.log.push(`${p.name} rimessa in mano.`); return null;
 }
 /** 2) Riordina il campo: scambia una carta schierata in questo turno con la vicina (dir = -1 a sinistra, +1 a destra) e ricalcola le combo a sequenza. */

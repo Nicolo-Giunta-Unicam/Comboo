@@ -423,7 +423,7 @@ function act(a: string, id = '') {
     else if (a === 'tab') tab = id as typeof tab; else if (a === 'next') tab = tab === 'sto' ? 'st' : 'me'; else if (a === 'region') { if (unlocked(run).includes(id)) mapSel = id; else err = '🔒 Isola bloccata: vinci le 5 partite dell\'isola precedente.'; } else if (a === 'openmap') err = openMap(run);
     else if (a === 'mercy') { const c = run.combat; if (c?.mercy) err = 'Hai già chiesto pietà in questo duello.'; else if (c?.phase !== 'player') err = 'Non è il tuo turno.'; else slotMachine('mercy', '', () => { const res = askMercy(run!); if (res.err) { note = res.err; render(); return null; } persist(run!); return res.spared ? 'ok' : 'no'; }); } else if (a === 'sellcard') err = sellCard(run, id); else if (a === 'heal') err = healRun(run); else if (a === 'ddraw') { err = drawDiscard(run); if (!err) sfx('shuffle'); } else if (a === 'enter') { err = chooseRegion(run, mapSel ?? ''); if (!err) { tab = 'sto'; mapSel = null; } } else if (a === 'buyE') err = buyEquipment(run, id); else if (a === 'sellE') err = sellEquipment(run, id);
     else if (a === 'buyM') err = buyMove(run, id); else if (a === 'buyEn') err = buyEnergy(run); else if (a === 'reroll') err = rerollOffers(run); else if (a === 'offerEq') err = buyOfferEq(run, +id); else if (a === 'offerMv') err = buyOfferMv(run, +id); else if (a === 'hint') err = id; else if (a === 'sellM') err = sellMove(run, id); else if (a === 'deck') err = toggleDeck(run, id);
-    else if (a === 'recall') { err = recallCard(run, +id); if (!err) { fsel = null; sfx('click'); } } else if (a === 'moveto') { const [i, b] = id.split(':'); err = moveCardTo(run, +i, +b); if (!err) sfx('deal'); } else if (a === 'mvL' || a === 'mvR') { err = moveCard(run, +id, a === 'mvL' ? -1 : 1); if (!err) sfx('deal'); } else if (a === 'retrieve') { err = retrieveCard(run, id); if (!err) { pileView = null; sfx('deal'); } } else if (a === 'introOk') err = dismissIntro(run);
+    else if (a === 'recall') { const [rid, rat] = id.split(':'); err = recallCard(run, +rid, rat === undefined ? undefined : +rat); if (!err) { fsel = null; sfx('click'); } } else if (a === 'moveto') { const [i, b] = id.split(':'); err = moveCardTo(run, +i, +b); if (!err) sfx('deal'); } else if (a === 'mvL' || a === 'mvR') { err = moveCard(run, +id, a === 'mvL' ? -1 : 1); if (!err) sfx('deal'); } else if (a === 'retrieve') { err = retrieveCard(run, id); if (!err) { pileView = null; sfx('deal'); } } else if (a === 'introOk') err = dismissIntro(run);
     else if (a === 'go') err = beginArena(run); else if (a === 'play') err = playCard(run, id); else if (a === 'end') { fsel = null; err = endTurn(run); }
     if (!['tab', 'next', 'play', 'end'].includes(a)) run.msg = '';
     if (!err) { if (a === 'end') sfx('turn'); if (run.gold !== g0 && !settings.god) coinFx(g0, run.gold); if (mys) slotMachine(a === 'offerEq' ? 'eq' : 'mv', mys);
@@ -480,19 +480,48 @@ function unlift(c: HTMLElement) { ph?.remove(); ph = null; ['position', 'left', 
 const zoneAt = (ev: PointerEvent) => document.elementsFromPoint(ev.clientX, ev.clientY).filter(n => !(el && el.contains(n)) && n !== ph).map(e => e.closest('[data-zone]')).find(Boolean) as HTMLElement | undefined;
 const clearHot = () => document.querySelectorAll('.hot').forEach(z => z.classList.remove('hot'));
 let insMark: HTMLElement | null = null;
-/** Riga di partenza di una carta del campo trascinata (il segnaposto è rimasto lì) e punto di inserimento sotto il puntatore: id della carta davanti a cui metterla (0 = in fondo). */
-function fieldIns(ev: PointerEvent, id: number): { row: HTMLElement; before: number; x: number } | null {
-  const row = ph?.parentElement as HTMLElement | null; if (!row || !row.classList.contains('rowf') || !(el?.dataset.mv)) return null;
-  if (!document.elementsFromPoint(ev.clientX, ev.clientY).filter(n => !(el && el.contains(n)) && n !== ph).some(n => n === row || n.closest('.rowf') === row)) return null;
-  const cs = Array.from(row.querySelectorAll<HTMLElement>('[data-pc][data-mv]')).filter(n => +n.dataset.pc! !== id && !n.classList.contains('drag'));
-  for (const n of cs) { const q = n.getBoundingClientRect(); if (ev.clientX < q.left + q.width / 2) return { row, before: +n.dataset.pc!, x: q.left - 2 }; }
-  const l = cs[cs.length - 1]?.getBoundingClientRect(); return { row, before: 0, x: l ? l.right + 2 : row.getBoundingClientRect().left + 6 };
+/** Trascinamento di una carta del campo: il segnaposto (ph) diventa lo "spazio" che si sposta lungo la riga e le altre carte scorrono con un'animazione per fargli posto. */
+const overRow = (ev: PointerEvent, row: HTMLElement) => document.elementsFromPoint(ev.clientX, ev.clientY).filter(n => !(el && el.contains(n)) && n !== ph).some(n => n === row || n.closest('.rowf') === row);
+/** id della prossima carta riordinabile dopo l'elemento (0 = nessuna): è "davanti a chi" finirebbe la carta. */
+function nextHead(from: Element): number { let n = from.nextElementSibling as HTMLElement | null; while (n) { if (n !== el && n.dataset.mv && n.dataset.pc) return +n.dataset.pc; n = n.nextElementSibling as HTMLElement | null; } return 0; }
+/** Esegue uno spostamento nel DOM della riga animando (FLIP) le carte che cambiano posizione. */
+function flip(row: HTMLElement, mutate: () => void) {
+  const cs = (Array.from(row.children) as HTMLElement[]).filter(n => n !== el && n !== ph), from = new Map(cs.map(n => [n, n.getBoundingClientRect()]));
+  mutate();
+  for (const n of cs) { const a = from.get(n)!, b = n.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top; if (Math.abs(dx) > 1 || Math.abs(dy) > 1) n.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'translate(0,0)' }], { duration: 170, easing: 'cubic-bezier(.2,.8,.3,1)' }); }
+}
+function slotHome(row: HTMLElement) { if (ph && el && ph.nextElementSibling !== el) flip(row, () => row.insertBefore(ph!, el)); }
+function slotFollow(ev: PointerEvent) {
+  const row = ph?.parentElement as HTMLElement | null; if (!row || !ph || !el?.dataset.mv) return;
+  if (!overRow(ev, row)) { slotHome(row); return; }
+  ph.classList.add('phslot'); const r = ph.getBoundingClientRect(), x = ev.clientX; if (x >= r.left && x <= r.right) return;
+  const cs = (Array.from(row.querySelectorAll<HTMLElement>('[data-pc][data-mv]'))).filter(n => n !== el), i = cs.findIndex(n => !!(ph!.compareDocumentPosition(n) & Node.DOCUMENT_POSITION_FOLLOWING)), left = i < 0 ? cs : cs.slice(0, i), right = i < 0 ? [] : cs.slice(i);
+  const mid = (n: HTMLElement) => { const q = n.getBoundingClientRect(); return q.left + q.width / 2; };
+  if (x < r.left) { const t = left.find(n => mid(n) > x); if (t) flip(row, () => row.insertBefore(ph!, t)); }
+  else { const k = right.map(mid).filter(c => c < x).length - 1; if (k >= 0) { const nx = right[k + 1]; flip(row, () => nx ? row.insertBefore(ph!, nx) : row.appendChild(ph!)); } }
+}
+/** Punto della mano più vicino al rilascio: indice in cui inserire la carta e posizione del segnalino. */
+function handAt(ev: PointerEvent) {
+  const cs = Array.from(app.querySelectorAll<HTMLElement>('.hand .card')), hr = (app.querySelector('.hand') ?? app.querySelector('.handrow'))!.getBoundingClientRect();
+  let at = 0, x = cs.length ? cs[0].getBoundingClientRect().left - 3 : hr.left + hr.width / 2;
+  cs.forEach((n, i) => { const q = n.getBoundingClientRect(); if (ev.clientX > q.left + q.width / 2) { at = i + 1; x = q.right + 3; } });
+  return { at, x, top: hr.top + 4, h: hr.height - 8 };
 }
 function showIns(ev: PointerEvent) {
-  const u = el?.dataset.drag ?? ''; if (!u.startsWith('field:')) return; const t = fieldIns(ev, +u.slice(6));
-  if (!t) { insMark?.remove(); insMark = null; return; } if (!insMark) { insMark = document.createElement('div'); insMark.className = 'insmark'; document.body.appendChild(insMark); }
-  const q = t.row.getBoundingClientRect(); Object.assign(insMark.style, { left: t.x + 'px', top: q.top + 4 + 'px', height: q.height - 8 + 'px' });
+  const u = el?.dataset.drag ?? ''; if (!u.startsWith('field:')) return;
+  if (zoneAt(ev)?.dataset.zone === 'hand') {
+    const row = ph?.parentElement as HTMLElement | null; if (row) slotHome(row);
+    const t = handAt(ev); if (!insMark) { insMark = document.createElement('div'); insMark.className = 'insmark'; document.body.appendChild(insMark); }
+    Object.assign(insMark.style, { left: t.x + 'px', top: t.top + 'px', height: t.h + 'px' }); return;
+  }
+  insMark?.remove(); insMark = null; slotFollow(ev);
 }
+/** Alla fine del trascinamento di una carta del campo lungo la sua riga: davanti a quale carta va messa (null = nessuna modifica). */
+function fieldDrop(ev: PointerEvent): { before: number } | null {
+  const row = ph?.parentElement as HTMLElement | null; if (!row || !ph || !el?.dataset.mv || !overRow(ev, row)) return null;
+  const b = nextHead(ph); return b === nextHead(el) ? null : { before: b };
+}
+
 const phone = () => matchMedia('(max-width:640px)').matches;
 let hold = 0, grabbed = false, held = false, dbar: HTMLElement | null = null, fullEl: HTMLElement | null = null;
 const needHold = (c: HTMLElement) => phone() && !c.closest('.hand') && !c.closest('.rowf'); // mazzo ed equipaggiamenti: si trascina solo dopo una pressione lunga (altrimenti il dito scorre la pagina)
@@ -522,13 +551,13 @@ app.addEventListener('pointermove', ev => {
   if (!el) return; const dx = ev.clientX - sx, dy = ev.clientY - sy;
   if (needHold(el) && !grabbed) { if (Math.hypot(dx, dy) > 10) clearTimeout(hold); return; } // senza pressione lunga il movimento è solo scorrimento
   if (!moved && Math.hypot(dx, dy) < 8) return;
-  if (!moved) { clearTimeout(hold); hideFull(); if (!grabbed) { lift(el); markTarget(el); } } moved = true; el.classList.add('drag'); el.style.transform = `translate(${dx}px,${dy}px) scale(1.15)`; clearHot(); zoneAt(ev)?.classList.add('hot'); showIns(ev);
+  if (!moved) { clearTimeout(hold); hideFull(); hideTip(); if (!grabbed) { lift(el); markTarget(el); } } moved = true; el.classList.add('drag'); el.style.transform = `translate(${dx}px,${dy}px) scale(1.15)`; clearHot(); zoneAt(ev)?.classList.add('hot'); showIns(ev);
 });
 const endDrag = (ev: PointerEvent, cancel: boolean) => {
-  if (!el) return; const c = el, uid = c.dataset.drag!, z = cancel ? undefined : zoneAt(ev)?.dataset.zone, ins = uid.startsWith('field:') && !cancel && moved ? fieldIns(ev, +uid.slice(6)) : null; el = null; clearHot(); const wasGrab = grabbed || held; endHold();
+  if (!el) return; const c = el, uid = c.dataset.drag!, z = cancel ? undefined : zoneAt(ev)?.dataset.zone, ins = uid.startsWith('field:') && !cancel && moved ? fieldDrop(ev) : null, at = uid.startsWith('field:') && z === 'hand' ? handAt(ev).at : 0; el = null; clearHot(); const wasGrab = grabbed || held; endHold();
   c.classList.remove('drag', 'grab'); c.style.transform = ''; unlift(c); clearTargets(); if (!run) return;
   if (uid.startsWith('field:')) { // carta del proprio campo: trascinata sulla mano = riprendi in mano; trascinata lungo la sua riga = riordina (il semplice tocco la seleziona, vedi fieldPick)
-    if (!moved || cancel) return; noClick = Date.now(); const id = +uid.slice(6); if (z === 'hand') act('recall', String(id)); else if (ins) act('moveto', `${id}:${ins.before}`); return;
+    if (!moved || cancel) return; noClick = Date.now(); const id = +uid.slice(6); if (z === 'hand') act('recall', `${id}:${at}`); else if (ins) act('moveto', `${id}:${ins.before}`); return;
   }
   if (uid.startsWith('offer:')) { // acquisto solo con drag & drop: potenziamenti -> barra equipaggiamenti, mosse -> mazzo
     const [, k, i] = uid.split(':'); if (z === (k === 'eq' ? 'eqbar' : 'deck')) act(k === 'eq' ? 'offerEq' : 'offerMv', i);
@@ -560,7 +589,7 @@ function placedFull(p: Placed): string {
 }
 const placedById = (id: number): Placed | null => { const c = run?.combat; return c ? [...c.field.off, ...c.field.def, ...c.foeField.off, ...c.foeField.def].find(p => p.id === id) ?? null : null; };
 /** Suggerimento per equipaggiamenti ([data-eq]) e carte schierate ([data-pc]). */
-function tipFor(ev: Event) { const t = ev.target as HTMLElement, eq = t.closest('[data-eq]') as HTMLElement | null, pc = t.closest('[data-pc]') as HTMLElement | null; if (eq) showTip(eq); else if (pc) { const p = placedById(+pc.dataset.pc!); if (p) showTip(pc, placedFull(p)); else hideTip(); } else hideTip(); }
+function tipFor(ev: Event) { if (el) return; /* durante un trascinamento niente popup */ const t = ev.target as HTMLElement, eq = t.closest('[data-eq]') as HTMLElement | null, pc = t.closest('[data-pc]') as HTMLElement | null; if (eq) showTip(eq); else if (pc) { const p = placedById(+pc.dataset.pc!); if (p) showTip(pc, placedFull(p)); else hideTip(); } else hideTip(); }
 app.addEventListener('mouseover', tipFor);
 app.addEventListener('input', ev => { const t = ev.target as HTMLInputElement; if (t.id === 'godq') { godShop.q = t.value; const l = document.getElementById('godlist'); if (l) l.innerHTML = godList(); } }); // la ricerca aggiorna solo l'elenco (il campo mantiene il focus)
 app.addEventListener('mouseleave', hideTip);
