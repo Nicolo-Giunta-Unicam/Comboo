@@ -212,7 +212,7 @@
       "retrieve": {
         "unlock": "ocean",
         "cost": 2,
-        "perTurn": 0,
+        "perTurn": 1,
         "icon": "♻️",
         "name": "Recupera dagli scarti",
         "desc": "Ora puoi comprare con l'energia una carta dalla pila degli scarti e rimetterla in mano: tocca gli Scarti e scegli la carta da recuperare."

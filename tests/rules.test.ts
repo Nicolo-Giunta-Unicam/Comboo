@@ -404,7 +404,7 @@ test('recupera dagli scarti: costa energia, serve spazio in mano', () => {
   const r = newRun(3); r.region = 'desert'; beginArena(r); const c = r.combat!; c.energy = 3; c.discard = ['base:jab:0', 'base:guard:1']; c.hand = [];
   assert.match(retrieveCard(r, 'base:jab:0') ?? '', /sbloccata/); r.region = 'ocean'; const cost = CONFIG.actions.retrieve.cost;
   assert.match(retrieveCard(r, 'base:nonc:9') ?? '', /scarti/); assert.equal(retrieveCard(r, 'base:jab:0'), null); assert.deepEqual(c.hand, ['base:jab:0']); assert.deepEqual(c.discard, ['base:guard:1']); assert.equal(c.energy, 3 - cost);
-  c.energy = cost - 1; assert.equal(retrieveCard(r, 'base:guard:1'), 'Energia insufficiente.'); c.energy = 10; c.hand = Array(CONFIG.maxHand).fill('base:jab:0'); assert.match(retrieveCard(r, 'base:guard:1') ?? '', /Mano piena/);
+  assert.match(retrieveCard(r, 'base:guard:1') ?? '', /una sola volta/, 'al massimo una carta recuperata per turno'); c.act = {}; c.energy = cost - 1; assert.equal(retrieveCard(r, 'base:guard:1'), 'Energia insufficiente.'); c.energy = 10; c.hand = Array(CONFIG.maxHand).fill('base:jab:0'); assert.match(retrieveCard(r, 'base:guard:1') ?? '', /Mano piena/);
 });
 
 test('riordina col trascinamento: sposta la carta davanti a un\'altra o in fondo, ricalcolando le combo', () => {

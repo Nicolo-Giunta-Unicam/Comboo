@@ -475,11 +475,10 @@ function lift(c: HTMLElement) { const q = c.getBoundingClientRect(); ph = docume
   const q2 = c.getBoundingClientRect(), ox = q2.left - q.left, oy = q2.top - q.top; if (Math.abs(ox) > 0.5 || Math.abs(oy) > 0.5) Object.assign(c.style, { left: q.left - ox + 'px', top: q.top - oy + 'px' }); // se un contenitore è trasformato/animato, position:fixed è relativo a lui: si compensa lo scarto
 }
 function markTarget(c: HTMLElement) { const u = c.dataset.drag ?? ''; if (u.startsWith('field:') && actionOn(run!, 'recall') && (c.dataset.drag ?? '').length) document.querySelector('.handrow')?.classList.add('target'); if (u.startsWith('offer:')) document.querySelector(`[data-zone="${u.split(':')[1] === 'eq' ? 'eqbar' : 'deck'}"]`)?.classList.add('target'); } // evidenzia dove trascinare la carta da acquistare
-function clearTargets() { document.querySelectorAll('.target').forEach(z => z.classList.remove('target')); insMark?.remove(); insMark = null; }
+function clearTargets() { document.querySelectorAll('.target').forEach(z => z.classList.remove('target')); }
 function unlift(c: HTMLElement) { ph?.remove(); ph = null; ['position', 'left', 'top', 'width', 'height', 'margin', 'z-index'].forEach(p => c.style.removeProperty(p)); }
 const zoneAt = (ev: PointerEvent) => document.elementsFromPoint(ev.clientX, ev.clientY).filter(n => !(el && el.contains(n)) && n !== ph).map(e => e.closest('[data-zone]')).find(Boolean) as HTMLElement | undefined;
 const clearHot = () => document.querySelectorAll('.hot').forEach(z => z.classList.remove('hot'));
-let insMark: HTMLElement | null = null;
 /** Trascinamento di una carta del campo: il segnaposto (ph) diventa lo "spazio" che si sposta lungo la riga e le altre carte scorrono con un'animazione per fargli posto. */
 const overRow = (ev: PointerEvent, row: HTMLElement) => document.elementsFromPoint(ev.clientX, ev.clientY).filter(n => !(el && el.contains(n)) && n !== ph).some(n => n === row || n.closest('.rowf') === row);
 /** id della prossima carta riordinabile dopo l'elemento (0 = nessuna): è "davanti a chi" finirebbe la carta. */
@@ -500,21 +499,17 @@ function slotFollow(ev: PointerEvent) {
   if (x < r.left) { const t = left.find(n => mid(n) > x); if (t) flip(row, () => row.insertBefore(ph!, t)); }
   else { const k = right.map(mid).filter(c => c < x).length - 1; if (k >= 0) { const nx = right[k + 1]; flip(row, () => nx ? row.insertBefore(ph!, nx) : row.appendChild(ph!)); } }
 }
-/** Punto della mano più vicino al rilascio: indice in cui inserire la carta e posizione del segnalino. */
+/** Punto della mano più vicino al rilascio: indice in cui inserire la carta. */
 function handAt(ev: PointerEvent) {
-  const cs = Array.from(app.querySelectorAll<HTMLElement>('.hand .card')), hr = (app.querySelector('.hand') ?? app.querySelector('.handrow'))!.getBoundingClientRect();
-  let at = 0, x = cs.length ? cs[0].getBoundingClientRect().left - 3 : hr.left + hr.width / 2;
-  cs.forEach((n, i) => { const q = n.getBoundingClientRect(); if (ev.clientX > q.left + q.width / 2) { at = i + 1; x = q.right + 3; } });
-  return { at, x, top: hr.top + 4, h: hr.height - 8 };
+  const cs = Array.from(app.querySelectorAll<HTMLElement>('.hand .card'));
+  let at = 0; cs.forEach((n, i) => { const q = n.getBoundingClientRect(); if (ev.clientX > q.left + q.width / 2) at = i + 1; });
+  return { at };
 }
 function showIns(ev: PointerEvent) {
   const u = el?.dataset.drag ?? ''; if (!u.startsWith('field:')) return;
-  if (zoneAt(ev)?.dataset.zone === 'hand') {
-    const row = ph?.parentElement as HTMLElement | null; if (row) slotHome(row);
-    const t = handAt(ev); if (!insMark) { insMark = document.createElement('div'); insMark.className = 'insmark'; document.body.appendChild(insMark); }
-    Object.assign(insMark.style, { left: t.x + 'px', top: t.top + 'px', height: t.h + 'px' }); return;
-  }
-  insMark?.remove(); insMark = null; slotFollow(ev);
+  const row = ph?.parentElement as HTMLElement | null;
+  if (zoneAt(ev)?.dataset.zone === 'hand') { if (row) slotHome(row); return; } // sulla mano nessun segnalino: la carta finisce nel punto in cui la lasci
+  slotFollow(ev);
 }
 /** Alla fine del trascinamento di una carta del campo lungo la sua riga: davanti a quale carta va messa (null = nessuna modifica). */
 function fieldDrop(ev: PointerEvent): { before: number } | null {
