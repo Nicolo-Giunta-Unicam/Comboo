@@ -463,7 +463,7 @@ body.calm *::before,body.calm *::after{animation:none!important;transition:none!
 .epim{z-index:300;background:#000d}.epibox{width:min(94vw,520px);gap:10px;border:2px solid var(--gold);box-shadow:0 0 40px #ffc85755;text-align:center}.epibox h2{margin:0;color:var(--gold)}.epibox .tale{font-size:14px;line-height:1.5;text-align:left;margin:0}.epistats{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:4px 0}.epistats span{padding:3px 10px;border-radius:999px;border:1px solid var(--vc);background:color-mix(in srgb,var(--vc) 18%,#0008);font-size:12px}
 /* campo a 3 righe: nel turno del giocatore si vedono difesa nemica + offesa e difesa tue; nel turno nemico offesa/difesa nemiche + difesa tua. Le righe nascoste si chiudono con un'animazione. */
 body.fs{--rh:min(calc(var(--cw)*1.6),calc((100dvh - 160px - var(--cw)*1.6)/3 - 14px))}
-@supports (height:1cqh){body.fs .arena{--rh:max(44px,min(calc(var(--cw)*1.6),calc((100cqh - 68px)/3 - 14px)))}}
+@supports (height:1cqh){body.fs .arena{--rh:max(44px,min(calc((100cqw - 300px)/2.1),calc((100cqh - 68px)/3 - 14px)))}}
 .board{justify-content:flex-start}
 .rowf{transition:height .55s cubic-bezier(.4,0,.2,1),padding .55s cubic-bezier(.4,0,.2,1),opacity .45s ease,transform .55s cubic-bezier(.4,0,.2,1),border-width .55s,box-shadow .3s}
 .board.v-me .rowf.own-f.off,.board.v-foe .rowf.own-m.off{height:0!important;padding-top:0!important;padding-bottom:0!important;border-width:0;opacity:0;overflow:hidden!important;pointer-events:none;box-shadow:none}
@@ -722,5 +722,22 @@ body.fs .side .vbar{width:12px}
 .rowf.own-m .card[data-drag]{touch-action:none;cursor:grab}.rowf.own-m .card.drag{cursor:grabbing}
 .handrow.target{outline:3px solid var(--gold);outline-offset:-3px;border-radius:14px;box-shadow:0 0 26px #ffc857aa inset;animation:tgt .8s ease-in-out infinite}.handrow.hot{background:#ffc85722}
 .phslot{box-sizing:border-box;border:2px dashed #ffd27acc;border-radius:10px;background:#ffd27a14}
+
+/* PC (mouse): scrollbar sottile e discreta nei menu; resta nascosta nel campo di duello e sul telefono */
+@media (hover:hover) and (pointer:fine){
+*{scrollbar-width:thin;scrollbar-color:#ffe3a05c transparent}
+.field,.field *,.handrow,.hand,.fullprev,.fullprev *{scrollbar-width:none}
+@supports not (scrollbar-width:thin){
+*::-webkit-scrollbar{display:block;width:7px;height:7px;background:transparent}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{border-radius:999px;background:#ffe3a05c}
+*::-webkit-scrollbar-thumb:hover{background:#ffe3a0a6}
+*::-webkit-scrollbar-corner{background:transparent}
+.field::-webkit-scrollbar,.field *::-webkit-scrollbar,.handrow::-webkit-scrollbar,.hand::-webkit-scrollbar{display:none}
+}
+}
+/* barra Vendi / Fuori dal mazzo che compare anche su PC mentre si trascina una carta del mazzo */
+@media (min-width:641px){.dbar{animation:dbin .18s ease-out}.dbtn{max-width:260px;height:92px}.dbtn span{font-size:30px}.dbtn b{font-size:13px}}
+@keyframes dbin{from{opacity:0;transform:translateY(22px)}}
 </style></head>
-<body><div id="app"></div><script src="dist/game.js?v=20261105"></script></body></html>
+<body><div id="app"></div><script src="dist/game.js?v=20261122"></script></body></html>

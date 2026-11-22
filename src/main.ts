@@ -289,7 +289,8 @@ function draw() {
     <div class="zone dz sellz" data-zone="sell"><div><b>💰 Vendita</b> <small>Trascina qui un equipaggiamento (50%)</small></div></div></div>
     <div class="zone dz deckz" data-zone="deck"><div class="card back"><div class="bk">${r.deck.length}<span class="pd"></span></div></div><b>Mazzo ${r.deck.length}/${CONFIG.maxDeck}</b><small>⬆ trascina qui una mossa</small></div></div>${energy}</div></div>`;
   if (tab === 'me') {
-    const inn = own.filter(c => r.deck.includes(c.uid)), out = own.filter(c => !r.deck.includes(c.uid));
+    const srcRank = (mv: string) => { const sc = MOVES[mv]?.source ?? 'base'; if (sc === 'base') return -1; const i = r.equipped.indexOf(sc); return i >= 0 ? i : 1000 + Math.max(0, Object.keys(EQUIPMENT).indexOf(sc)); }; // carte base per prime, poi un gruppo per ogni equipaggiamento (nell'ordine in cui è installato)
+    const inn = own.filter(c => r.deck.includes(c.uid)).sort((a, b) => srcRank(a.move) - srcRank(b.move) || MOVES[a.move].cost - MOVES[b.move].cost || MOVES[a.move].name.localeCompare(MOVES[b.move].name)), out = own.filter(c => !r.deck.includes(c.uid));
     const cs = (l: typeof own) => l.map(c => card(c.uid, { attr: `data-drag="${c.uid}"`, sell: cardValue(r, c.uid) })).join('');
     body = `<div class="zone sellz" data-zone="sell"><b>🗑 Vendita</b> · trascina qui una carta per venderla (nel mazzo ne restano almeno ${CONFIG.minDeck})</div>
     <h3>Mazzo attivo ${inn.length}/${CONFIG.maxDeck}</h3><small class="deskhint">Trascina (o tocca) le carte tra le due aree.</small><small class="phonehint">Tocca una carta per spostarla; tienila premuta per venderla o toglierla dal mazzo.</small><div class="zone" data-zone="in"><div class="cards">${cs(inn)}</div></div>
@@ -546,7 +547,7 @@ app.addEventListener('pointermove', ev => {
   if (!el) return; const dx = ev.clientX - sx, dy = ev.clientY - sy;
   if (needHold(el) && !grabbed) { if (Math.hypot(dx, dy) > 10) clearTimeout(hold); return; } // senza pressione lunga il movimento è solo scorrimento
   if (!moved && Math.hypot(dx, dy) < 8) return;
-  if (!moved) { clearTimeout(hold); hideFull(); hideTip(); if (!grabbed) { lift(el); markTarget(el); } } moved = true; el.classList.add('drag'); el.style.transform = `translate(${dx}px,${dy}px) scale(1.15)`; clearHot(); zoneAt(ev)?.classList.add('hot'); showIns(ev);
+  if (!moved) { clearTimeout(hold); hideFull(); hideTip(); if (!grabbed) { lift(el); markTarget(el); } if (!dbar && !phone() && tab === 'me' && run?.phase === 'store' && !/^(field|offer|eqs):/.test(el.dataset.drag ?? '')) showDropBar(el); } moved = true; el.classList.add('drag'); el.style.transform = `translate(${dx}px,${dy}px) scale(1.15)`; clearHot(); zoneAt(ev)?.classList.add('hot'); showIns(ev);
 });
 const endDrag = (ev: PointerEvent, cancel: boolean) => {
   if (!el) return; const c = el, uid = c.dataset.drag!, z = cancel ? undefined : zoneAt(ev)?.dataset.zone, ins = uid.startsWith('field:') && !cancel && moved ? fieldDrop(ev) : null, at = uid.startsWith('field:') && z === 'hand' ? handAt(ev).at : 0; el = null; clearHot(); const wasGrab = grabbed || held; endHold();
