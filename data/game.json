@@ -223,7 +223,7 @@
         "name": "Riprendi in mano",
         "desc": "Ritira in mano una carta già schierata sul tuo campo (senza rimborso di energia), una volta per turno.",
         "cost": 45,
-        "needs": "",
+        "needs": [],
         "req": {
           "honor": 30,
           "fame": 0,
@@ -231,6 +231,10 @@
         },
         "fx": {
           "action": "recall"
+        },
+        "pos": {
+          "x": 1,
+          "y": 0
         }
       },
       {
@@ -240,7 +244,10 @@
         "name": "Riordina il campo",
         "desc": "Cambia l'ordine delle carte schierate nel turno per riattivare le combo a sequenza.",
         "cost": 80,
-        "needs": "",
+        "needs": [
+          "recall",
+          "slot2"
+        ],
         "req": {
           "honor": 0,
           "fame": 0,
@@ -248,6 +255,10 @@
         },
         "fx": {
           "action": "reorder"
+        },
+        "pos": {
+          "x": 1,
+          "y": 1
         }
       },
       {
@@ -257,7 +268,10 @@
         "name": "Recupera dagli scarti",
         "desc": "Compra con l'energia una carta dalla pila degli scarti e rimettila in mano (una per turno).",
         "cost": 110,
-        "needs": "",
+        "needs": [
+          "reorder",
+          "deck2"
+        ],
         "req": {
           "honor": 0,
           "fame": 0,
@@ -265,6 +279,10 @@
         },
         "fx": {
           "action": "retrieve"
+        },
+        "pos": {
+          "x": 1,
+          "y": 2
         }
       },
       {
@@ -274,7 +292,7 @@
         "name": "Mazzo più ampio I",
         "desc": "+5 carte massime nel mazzo attivo (25 → 30).",
         "cost": 60,
-        "needs": "",
+        "needs": [],
         "req": {
           "honor": 0,
           "fame": 25,
@@ -282,6 +300,10 @@
         },
         "fx": {
           "deck": 5
+        },
+        "pos": {
+          "x": 0,
+          "y": 0
         }
       },
       {
@@ -289,17 +311,45 @@
         "branch": "deck",
         "icon": "🃏",
         "name": "Mazzo più ampio II",
-        "desc": "+5 carte massime nel mazzo attivo (30 → 35) e +1 carta massima in mano.",
+        "desc": "+5 carte massime nel mazzo attivo (30 → 35).",
         "cost": 110,
-        "needs": "deck1",
+        "needs": [
+          "deck1"
+        ],
         "req": {
           "honor": 40,
           "fame": 45,
           "ambition": 0
         },
         "fx": {
-          "deck": 5,
+          "deck": 5
+        },
+        "pos": {
+          "x": 0,
+          "y": 1
+        }
+      },
+      {
+        "id": "hand1",
+        "branch": "deck",
+        "icon": "✋",
+        "name": "Mano più ampia",
+        "desc": "+1 carta massima in mano.",
+        "cost": 140,
+        "req": {
+          "honor": 45,
+          "fame": 55,
+          "ambition": 0
+        },
+        "fx": {
           "hand": 1
+        },
+        "needs": [
+          "deck2"
+        ],
+        "pos": {
+          "x": 0,
+          "y": 2
         }
       },
       {
@@ -309,7 +359,7 @@
         "name": "Slot equipaggiamento I",
         "desc": "+1 slot equipaggiamento.",
         "cost": 60,
-        "needs": "",
+        "needs": [],
         "req": {
           "honor": 0,
           "fame": 0,
@@ -317,6 +367,10 @@
         },
         "fx": {
           "slots": 1
+        },
+        "pos": {
+          "x": 2,
+          "y": 0
         }
       },
       {
@@ -326,7 +380,9 @@
         "name": "Slot equipaggiamento II",
         "desc": "+1 slot equipaggiamento.",
         "cost": 90,
-        "needs": "slot1",
+        "needs": [
+          "slot1"
+        ],
         "req": {
           "honor": 0,
           "fame": 0,
@@ -334,6 +390,10 @@
         },
         "fx": {
           "slots": 1
+        },
+        "pos": {
+          "x": 2,
+          "y": 1
         }
       },
       {
@@ -343,7 +403,9 @@
         "name": "Slot equipaggiamento III",
         "desc": "+1 slot equipaggiamento.",
         "cost": 130,
-        "needs": "slot2",
+        "needs": [
+          "slot2"
+        ],
         "req": {
           "honor": 0,
           "fame": 0,
@@ -351,19 +413,23 @@
         },
         "fx": {
           "slots": 1
+        },
+        "pos": {
+          "x": 2,
+          "y": 2
         }
       }
     ],
     "skillBranches": [
       {
-        "id": "tactics",
-        "icon": "⚔️",
-        "name": "Tattica"
-      },
-      {
         "id": "deck",
         "icon": "🎴",
         "name": "Mazzo"
+      },
+      {
+        "id": "tactics",
+        "icon": "⚔️",
+        "name": "Tattica"
       },
       {
         "id": "slots",
@@ -6658,7 +6724,7 @@
       "skill.deck1.name": "Larger deck I",
       "skill.deck1.desc": "+5 maximum cards in the active deck (25 → 30).",
       "skill.deck2.name": "Larger deck II",
-      "skill.deck2.desc": "+5 maximum cards in the active deck (30 → 35) and +1 maximum card in hand.",
+      "skill.deck2.desc": "+5 maximum cards in the active deck (30 → 35).",
       "skill.slot1.name": "Equipment slot I",
       "skill.slot1.desc": "+1 equipment slot.",
       "skill.slot2.name": "Equipment slot II",
@@ -6667,7 +6733,9 @@
       "skill.slot3.desc": "+1 equipment slot.",
       "skillBranch.tactics.name": "Tactics",
       "skillBranch.deck.name": "Deck",
-      "skillBranch.slots.name": "Equipment"
+      "skillBranch.slots.name": "Equipment",
+      "skill.hand1.name": "Larger hand",
+      "skill.hand1.desc": "+1 maximum card in hand."
     }
   },
   "epilogues": [

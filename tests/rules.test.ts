@@ -372,8 +372,8 @@ const ACTS: ActionId[] = ['recall', 'reorder', 'retrieve'];
 const store = (gold = 1000) => { const r = newRun(1); r.phase = 'store'; r.gold = gold; return r; };
 test('abilità: le tre azioni si sbloccano solo comprandole nell\'albero (non più con le isole)', () => {
   const r = store(); for (const id of ['boxing', 'battlefield', 'desert', 'ocean', 'volcano']) { r.region = id; assert.deepEqual(ACTS.map(a => actionOn(r, a)), [false, false, false]); }
-  assert.equal(buySkill(r, 'reorder', false), null); assert.deepEqual(ACTS.map(a => actionOn(r, a)), [false, true, false]);
-  assert.equal(buySkill(r, 'recall', false), null); assert.equal(buySkill(r, 'retrieve', false), null); assert.deepEqual(ACTS.map(a => actionOn(r, a)), [true, true, true]);
+  assert.equal(buySkill(r, 'recall', false), null); assert.deepEqual(ACTS.map(a => actionOn(r, a)), [true, false, false]);
+  assert.equal(buySkill(r, 'reorder', false), null); assert.equal(buySkill(r, 'retrieve', false), null); assert.deepEqual(ACTS.map(a => actionOn(r, a)), [true, true, true]);
   const g = newRun(1); g.god = true; assert.deepEqual(ACTS.map(a => actionOn(g, a)), [true, true, true]);
 });
 test('abilità: costo in monete, requisiti di statistiche solo con la Storia attiva, ramo a nodi', () => {
@@ -383,15 +383,24 @@ test('abilità: costo in monete, requisiti di statistiche solo con la Storia att
   assert.match(skillErr(r, 'deck2', false) ?? '', /Prima serve/); assert.match(skillErr(r, 'slot2', false) ?? '', /Prima serve/);
   r.phase = 'combat'; assert.match(skillErr(r, 'reorder') ?? '', /solo nello store/);
 });
-test('abilità: mazzo 25 → 30 → 35, mano +1 all\'ultimo nodo, slot +1 per nodo fino a +3', () => {
+test('abilità: mazzo 25 → 30 → 35, mano +1 al terzo nodo del ramo, slot +1 per nodo fino a +3', () => {
   const r = store(); r.virt = { honor: 100, fame: 100, ambition: 100 }; assert.equal(maxDeckOf(r), 25); assert.equal(maxHandOf(r), CONFIG.maxHand);
   assert.equal(buySkill(r, 'deck1'), null); assert.equal(maxDeckOf(r), 30); assert.equal(maxHandOf(r), CONFIG.maxHand);
-  assert.equal(buySkill(r, 'deck2'), null); assert.equal(maxDeckOf(r), 35); assert.equal(maxHandOf(r), CONFIG.maxHand + 1);
+  assert.equal(buySkill(r, 'deck2'), null); assert.equal(maxDeckOf(r), 35); assert.equal(maxHandOf(r), CONFIG.maxHand, 'il secondo nodo non dà carte in mano');
+  assert.equal(buySkill(r, 'hand1'), null); assert.equal(maxDeckOf(r), 35); assert.equal(maxHandOf(r), CONFIG.maxHand + 1);
   const s0 = r.slots; for (const id of ['slot1', 'slot2', 'slot3']) assert.equal(buySkill(r, id), null); assert.equal(r.slots, s0 + 3);
   assert.equal(slotsOf(r), slotsFor(r.arena) + 3, 'gli slot dell\'albero restano dopo la vittoria');
 });
 test('slot: si parte da 4 e si guadagna uno slot a ogni arena', () => {
   assert.equal(slotsFor(1), 4); assert.equal(slotsFor(2), 5); assert.equal(slotsFor(3), 6); assert.equal(CONFIG.maxDeck, 25);
+});
+test('abilità: percorsi alternativi — Riordina anche da Slot II, Recupera anche da Mazzo II', () => {
+  const r = store(); r.virt = { honor: 100, fame: 100, ambition: 100 };
+  assert.match(skillErr(r, 'reorder') ?? '', /Prima serve una di queste/); assert.match(skillErr(r, 'retrieve') ?? '', /Prima serve una di queste/);
+  buySkill(r, 'slot1'); assert.match(skillErr(r, 'reorder') ?? '', /Prima serve/); buySkill(r, 'slot2'); assert.equal(skillErr(r, 'reorder'), null, 'Slot II sblocca Riordina senza passare da Riprendi');
+  assert.match(skillErr(r, 'retrieve') ?? '', /Prima serve/); buySkill(r, 'deck1'); buySkill(r, 'deck2'); assert.equal(skillErr(r, 'retrieve'), null, 'Mazzo II sblocca Recupera senza passare da Riordina');
+  assert.equal(buySkill(r, 'retrieve'), null); assert.ok(actionOn(r, 'retrieve') && !actionOn(r, 'reorder') && !actionOn(r, 'recall'));
+  const q = store(); assert.equal(buySkill(q, 'recall', false), null); assert.equal(skillErr(q, 'reorder', false), null, 'il percorso normale resta Riprendi → Riordina → Recupera');
 });
 test('abilità: il popup di spiegazione compare all\'acquisto, una sola volta per azione', () => {
   const r = store(); assert.equal(buySkill(r, 'recall', false), null); assert.deepEqual(r.intro, ['recall']); assert.equal(dismissIntro(r), null); assert.equal(r.intro, undefined); assert.deepEqual(r.seen, ['recall']);

@@ -390,9 +390,12 @@ export function drawDiscard(r: Run): Err {
 }
 // ---- Azioni sbloccabili dall'albero delle abilità (config.actions + config.skills): riprendere una carta dal campo, riordinare il campo, recuperare dagli scarti ----
 // ---- Albero delle abilità (config.skills): si comprano con le monete nello store e hanno requisiti minimi di Onore/Fama/Ambizione ----
-export interface SkillDef { id: string; branch: string; icon: string; name: string; desc: string; cost: number; needs?: string | null; req?: Partial<Record<VirtId, number>>; fx: { action?: string; deck?: number; hand?: number; slots?: number } }
+export interface SkillDef { id: string; branch: string; icon: string; name: string; desc: string; cost: number; needs?: string | string[] | null; pos?: { x: number; y: number }; req?: Partial<Record<VirtId, number>>; fx: { action?: string; deck?: number; hand?: number; slots?: number } }
 export const skillDefs = (): SkillDef[] => ((CONFIG as unknown as { skills?: SkillDef[] }).skills ?? []);
 export const hasSkill = (r: Run, id: string) => !!r.skills?.includes(id);
+/** Abilità che sbloccano questo nodo: basta averne UNA (percorsi alternativi nell'albero). Nessuna = nodo di partenza. */
+export const needsOf = (x: SkillDef): string[] => (Array.isArray(x.needs) ? x.needs : x.needs ? [x.needs] : []).filter(Boolean);
+export const skillReady = (r: Run, x: SkillDef) => { const n = needsOf(x); return !n.length || n.some(id => hasSkill(r, id)); };
 export const skillSum = (r: Run, k: 'deck' | 'hand' | 'slots') => skillDefs().filter(x => hasSkill(r, x.id)).reduce((n, x) => n + (x.fx[k] ?? 0), 0);
 /** Massimo di carte del mazzo attivo e in mano (valori base di config + bonus dell'albero). */
 export const maxDeckOf = (r: Run) => CONFIG.maxDeck + skillSum(r, 'deck');
@@ -401,7 +404,7 @@ export const maxHandOf = (r: Run) => CONFIG.maxHand + skillSum(r, 'hand');
 export function skillErr(r: Run, id: string, story = true): Err {
   const x = skillDefs().find(k => k.id === id); if (!x) return 'Abilità sconosciuta.';
   if (r.phase !== 'store') return 'Puoi acquistare abilità solo nello store.'; if (hasSkill(r, id)) return 'Abilità già acquistata.'; if (r.god) return null;
-  if (x.needs && !hasSkill(r, x.needs)) return `Prima serve l'abilità «${skillDefs().find(k => k.id === x.needs)?.name ?? x.needs}».`;
+  if (!skillReady(r, x)) { const nm = needsOf(x).map(id => skillDefs().find(k => k.id === id)?.name ?? id); return nm.length > 1 ? `Prima serve una di queste abilità: ${nm.join(' · ')}.` : `Prima serve l'abilità «${nm[0]}».`; }
   if (story) for (const v of VIRT_IDS) { const m = x.req?.[v] ?? 0; if (m > 0 && virtOf(r, v) < m) return `Requisito: ${virtDef(v).name} almeno ${m}.`; }
   if (r.gold < x.cost) return 'Oro insufficiente.'; return null;
 }
