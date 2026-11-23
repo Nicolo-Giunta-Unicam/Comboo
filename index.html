@@ -747,8 +747,9 @@ body.fs .side .vbar{width:12px}
 .sktree line{stroke:#ffffff2e;stroke-width:5;stroke-linecap:round;vector-effect:non-scaling-stroke}
 .sktree line.nx{stroke:#ffd77a99;stroke-width:4}
 .sktree line.on{stroke:#ffd77a;stroke-width:5;filter:drop-shadow(0 0 5px #ffb430aa)}
-.skn{position:absolute;transform:translate(-50%,-37px);width:calc(100% / var(--cols) - 8px);max-width:132px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;box-shadow:none;padding:0;color:inherit;cursor:pointer;z-index:1}
+.skn{--nw:min(132px,calc(100% / var(--cols) - 8px));position:absolute;transform:none;width:var(--nw);margin:-37px 0 0 calc(var(--nw) / -2);display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;box-shadow:none;padding:0;color:inherit;cursor:pointer;z-index:1}
 .skn .skic{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;font-size:32px;background:radial-gradient(circle at 35% 30%,#4a3a78,#1b1236);border:3px solid #ffffff44;box-shadow:0 4px 10px #000a,inset 0 0 12px #0008;transition:transform .15s,box-shadow .15s}
+.skn:hover,.skn:active,.skn:focus{transform:none!important}
 .skn:hover .skic{transform:scale(1.06)}
 .skn.open .skic{border-color:#ffffffaa}
 .skn.buy .skic{border-color:#6fe09a;box-shadow:0 4px 10px #000a,0 0 16px #6fe09a99;animation:skpulse 1.8s ease-in-out infinite}
