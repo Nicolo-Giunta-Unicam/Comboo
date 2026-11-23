@@ -22,6 +22,8 @@ export interface Run {
   virt?: VirtMap; flags?: string[]; ended?: boolean; epiSeen?: boolean;
   /** Azioni sbloccabili: quelle già spiegate al giocatore (seen) e quelle da spiegare ora (intro, mostrate entrando nell'isola). */
   seen?: string[]; intro?: string[];
+  /** Abilità dell'albero acquistate (config.skills). */
+  skills?: string[];
   v: 1; rng: number; arena: number; gold: number; hp: number; slots: number;
   equipped: string[]; bought: string[]; retained: string[]; energyBonus: number; offers: Offers; paid: Record<string, number>;
   deck: string[]; phase: Phase; combat: Combat | null; msg: string;
@@ -99,7 +101,7 @@ export function healRun(r: Run): Err {
 export function setStyle(r: Run, id: string): Err { if (!STYLES.some(x => x.id === id)) return 'Stile sconosciuto.'; r.style = id; r.deck = ownedCards(r).map(c => c.uid); return null; }
 export function chooseRegion(r: Run, id: string): Err {
   if (r.phase !== 'store' || !r.needsMap) return 'Non puoi scegliere ora.'; const g = REGIONS[id]; if (!g) return 'Regione sconosciuta.'; if (!unlocked(r).includes(id)) return 'Isola bloccata.';
-  const changed = islandIndex(id) !== storeIsland(r); r.region = id; r.needsMap = false; r.msg = `Arena: ${g.name}.`; if (changed) genOffers(r); introActions(r); return null;
+  const changed = islandIndex(id) !== storeIsland(r); r.region = id; r.needsMap = false; r.msg = `Arena: ${g.name}.`; if (changed) genOffers(r); return null;
 }
 // ---- Scelte di capitolo ----
 const seeded = (seed: number) => () => { seed = (seed + 0x6D2B79F5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -171,6 +173,8 @@ export function resolvePending(r: Run, action: 'discard' | 'replace', target?: s
 }
 export function buyOfferMv(r: Run, i: number): Err { const id = r.offers.mv[i]; if (!id) return 'Offerta non disponibile.'; const err = buyMove(r, id, i === 2 ? r.offers.mvPrice : undefined); if (err) return err; r.offers.mv[i] = null; return null; }
 export const slotsFor = (arena: number) => Math.min(CONFIG.maxSlots, CONFIG.startSlots + Math.floor((arena - 1) / CONFIG.slotEveryArenas));
+/** Slot equipaggiamento del giocatore: quelli che crescono con l'arena più quelli comprati nell'albero delle abilità. */
+export const slotsOf = (r: Run) => slotsFor(r.arena) + skillSum(r, 'slots');
 export function newRun(seed = Date.now()): Run {
   const r: Run = { v: 1, cs: Math.imul(seed >>> 0, 2654435761) >>> 0, rng: seed >>> 0, arena: 1, gold: CONFIG.startGold, hp: CONFIG.startHp, slots: CONFIG.startSlots, equipped: [], bought: [], retained: [], energyBonus: 0, offers: { eq: [], mv: [], eqPrice: 0, mvPrice: 0 }, paid: {}, deck: [], phase: 'store', combat: null, msg: 'Preparati: compra equipaggiamento prima della prima arena.' };
   r.deck = ownedCards(r).map(c => c.uid); genOffers(r); r.needsMap = true; return r;
@@ -192,13 +196,13 @@ export function enemyFor(a: number, region?: string, match = 0): Enemy {
   return { name: en ? en.name : `Avversario ${a}`, ...(rg ? { art: rg.id } : {}), ...(en?.id ? { id: en.id } : {}), tier: rg ? rg.level : 'Umano', hp, maxHp: hp, block: 0, gear, atk: Math.round(E.atkBase * E.atkGrowth ** (a - 1) * (en?.atkMul ?? 1)) };
 }
 // ---- Mazzo ----
-function sanitize(r: Run) { const own = new Set(ownedCards(r).map(c => c.uid)); r.deck = r.deck.filter(u => own.has(u)).slice(0, CONFIG.maxDeck); }
-function autoAdd(r: Run, uids: string[]) { for (const u of uids) if (r.deck.length < CONFIG.maxDeck && !r.deck.includes(u)) r.deck.push(u); }
+function sanitize(r: Run) { const own = new Set(ownedCards(r).map(c => c.uid)); r.deck = r.deck.filter(u => own.has(u)).slice(0, maxDeckOf(r)); }
+function autoAdd(r: Run, uids: string[]) { for (const u of uids) if (r.deck.length < maxDeckOf(r) && !r.deck.includes(u)) r.deck.push(u); }
 export function toggleDeck(r: Run, uid: string): Err {
   if (r.phase !== 'store') return 'Puoi modificare il mazzo solo nello store.';
   if (!ownedCards(r).some(c => c.uid === uid)) return 'Carta non posseduta.';
   if (r.deck.includes(uid)) { if (r.deck.length <= CONFIG.minDeck) return `Servono almeno ${CONFIG.minDeck} carte.`; r.deck = r.deck.filter(u => u !== uid); return null; }
-  if (r.deck.length >= CONFIG.maxDeck) return `Mazzo pieno (${CONFIG.maxDeck}).`;
+  if (r.deck.length >= maxDeckOf(r)) return `Mazzo pieno (${maxDeckOf(r)}).`;
   r.deck.push(uid); return null;
 }
 // ---- Store ed economia ----
@@ -248,7 +252,7 @@ function applyBoon(r: Run) {
   if (b.energy) c.energy += b.energy; if (b.draw) drawCards(c, r, b.draw);
 }
 function drawCards(c: Combat, r: Run, n: number) {
-  for (; n > 0 && c.hand.length < CONFIG.maxHand; n--) { const u = c.draw.pop(); if (!u) break; c.hand.push(u); } // a mazzo finito si pesca solo spendendo energia (drawDiscard), che rimescola gli scarti
+  for (; n > 0 && c.hand.length < maxHandOf(r); n--) { const u = c.draw.pop(); if (!u) break; c.hand.push(u); } // a mazzo finito si pesca solo spendendo energia (drawDiscard), che rimescola gli scarti
 }
 /** Scala la durata delle difese; quelle scadute o abbattute vanno agli scarti. ttl<0 = finché abbattuta. */
 function decay(c: Combat, sh: Placed[]) { sh.forEach(s => { if (s.ttl > 0) s.ttl--; }); return sh.filter(s => { const keep = s.ttl !== 0 && s.block > 0; if (!keep && s.uid) c.discard.push(s.uid); return keep; }); }
@@ -381,16 +385,39 @@ export function godGiveCard(r: Run, id: string): Err {
 }
 export function drawDiscard(r: Run): Err {
   const c = r.combat; if (r.phase !== 'combat' || !c) return 'Nessun combattimento.'; if (c.phase !== 'player') return 'Non è il tuo turno.'; if (c.pick?.length) return 'Scegli prima una carta (Stratega).';
-  if (c.draw.length) return 'Hai ancora carte da pescare nel mazzo.'; if (!c.discard.length) return 'Nessuna carta negli scarti.'; if (c.hand.length >= CONFIG.maxHand) return `Mano piena (${CONFIG.maxHand}).`; if (c.energy < CONFIG.discardDrawCost) return 'Energia insufficiente.';
+  if (c.draw.length) return 'Hai ancora carte da pescare nel mazzo.'; if (!c.discard.length) return 'Nessuna carta negli scarti.'; if (c.hand.length >= maxHandOf(r)) return `Mano piena (${maxHandOf(r)}).`; if (c.energy < CONFIG.discardDrawCost) return 'Energia insufficiente.';
   c.energy -= CONFIG.discardDrawCost; c.draw = shuffle(r, c.discard); c.discard = []; drawCards(c, r, CONFIG.discardDrawCards); c.log.push('Mazzo rimescolato: peschi 1 carta.'); return null;
 }
-// ---- Azioni sbloccabili per isola (config.actions): riprendere una carta dal campo, riordinare il campo, recuperare dagli scarti ----
+// ---- Azioni sbloccabili dall'albero delle abilità (config.actions + config.skills): riprendere una carta dal campo, riordinare il campo, recuperare dagli scarti ----
+// ---- Albero delle abilità (config.skills): si comprano con le monete nello store e hanno requisiti minimi di Onore/Fama/Ambizione ----
+export interface SkillDef { id: string; branch: string; icon: string; name: string; desc: string; cost: number; needs?: string | null; req?: Partial<Record<VirtId, number>>; fx: { action?: string; deck?: number; hand?: number; slots?: number } }
+export const skillDefs = (): SkillDef[] => ((CONFIG as unknown as { skills?: SkillDef[] }).skills ?? []);
+export const hasSkill = (r: Run, id: string) => !!r.skills?.includes(id);
+export const skillSum = (r: Run, k: 'deck' | 'hand' | 'slots') => skillDefs().filter(x => hasSkill(r, x.id)).reduce((n, x) => n + (x.fx[k] ?? 0), 0);
+/** Massimo di carte del mazzo attivo e in mano (valori base di config + bonus dell'albero). */
+export const maxDeckOf = (r: Run) => CONFIG.maxDeck + skillSum(r, 'deck');
+export const maxHandOf = (r: Run) => CONFIG.maxHand + skillSum(r, 'hand');
+/** Perché un'abilità non si può comprare (null = si può). `story` = scelte di storia attive: solo allora contano i requisiti di Onore/Fama/Ambizione. */
+export function skillErr(r: Run, id: string, story = true): Err {
+  const x = skillDefs().find(k => k.id === id); if (!x) return 'Abilità sconosciuta.';
+  if (r.phase !== 'store') return 'Puoi acquistare abilità solo nello store.'; if (hasSkill(r, id)) return 'Abilità già acquistata.'; if (r.god) return null;
+  if (x.needs && !hasSkill(r, x.needs)) return `Prima serve l'abilità «${skillDefs().find(k => k.id === x.needs)?.name ?? x.needs}».`;
+  if (story) for (const v of VIRT_IDS) { const m = x.req?.[v] ?? 0; if (m > 0 && virtOf(r, v) < m) return `Requisito: ${virtDef(v).name} almeno ${m}.`; }
+  if (r.gold < x.cost) return 'Oro insufficiente.'; return null;
+}
+export function buySkill(r: Run, id: string, story = true): Err {
+  const err = skillErr(r, id, story); if (err) return err; const x = skillDefs().find(k => k.id === id)!;
+  if (!r.god) r.gold -= x.cost; (r.skills ??= []).push(id); if (x.fx.slots) r.slots += x.fx.slots;
+  if (x.fx.action && !r.god && !(r.seen ?? []).includes(x.fx.action)) r.intro = [x.fx.action]; // il popup che spiega la meccanica compare all'acquisto
+  r.msg = `Abilità acquistata: ${x.name}.`; return null;
+}
+/** Fine del viaggio: dopo l'epilogo la run termina (il punteggio si salva nella schermata finale). */
+export function finishRun(r: Run): Err { if (!r.ended) return 'Il viaggio non è concluso.'; r.epiSeen = true; r.phase = 'over'; r.combat = null; r.msg = 'Hai concluso il viaggio.'; return null; }
 export const ACTION_IDS = ['recall', 'reorder', 'retrieve'] as const;
 export type ActionId = typeof ACTION_IDS[number];
-/** Un'azione è disponibile dall'isola indicata in config.actions.<id>.unlock in poi ("off" = disattivata). */
+/** Un'azione è disponibile dopo aver acquistato nell'albero delle abilità il nodo con fx.action = <id> (in god mode sempre). */
 export function actionOn(r: Run, id: ActionId): boolean {
-  const u = CONFIG.actions[id]?.unlock; if (!u || u === 'off') return false; const need = islandIndex(u); if (need < 0) return false;
-  return !!r.god || islandIndex(r.region ?? REGION_LIST[0].id) >= need;
+  return !!r.god || skillDefs().some(x => x.fx.action === id && hasSkill(r, x.id));
 }
 function actGuard(r: Run, id: ActionId): Err {
   const c = r.combat; if (r.phase !== 'combat' || !c) return 'Nessun combattimento.'; if (c.phase !== 'player') return 'Non è il tuo turno.'; if (c.pick?.length) return 'Scegli prima una carta (Stratega).';
@@ -426,7 +453,7 @@ function rebuild(r: Run, c: Combat, g: 'off' | 'def') {
 /** 1) Riprendi in mano: ritira una carta dal proprio campo e la rimette in mano (l'energia spesa non viene rimborsata). */
 export function recallErr(r: Run, id: number): Err {
   const g = actGuard(r, 'recall'); if (g) return g; const c = r.combat!, f = findPlaced(c, id); if (!f) return 'Carta non sul campo.'; if (!f[1].uid) return 'Questa carta non si può rimettere in mano.';
-  if (c.hand.length >= CONFIG.maxHand) return `Mano piena (${CONFIG.maxHand}).`; if (c.energy < (CONFIG.actions.recall.cost ?? 0)) return 'Energia insufficiente.'; return null;
+  if (c.hand.length >= maxHandOf(r)) return `Mano piena (${maxHandOf(r)}).`; if (c.energy < (CONFIG.actions.recall.cost ?? 0)) return 'Energia insufficiente.'; return null;
 }
 /** at = posizione della mano in cui rimettere la carta (la più vicina al punto di rilascio); senza, in fondo. */
 export function recallCard(r: Run, id: number, at?: number): Err {
@@ -462,14 +489,13 @@ export function moveCardTo(r: Run, id: number, beforeId: number): Err {
 /** 3) Recupera dagli scarti: per config.actions.retrieve.cost energia una carta scelta dagli scarti torna in mano. */
 export function retrieveErr(r: Run, uid: string): Err {
   const g = actGuard(r, 'retrieve'); if (g) return g; const c = r.combat!; if (!c.discard.includes(uid)) return 'Carta non negli scarti.';
-  if (c.hand.length >= CONFIG.maxHand) return `Mano piena (${CONFIG.maxHand}).`; if (c.energy < CONFIG.actions.retrieve.cost) return 'Energia insufficiente.'; return null;
+  if (c.hand.length >= maxHandOf(r)) return `Mano piena (${maxHandOf(r)}).`; if (c.energy < CONFIG.actions.retrieve.cost) return 'Energia insufficiente.'; return null;
 }
 export function retrieveCard(r: Run, uid: string): Err {
   const e = retrieveErr(r, uid); if (e) return e; const c = r.combat!;
   c.energy -= CONFIG.actions.retrieve.cost; c.discard.splice(c.discard.indexOf(uid), 1); c.hand.push(uid); bump(c, 'retrieve'); c.log.push(`${MOVES[moveOf(uid)].name} recuperata dagli scarti.`); return null;
 }
 /** Entrando in un'isola si spiegano (una volta per run) le azioni che da lì in poi sono disponibili. */
-function introActions(r: Run) { if (r.god) return; const seen = r.seen ?? []; const fresh = ACTION_IDS.filter(id => actionOn(r, id) && !seen.includes(id)); if (fresh.length) r.intro = fresh; }
 export function dismissIntro(r: Run): Err { if (r.intro?.length) r.seen = Array.from(new Set([...(r.seen ?? []), ...r.intro])); r.intro = undefined; return null; }
 /** Stratega: sceglie una delle 3 carte mostrate; entra in mano e, se giocata nel turno, costa 1. */
 export function choosePick(r: Run, uid: string): Err {
@@ -532,7 +558,7 @@ export function resolveOutcome(r: Run, res: 'win' | 'lose' | 'flee' | 'spared') 
     const g = Math.max(0, Math.round(CONFIG.reward(r.arena) * (1 + (perkFx(r).goldPct ?? 0) / 100))); r.gold += g; r.msg = `Vittoria! +${g} oro.`; r.outcome = 'win';
     if (r.region) { r.progress = { ...r.progress, [r.region]: wins(r, r.region) + 1 }; const nx = REGION_LIST[islandIndex(r.region) + 1]; if (wins(r, r.region) === CONFIG.matchesPerIsland && nx) r.msg += ` Isola completata: si sblocca ${nx.name}!`; }
     if (!r.ended && REGION_LIST.every(g => wins(r, g.id) >= CONFIG.matchesPerIsland)) r.ended = true;
-    r.wounded = r.hp / maxHp(r) < CONFIG.woundedBelow; r.arena++; r.slots = slotsFor(r.arena); scar(r); r.phase = 'store'; genOffers(r); r.needsMap = !r.region || wins(r, r.region) >= CONFIG.matchesPerIsland;
+    r.wounded = r.hp / maxHp(r) < CONFIG.woundedBelow; r.arena++; r.slots = slotsOf(r); scar(r); r.phase = 'store'; genOffers(r); r.needsMap = !r.region || wins(r, r.region) >= CONFIG.matchesPerIsland;
   } else if (res === 'flee' || res === 'spared') { // fuga (nessuna conseguenza) o pietà accettata (soldi dimezzati): si torna alla storia e il duello si ripete
     r.outcome = res; if (res === 'spared') r.gold = Math.floor(r.gold / 2); r.wounded = r.hp / maxHp(r) < CONFIG.woundedBelow; r.phase = 'store'; r.needsMap = false;
     r.msg = res === 'flee' ? 'Sei fuggito dal duello: nessuna conseguenza.' : 'Vieni risparmiato… ma ti portano via metà dei soldi.'; if (res === 'spared') scar(r);

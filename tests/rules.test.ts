@@ -1,6 +1,7 @@
 import { test } from 'node:test'; import assert from 'node:assert/strict';
 import { newRun, maxHp, askMercy, healRun, setStyle, effCost, choosePick, drawDiscard, sellCard, chooseRegion, unlocked, resolvePending, enemyFor, buyOfferEq, buyOfferMv, buyEnergy, rerollOffers, maxEnergy, energyPrice, buyEquipment, sellEquipment, buyMove, sellMove, toggleDeck, ownedCards, beginArena, playCard, endTurn, enemyStep, type Run } from '../src/engine';
-import { actionOn, recallCard, moveCard, moveErr, retrieveCard, dismissIntro, shieldsOf, moveCardTo, moveToErr } from '../src/engine'; import type { ActionId } from '../src/engine';
+import { slotsFor } from '../src/engine';
+import { actionOn, buySkill, skillErr, hasSkill, maxDeckOf, maxHandOf, slotsOf, finishRun, recallCard, moveCard, moveErr, retrieveCard, dismissIntro, shieldsOf, moveCardTo, moveToErr } from '../src/engine'; import type { ActionId } from '../src/engine';
 import { EQUIPMENT, MOVES, STYLES } from '../src/data'; import { REGIONS } from '../src/regions'; import { CONFIG } from '../src/config'; import { saveRun, loadRun, SAVE_KEY, loadBest, saveBest, runScore, type KV } from '../src/save';
 const kv = (): KV & { m: Map<string, string> } => { const m = new Map<string, string>(); return { m, getItem: k => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v), removeItem: k => void m.delete(k) }; };
 const settle = (r: Run) => { const c = r.combat!; for (let i = 0; i < 10 && c.phase === 'resolve'; i++) enemyStep(r); };
@@ -366,58 +367,78 @@ test('storia: ogni flag richiesto da una condizione viene impostato da almeno un
   assert.equal(EPILOGUES[EPILOGUES.length - 1].needs, undefined, 'l\'ultimo epilogo vale sempre');
 });
 
-// ---- azioni sbloccabili per isola ----
+// ---- abilità acquistabili nell'albero (config.skills) ----
 const ACTS: ActionId[] = ['recall', 'reorder', 'retrieve'];
-test('azioni: si sbloccano dalla 2ª, 3ª e 4ª isola e l\'isola si può personalizzare', () => {
-  const r = newRun(1), at = (id: string) => { r.region = id; return ACTS.map(a => actionOn(r, a)); };
-  assert.deepEqual(at('boxing'), [false, false, false]); assert.deepEqual(at('battlefield'), [true, false, false]); assert.deepEqual(at('desert'), [true, true, false]); assert.deepEqual(at('ocean'), [true, true, true]); assert.deepEqual(at('volcano'), [true, true, true]);
-  const old = CONFIG.actions.recall.unlock;
-  try { CONFIG.actions.recall.unlock = 'ocean'; assert.deepEqual(at('desert'), [false, true, false]); CONFIG.actions.recall.unlock = 'off'; assert.deepEqual(at('volcano'), [false, true, true]); CONFIG.actions.recall.unlock = 'nonesiste'; assert.equal(actionOn(r, 'recall'), false); } finally { CONFIG.actions.recall.unlock = old; }
+const store = (gold = 1000) => { const r = newRun(1); r.phase = 'store'; r.gold = gold; return r; };
+test('abilità: le tre azioni si sbloccano solo comprandole nell\'albero (non più con le isole)', () => {
+  const r = store(); for (const id of ['boxing', 'battlefield', 'desert', 'ocean', 'volcano']) { r.region = id; assert.deepEqual(ACTS.map(a => actionOn(r, a)), [false, false, false]); }
+  assert.equal(buySkill(r, 'reorder', false), null); assert.deepEqual(ACTS.map(a => actionOn(r, a)), [false, true, false]);
+  assert.equal(buySkill(r, 'recall', false), null); assert.equal(buySkill(r, 'retrieve', false), null); assert.deepEqual(ACTS.map(a => actionOn(r, a)), [true, true, true]);
+  const g = newRun(1); g.god = true; assert.deepEqual(ACTS.map(a => actionOn(g, a)), [true, true, true]);
 });
-test('azioni: popup di sblocco una sola volta per azione, entrando nell\'isola', () => {
-  const r = newRun(1); r.phase = 'store'; r.progress = { boxing: 5, battlefield: 5, desert: 5 };
-  const enter = (id: string) => { r.needsMap = true; assert.equal(chooseRegion(r, id), null); };
-  enter('boxing'); assert.equal(r.intro, undefined); enter('battlefield'); assert.deepEqual(r.intro, ['recall']); assert.equal(dismissIntro(r), null); assert.equal(r.intro, undefined); assert.deepEqual(r.seen, ['recall']);
-  enter('battlefield'); assert.equal(r.intro, undefined); enter('desert'); assert.deepEqual(r.intro, ['reorder']); dismissIntro(r); assert.deepEqual(r.seen, ['recall', 'reorder']);
-  const g = newRun(1); g.god = true; g.phase = 'store'; g.needsMap = true; g.progress = { boxing: 5 }; chooseRegion(g, 'battlefield'); assert.equal(g.intro, undefined, 'in god mode niente popup');
+test('abilità: costo in monete, requisiti di statistiche solo con la Storia attiva, ramo a nodi', () => {
+  const r = store(10); assert.equal(skillErr(r, 'recall'), 'Oro insufficiente.'); assert.equal(buySkill(r, 'recall'), 'Oro insufficiente.'); assert.equal(r.gold, 10);
+  r.gold = 1000; r.virt = { honor: 5, fame: 20, ambition: 30 }; assert.match(skillErr(r, 'recall') ?? '', /Requisito: .+ almeno 30/); assert.equal(skillErr(r, 'recall', false), null, 'con la Storia disattivata i requisiti non contano');
+  assert.match(buySkill(r, 'recall') ?? '', /Requisito/); assert.equal(r.skills, undefined); assert.equal(buySkill(r, 'recall', false), null); assert.equal(r.gold, 1000 - 45); assert.ok(hasSkill(r, 'recall')); assert.match(buySkill(r, 'recall', false) ?? '', /già acquistata/);
+  assert.match(skillErr(r, 'deck2', false) ?? '', /Prima serve/); assert.match(skillErr(r, 'slot2', false) ?? '', /Prima serve/);
+  r.phase = 'combat'; assert.match(skillErr(r, 'reorder') ?? '', /solo nello store/);
+});
+test('abilità: mazzo 25 → 30 → 35, mano +1 all\'ultimo nodo, slot +1 per nodo fino a +3', () => {
+  const r = store(); r.virt = { honor: 100, fame: 100, ambition: 100 }; assert.equal(maxDeckOf(r), 25); assert.equal(maxHandOf(r), CONFIG.maxHand);
+  assert.equal(buySkill(r, 'deck1'), null); assert.equal(maxDeckOf(r), 30); assert.equal(maxHandOf(r), CONFIG.maxHand);
+  assert.equal(buySkill(r, 'deck2'), null); assert.equal(maxDeckOf(r), 35); assert.equal(maxHandOf(r), CONFIG.maxHand + 1);
+  const s0 = r.slots; for (const id of ['slot1', 'slot2', 'slot3']) assert.equal(buySkill(r, id), null); assert.equal(r.slots, s0 + 3);
+  assert.equal(slotsOf(r), slotsFor(r.arena) + 3, 'gli slot dell\'albero restano dopo la vittoria');
+});
+test('slot: si parte da 4 e si guadagna uno slot a ogni arena', () => {
+  assert.equal(slotsFor(1), 4); assert.equal(slotsFor(2), 5); assert.equal(slotsFor(3), 6); assert.equal(CONFIG.maxDeck, 25);
+});
+test('abilità: il popup di spiegazione compare all\'acquisto, una sola volta per azione', () => {
+  const r = store(); assert.equal(buySkill(r, 'recall', false), null); assert.deepEqual(r.intro, ['recall']); assert.equal(dismissIntro(r), null); assert.equal(r.intro, undefined); assert.deepEqual(r.seen, ['recall']);
+  assert.equal(buySkill(r, 'deck1', false), null); assert.equal(r.intro, undefined, 'le abilità senza azione non hanno popup');
+  const g = newRun(1); g.god = true; g.phase = 'store'; assert.equal(buySkill(g, 'reorder'), null); assert.equal(g.intro, undefined, 'in god mode niente popup');
+  const m = store(); m.region = 'battlefield'; m.progress = { boxing: 5 }; m.needsMap = true; assert.equal(chooseRegion(m, 'battlefield'), null); assert.equal(m.intro, undefined, 'entrare in un\'isola non sblocca più nulla');
+});
+test('fine del viaggio: dopo l\'epilogo la run termina', () => {
+  const r = store(); assert.match(finishRun(r) ?? '', /non è concluso/); r.ended = true; assert.equal(finishRun(r), null); assert.equal(r.phase, 'over'); assert.equal(r.epiSeen, true);
 });
 test('riprendi in mano: la carta torna in mano senza rimborso, una volta per turno', () => {
   const r = newRun(3); r.region = 'boxing'; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 5; c.hand = ['base:jab:0'];
   assert.equal(playCard(r, 'base:jab:0'), null); const id = c.field.off[0].id!; assert.match(recallCard(r, id) ?? '', /sbloccata/);
-  r.region = 'battlefield'; assert.match(recallCard(r, 9999) ?? '', /campo/); const e0 = c.energy, sh = shieldsOf(c);
+  r.skills = ['recall']; assert.match(recallCard(r, 9999) ?? '', /campo/); const e0 = c.energy, sh = shieldsOf(c);
   assert.equal(recallCard(r, id), null); assert.deepEqual(c.hand, ['base:jab:0']); assert.equal(c.field.off.length, 0); assert.equal(c.energy, e0, 'nessun rimborso'); assert.equal(shieldsOf(c), sh);
   c.hand.push('base:guard:1'); assert.equal(playCard(r, 'base:guard:1'), null); assert.match(recallCard(r, c.field.def[0].id!) ?? '', /una sola volta/);
   endTurn(r); for (let i = 0; i < 60 && c.phase !== 'player'; i++) enemyStep(r); assert.equal(c.turn, 2); c.energy = 5; c.hand = ['base:guard:2']; playCard(r, 'base:guard:2'); const gid = c.field.def.find(p => p.uid === 'base:guard:2')!.id!;
   c.hand = Array(CONFIG.maxHand).fill('base:jab:0'); assert.match(recallCard(r, gid) ?? '', /Mano piena/); c.hand = []; assert.equal(recallCard(r, gid), null); assert.deepEqual(c.hand, ['base:guard:2']);
 });
 test('riordina il campo: le combo a sequenza si ricalcolano (concatenazione e stessa carta)', () => {
-  const r = newRun(3); r.region = 'battlefield'; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['eq:wraps:2', 'base:jab:0'];
+  const r = newRun(3); r.region = 'battlefield'; r.skills = ['recall']; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['eq:wraps:2', 'base:jab:0'];
   playCard(r, 'eq:wraps:2'); playCard(r, 'base:jab:0'); const w = c.field.off[0], base = w.dmg; assert.equal(w.mv, 'wraps_2'); assert.match(moveErr(r, w.id!, 1) ?? '', /sbloccata/);
-  r.region = 'desert'; assert.equal(moveErr(r, w.id!, -1), 'Non si può spostare oltre.');
+  r.skills = ['recall', 'reorder']; assert.equal(moveErr(r, w.id!, -1), 'Non si può spostare oltre.');
   assert.equal(moveCard(r, w.id!, 1), null); assert.deepEqual(c.field.off.map(p => p.mv), ['jab', 'wraps_2']); assert.equal(w.dmg, base + 5, 'Jab → wraps_2: concatenazione attiva'); assert.ok(w.tag?.includes('🔗'));
   assert.equal(moveCard(r, w.id!, -1), null); assert.equal(w.dmg, base, 'tornando all\'ordine di prima la combo si disattiva'); assert.equal(c.lastBy!.off, 'jab');
-  const r2 = newRun(3); r2.region = 'desert'; beginArena(r2); const d = r2.combat!; d.enemy.hp = d.enemy.maxHp = 1000; d.energy = 10; d.hand = ['base:jab:0', 'eq:wraps:1', 'base:jab:1'];
+  const r2 = newRun(3); r2.region = 'desert'; r2.skills = ['recall', 'reorder']; beginArena(r2); const d = r2.combat!; d.enemy.hp = d.enemy.maxHp = 1000; d.energy = 10; d.hand = ['base:jab:0', 'eq:wraps:1', 'base:jab:1'];
   [...d.hand].forEach(u => playCard(r2, u)); const j2 = d.field.off[2], before = j2.dmg; assert.equal(j2.mv, 'jab'); assert.equal(moveCard(r2, j2.id!, -1), null);
   assert.deepEqual(d.field.off.map(p => p.mv), ['jab', 'jab', 'wraps_1']); assert.ok(j2.dmg > before, 'doppio jab: bonus della stessa carta ripetuta'); assert.equal(d.runs!.off, 1); assert.equal(d.lastBy!.off, 'wraps_1');
 });
 test('recupera dagli scarti: costa energia, serve spazio in mano', () => {
   const r = newRun(3); r.region = 'desert'; beginArena(r); const c = r.combat!; c.energy = 3; c.discard = ['base:jab:0', 'base:guard:1']; c.hand = [];
-  assert.match(retrieveCard(r, 'base:jab:0') ?? '', /sbloccata/); r.region = 'ocean'; const cost = CONFIG.actions.retrieve.cost;
+  assert.match(retrieveCard(r, 'base:jab:0') ?? '', /sbloccata/); r.skills = ['retrieve']; const cost = CONFIG.actions.retrieve.cost;
   assert.match(retrieveCard(r, 'base:nonc:9') ?? '', /scarti/); assert.equal(retrieveCard(r, 'base:jab:0'), null); assert.deepEqual(c.hand, ['base:jab:0']); assert.deepEqual(c.discard, ['base:guard:1']); assert.equal(c.energy, 3 - cost);
   assert.match(retrieveCard(r, 'base:guard:1') ?? '', /una sola volta/, 'al massimo una carta recuperata per turno'); c.act = {}; c.energy = cost - 1; assert.equal(retrieveCard(r, 'base:guard:1'), 'Energia insufficiente.'); c.energy = 10; c.hand = Array(CONFIG.maxHand).fill('base:jab:0'); assert.match(retrieveCard(r, 'base:guard:1') ?? '', /Mano piena/);
 });
 
 test('riordina col trascinamento: sposta la carta davanti a un\'altra o in fondo, ricalcolando le combo', () => {
-  const r = newRun(3); r.region = 'battlefield'; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['base:jab:0', 'eq:wraps:1', 'base:jab:1'];
+  const r = newRun(3); r.region = 'battlefield'; r.skills = ['recall']; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 10; c.hand = ['base:jab:0', 'eq:wraps:1', 'base:jab:1'];
   [...c.hand].forEach(u => playCard(r, u)); const [j1, w, j2] = c.field.off, before = j2.dmg; assert.match(moveToErr(r, j2.id!, w.id!) ?? '', /sbloccata/);
-  r.region = 'desert'; assert.equal(moveToErr(r, j2.id!, 0), 'È già in questa posizione.'); assert.equal(moveToErr(r, w.id!, j2.id!), 'È già in questa posizione.'); assert.match(moveToErr(r, j2.id!, 9999) ?? '', /campo/);
+  r.skills = ['recall', 'reorder']; assert.equal(moveToErr(r, j2.id!, 0), 'È già in questa posizione.'); assert.equal(moveToErr(r, w.id!, j2.id!), 'È già in questa posizione.'); assert.match(moveToErr(r, j2.id!, 9999) ?? '', /campo/);
   assert.equal(moveCardTo(r, j2.id!, w.id!), null); assert.deepEqual(c.field.off.map(p => p.mv), ['jab', 'jab', 'wraps_1']); assert.ok(j2.dmg > before, 'doppio jab dopo il trascinamento');
   assert.equal(moveCardTo(r, j1.id!, 0), null); assert.deepEqual(c.field.off.map(p => p.id), [j2.id, w.id, j1.id]); assert.equal(j2.dmg, before, 'senza carte uguali vicine il bonus sparisce'); assert.equal(c.lastBy!.off, 'jab');
   c.hand = ['base:guard:1']; playCard(r, 'base:guard:1'); assert.match(moveToErr(r, j1.id!, c.field.def[0].id!) ?? '', /campo|riga|sposta/i);
 });
 
 test('riprendi in mano: la carta rientra nel punto della mano scelto', () => {
-  const r = newRun(3); r.region = 'battlefield'; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 9;
+  const r = newRun(3); r.region = 'battlefield'; r.skills = ['recall', 'reorder', 'retrieve']; beginArena(r); const c = r.combat!; c.enemy.hp = c.enemy.maxHp = 1000; c.energy = 9;
   const back = (at?: number) => { c.hand = ['base:guard:1', 'base:guard:2', 'base:guard:3', 'base:jab:0']; playCard(r, 'base:jab:0'); c.act = {}; assert.equal(recallCard(r, c.field.off.at(-1)!.id!, at), null); return c.hand.slice(); };
   assert.deepEqual(back(), ['base:guard:1', 'base:guard:2', 'base:guard:3', 'base:jab:0']); assert.deepEqual(back(0), ['base:jab:0', 'base:guard:1', 'base:guard:2', 'base:guard:3']);
   assert.deepEqual(back(2), ['base:guard:1', 'base:guard:2', 'base:jab:0', 'base:guard:3']); assert.deepEqual(back(99), ['base:guard:1', 'base:guard:2', 'base:guard:3', 'base:jab:0']);

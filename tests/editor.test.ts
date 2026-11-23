@@ -62,9 +62,11 @@ test('contenuti nuovi: tutte le carte con trigger sono difese permanenti e ogni 
   assert.equal(validate(d).filter(i => i.level !== 'err' && /trigger|passiva/.test(i.msg)).length, 0);
 });
 
-test('editor: isola di sblocco delle azioni controllata e aggiornata alla rinomina; testi traducibili', () => {
-  const d = fresh() as any; assert.equal(d.config.actions.recall.unlock, 'battlefield'); assert.equal(renameId(d, 'region', 'battlefield', 'campo'), null); assert.equal(d.config.actions.recall.unlock, 'campo');
-  assert.deepEqual(validate(d).filter(i => i.level === 'err'), []); d.config.actions.reorder.unlock = 'nope'; assert.ok(validate(d).some(i => i.level === 'err' && /reorder/.test(i.msg)));
-  d.config.actions.reorder.unlock = 'off'; assert.deepEqual(validate(d).filter(i => i.level === 'err'), []);
+test('editor: albero delle abilità controllato; testi traducibili', () => {
+  const d = fresh() as any; assert.equal(d.config.actions.recall.unlock, undefined); assert.deepEqual(validate(d).filter(i => i.level === 'err'), []);
+  d.config.skills[4].needs = 'nope'; assert.ok(validate(d).some(i => i.level === 'err' && /deck2/.test(i.msg))); d.config.skills[4].needs = 'deck1';
+  d.config.skills[0].fx.action = 'nope'; assert.ok(validate(d).some(i => i.level === 'err' && /recall/.test(i.msg))); d.config.skills[0].fx.action = 'recall';
+  assert.deepEqual(validate(d).filter(i => i.level === 'err'), []);
   const keys: string[] = []; forEachText(fresh(), k => keys.push(k)); for (const id of ['recall', 'reorder', 'retrieve']) assert.ok(keys.includes(`action.${id}.name`) && keys.includes(`action.${id}.desc`));
+  for (const id of ['recall', 'deck1', 'deck2', 'slot1', 'slot3']) assert.ok(keys.includes(`skill.${id}.name`) && keys.includes(`skill.${id}.desc`));
 });

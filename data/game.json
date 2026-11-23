@@ -4,8 +4,8 @@
     "startGold": 30,
     "startSlots": 4,
     "maxSlots": 15,
-    "slotEveryArenas": 3,
-    "maxDeck": 30,
+    "slotEveryArenas": 1,
+    "maxDeck": 25,
     "minDeck": 10,
     "sellRatio": 0.5,
     "startHand": 5,
@@ -194,7 +194,6 @@
     },
     "actions": {
       "recall": {
-        "unlock": "battlefield",
         "cost": 0,
         "perTurn": 1,
         "icon": "↩️",
@@ -202,7 +201,6 @@
         "desc": "Ora puoi ritirare una carta che hai schierato sul tuo campo: toccala e scegli ↩ per rimetterla in mano. L'energia che hai già speso non viene rimborsata."
       },
       "reorder": {
-        "unlock": "desert",
         "cost": 0,
         "perTurn": 0,
         "icon": "🔀",
@@ -210,14 +208,169 @@
         "desc": "Ora puoi cambiare l'ordine delle carte che hai schierato in questo turno: toccane una e usa ◀ ▶ per spostarla. Le combo a sequenza (la stessa carta due volte, o una carta che ne concatena un'altra, come Jab → Cross) vengono ricalcolate con il nuovo ordine. Le combo miste tra carte offensive e difensive non cambiano."
       },
       "retrieve": {
-        "unlock": "ocean",
         "cost": 2,
         "perTurn": 1,
         "icon": "♻️",
         "name": "Recupera dagli scarti",
         "desc": "Ora puoi comprare con l'energia una carta dalla pila degli scarti e rimetterla in mano: tocca gli Scarti e scegli la carta da recuperare."
       }
-    }
+    },
+    "skills": [
+      {
+        "id": "recall",
+        "branch": "tactics",
+        "icon": "↩️",
+        "name": "Riprendi in mano",
+        "desc": "Ritira in mano una carta già schierata sul tuo campo (senza rimborso di energia), una volta per turno.",
+        "cost": 45,
+        "needs": "",
+        "req": {
+          "honor": 30,
+          "fame": 0,
+          "ambition": 0
+        },
+        "fx": {
+          "action": "recall"
+        }
+      },
+      {
+        "id": "reorder",
+        "branch": "tactics",
+        "icon": "🔀",
+        "name": "Riordina il campo",
+        "desc": "Cambia l'ordine delle carte schierate nel turno per riattivare le combo a sequenza.",
+        "cost": 80,
+        "needs": "",
+        "req": {
+          "honor": 0,
+          "fame": 0,
+          "ambition": 30
+        },
+        "fx": {
+          "action": "reorder"
+        }
+      },
+      {
+        "id": "retrieve",
+        "branch": "tactics",
+        "icon": "♻️",
+        "name": "Recupera dagli scarti",
+        "desc": "Compra con l'energia una carta dalla pila degli scarti e rimettila in mano (una per turno).",
+        "cost": 110,
+        "needs": "",
+        "req": {
+          "honor": 0,
+          "fame": 0,
+          "ambition": 45
+        },
+        "fx": {
+          "action": "retrieve"
+        }
+      },
+      {
+        "id": "deck1",
+        "branch": "deck",
+        "icon": "🎴",
+        "name": "Mazzo più ampio I",
+        "desc": "+5 carte massime nel mazzo attivo (25 → 30).",
+        "cost": 60,
+        "needs": "",
+        "req": {
+          "honor": 0,
+          "fame": 25,
+          "ambition": 0
+        },
+        "fx": {
+          "deck": 5
+        }
+      },
+      {
+        "id": "deck2",
+        "branch": "deck",
+        "icon": "🃏",
+        "name": "Mazzo più ampio II",
+        "desc": "+5 carte massime nel mazzo attivo (30 → 35) e +1 carta massima in mano.",
+        "cost": 110,
+        "needs": "deck1",
+        "req": {
+          "honor": 40,
+          "fame": 45,
+          "ambition": 0
+        },
+        "fx": {
+          "deck": 5,
+          "hand": 1
+        }
+      },
+      {
+        "id": "slot1",
+        "branch": "slots",
+        "icon": "🔧",
+        "name": "Slot equipaggiamento I",
+        "desc": "+1 slot equipaggiamento.",
+        "cost": 60,
+        "needs": "",
+        "req": {
+          "honor": 0,
+          "fame": 0,
+          "ambition": 30
+        },
+        "fx": {
+          "slots": 1
+        }
+      },
+      {
+        "id": "slot2",
+        "branch": "slots",
+        "icon": "⚙️",
+        "name": "Slot equipaggiamento II",
+        "desc": "+1 slot equipaggiamento.",
+        "cost": 90,
+        "needs": "slot1",
+        "req": {
+          "honor": 0,
+          "fame": 0,
+          "ambition": 45
+        },
+        "fx": {
+          "slots": 1
+        }
+      },
+      {
+        "id": "slot3",
+        "branch": "slots",
+        "icon": "🛠️",
+        "name": "Slot equipaggiamento III",
+        "desc": "+1 slot equipaggiamento.",
+        "cost": 130,
+        "needs": "slot2",
+        "req": {
+          "honor": 0,
+          "fame": 0,
+          "ambition": 60
+        },
+        "fx": {
+          "slots": 1
+        }
+      }
+    ],
+    "skillBranches": [
+      {
+        "id": "tactics",
+        "icon": "⚔️",
+        "name": "Tattica"
+      },
+      {
+        "id": "deck",
+        "icon": "🎴",
+        "name": "Mazzo"
+      },
+      {
+        "id": "slots",
+        "icon": "🔧",
+        "name": "Equipaggiamento"
+      }
+    ]
   },
   "baseMoves": [
     {
@@ -6495,7 +6648,26 @@
       "action.reorder.name": "Reorder your field",
       "action.reorder.desc": "You can now change the order of the cards you placed this turn: tap one and use ◀ ▶ to move it. Sequence combos (the same card twice, or a card that chains from another, like Jab → Cross) are recalculated with the new order. Mixed combos between offensive and defensive cards do not change.",
       "action.retrieve.name": "Recover from the discard pile",
-      "action.retrieve.desc": "You can now buy a card back from the discard pile with energy and return it to your hand: tap the Discard pile and choose the card to recover."
+      "action.retrieve.desc": "You can now buy a card back from the discard pile with energy and return it to your hand: tap the Discard pile and choose the card to recover.",
+      "skill.recall.name": "Take a card back",
+      "skill.recall.desc": "Pull a card you already placed on your field back into your hand (no energy refund), once per turn.",
+      "skill.reorder.name": "Reorder your field",
+      "skill.reorder.desc": "Change the order of the cards placed this turn to re-trigger sequence combos.",
+      "skill.retrieve.name": "Recover from the discard pile",
+      "skill.retrieve.desc": "Buy a card back from the discard pile with energy and return it to your hand (one per turn).",
+      "skill.deck1.name": "Larger deck I",
+      "skill.deck1.desc": "+5 maximum cards in the active deck (25 → 30).",
+      "skill.deck2.name": "Larger deck II",
+      "skill.deck2.desc": "+5 maximum cards in the active deck (30 → 35) and +1 maximum card in hand.",
+      "skill.slot1.name": "Equipment slot I",
+      "skill.slot1.desc": "+1 equipment slot.",
+      "skill.slot2.name": "Equipment slot II",
+      "skill.slot2.desc": "+1 equipment slot.",
+      "skill.slot3.name": "Equipment slot III",
+      "skill.slot3.desc": "+1 equipment slot.",
+      "skillBranch.tactics.name": "Tactics",
+      "skillBranch.deck.name": "Deck",
+      "skillBranch.slots.name": "Equipment"
     }
   },
   "epilogues": [
