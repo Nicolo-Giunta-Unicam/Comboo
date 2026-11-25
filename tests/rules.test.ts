@@ -330,7 +330,7 @@ const atChapter = (r: any, region: string, at: number) => { r.region = region; r
 test('statistiche: valori iniziali, variazioni con limiti 0–100, cambi di livello e flag registrati nella scelta', () => {
   const r = newRun(21); chooseRegion(r, 'boxing'); assert.deepEqual(VIRT_IDS.map(id => virtOf(r, id)), VIRTUES.list.map(x => x.start));
   assert.deepEqual(VIRT_IDS.map(id => rankOf(virtOf(r, id))), [2, 1, 1]); assert.deepEqual(perkFx(r), {}, 'all\'inizio nessun tratto attivo');
-  const p = atChapter(r, 'boxing', 0), o = p.ev.options.find(x => x.id === 'b')!; assert.equal(o.flag, 'gorin_bond');
+  const p = atChapter(r, 'boxing', 0), o = p.ev.options.find(x => x.id === 'b')!; assert.equal(o.flag, 'gorin_bond,vow_loyal'); // la prima scelta è un voto: il flag vow_* torna negli epiloghi
   assert.equal(makeChoice(r, 'b'), null); const dv = o.v!; assert.ok(dv.honor! > 0 && dv.ambition! < 0); assert.equal(virtOf(r, 'honor'), 40 + dv.honor!); assert.equal(virtOf(r, 'ambition'), 30 + dv.ambition!); assert.ok(hasFlag(r, 'gorin_bond'));
   const ch = Object.values(r.chapters!)[0]; assert.deepEqual(ch.v, { honor: dv.honor, ambition: dv.ambition });
   r.virt = { honor: 98, fame: 1, ambition: 50 }; r.chapters = {}; atChapter(r, 'boxing', 0); makeChoice(r, 'b'); assert.equal(virtOf(r, 'honor'), 100, 'limite superiore'); assert.equal(Object.values(r.chapters!)[0].v!.honor, 2, 'conta solo il valore davvero guadagnato');

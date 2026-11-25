@@ -136,7 +136,12 @@ function addVirt(r: Run, d: VirtMap) {
 /** Testo dell'evento: paragrafo base + richiami alle scelte passate che valgono ora. */
 export const evParas = (r: Run, ev: ChoiceEv) => [ev.text, ...(ev.extra ?? []).filter(x => condOk(r, x.if)).map(x => x.text)];
 /** Epilogo del viaggio: il primo (in ordine) le cui condizioni valgono; con i paragrafi di richiamo. */
-export function epilogueOf(r: Run) { const e = EPILOGUES.find(x => condOk(r, x.needs)); return e ? { title: e.title, paras: [e.text, ...(e.extra ?? []).filter(x => condOk(r, x.if)).map(x => x.text)] } : null; }
+export function epilogueOf(r: Run) { const e = EPILOGUES.find(x => !x.id.startsWith('defeat-') && condOk(r, x.needs)); return e ? { title: e.title, paras: [e.text, ...(e.extra ?? []).filter(x => condOk(r, x.if)).map(x => x.text)] } : null; }
+/** Epilogo della sconfitta: testo dell'isola in cui sei caduto (epilogo "defeat-<isola>") più le righe comuni sul voto iniziale ("defeat-all"), filtrate dai flag. */
+export function defeatOf(r: Run) {
+  const e = EPILOGUES.find(x => x.id === `defeat-${r.region}`), all = EPILOGUES.find(x => x.id === 'defeat-all'); if (!e) return null;
+  return { title: e.title, paras: [e.text, ...(e.extra ?? []).filter(x => condOk(r, x.if)).map(x => x.text), ...(all?.extra ?? []).filter(x => condOk(r, x.if)).map(x => x.text)] };
+}
 export const goldUnit = (r: Run) => Math.max(1, Math.round(CONFIG.reward(r.arena) / CONFIG.choice.goldDivisor));
 export const choiceGold = (r: Run, fx: ChoiceFx) => Math.round((fx.gold ?? 0) * goldUnit(r));
 export interface PendingChoice { key: string; ev: ChoiceEv; options: ChoiceOpt[] }

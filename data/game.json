@@ -3866,7 +3866,7 @@
       "region": "boxing",
       "at": 0,
       "title": "Il muro dei nomi",
-      "text": "Prima del tuo primo allenamento, Gorin ti porta nello spogliatoio. Sul muro sono appese decine di foto: i suoi allievi, uno per uno. Quasi tutti i volti hanno una croce di pennarello rosso. Una foto, in fondo, è stata girata al contrario.",
+      "text": "Prima del tuo primo allenamento, Gorin ti porta nello spogliatoio. Sul muro sono appese decine di foto: i suoi allievi, uno per uno. Quasi tutti i volti hanno una croce di pennarello rosso. Una foto, in fondo, è stata girata al contrario. «Prima di salire sul ring», dice senza guardarti, «dimmi perché lo fai. Non la risposta giusta: quella vera.»",
       "options": [
         {
           "id": "a",
@@ -3879,7 +3879,7 @@
           "v": {
             "honor": 2
           },
-          "flag": "idris_known"
+          "flag": "idris_known,vow_truth"
         },
         {
           "id": "b",
@@ -3892,7 +3892,7 @@
             "honor": 4,
             "ambition": -1
           },
-          "flag": "gorin_bond"
+          "flag": "gorin_bond,vow_loyal"
         },
         {
           "id": "c",
@@ -3905,7 +3905,8 @@
           "v": {
             "ambition": 6,
             "fame": 2
-          }
+          },
+          "flag": "vow_name"
         }
       ]
     },
@@ -3986,18 +3987,25 @@
             "ambition": 5,
             "fame": 1
           },
-          "flag": "dirty_win"
+          "flag": "dirty_win",
+          "req": {
+            "max": {
+              "honor": 47
+            }
+          },
+          "lock": "Dopo tutto quello che hai già scelto di essere, non riusciresti nemmeno a stringergli la mano."
         },
         {
           "id": "b",
           "label": "Rifiuti e avvisi il campione di persona",
           "text": "Il campione ti guarda a lungo. «Strano modo di cominciare uno scontro», dice, e per la prima volta qualcuno sul ring ti stringe la mano prima del gong.",
           "fx": {
-            "block": 9
+            "block": 12,
+            "hp": -4
           },
           "v": {
             "honor": 6,
-            "fame": -1,
+            "fame": 2,
             "ambition": -1
           },
           "flag": "warned_champion"
@@ -4022,13 +4030,19 @@
       "region": "boxing",
       "at": 3,
       "title": "Il ginocchio e il vecchio",
-      "text": "Il ginocchio ti manda una fitta, e Gorin se ne accorge prima ancora che tu provi a nasconderla. «Il peso massimo ti mangerà a colazione», dice. «Posso fermarti. Stasera.» Poi, a voce più bassa: «Idris aveva lo stesso sguardo, il giorno in cui un uomo in nero venne a cercarlo.»",
+      "text": "Contro il campione regionale hai preso un colpo al ginocchio e hai fatto finta di niente. Ora una fitta ti tradisce, e Gorin se ne accorge prima ancora che tu provi a nasconderla. «Il peso massimo ti mangerà a colazione», dice. «Posso fermarti. Stasera.» Poi, a voce più bassa: «Idris aveva lo stesso sguardo, il giorno in cui un uomo in nero venne a cercarlo.»",
       "extra": [
         {
           "if": {
             "flag": "idris_known"
           },
           "text": "Quindi quel volto girato al muro aveva un nome, e adesso ha anche una storia."
+        },
+        {
+          "if": {
+            "flag": "warned_champion"
+          },
+          "text": "Il campione che hai avvisato ti ha lasciato un biglietto in palestra: «Non dimentico.»"
         }
       ],
       "options": [
@@ -4080,7 +4094,7 @@
       "region": "boxing",
       "at": 4,
       "title": "L'uomo in nero",
-      "text": "Nel corridoio del palazzetto, a pochi minuti dallo scontro con la Leggenda, l'uomo in nero ti aspetta appoggiato al muro. Ha il taccuino aperto alla pagina con il tuo nome già scritto. «Non serve vincere», dice piano. «Serve essere ricordati. Io mi occupo di quello. Basta una firma.»",
+      "text": "Nel corridoio del palazzetto, a pochi minuti dallo scontro con la Leggenda, l'uomo in nero ti aspetta appoggiato al muro. In palestra lo chiamano il Notaio: tiene il Registro, l'elenco di chi verrà ricordato. Ha il taccuino aperto alla pagina con il tuo nome già scritto. «Non serve vincere», dice piano. «Serve essere ricordati. Io mi occupo di quello. Basta una firma.»",
       "extra": [
         {
           "if": {
@@ -4170,6 +4184,12 @@
             "flag": "dirty_win"
           },
           "text": "Qualcuno, nella fila, sussurra che hai vinto 'con un aiuto'. Le voci attraversano il mare più in fretta delle navi."
+        },
+        {
+          "if": {
+            "flag": "notaio_wary"
+          },
+          "text": "L'uomo in nero ti sorride da lontano: non ha dimenticato le tue domande."
         }
       ],
       "options": [
@@ -4230,7 +4250,7 @@
           },
           "v": {
             "honor": 6,
-            "fame": 1,
+            "fame": 3,
             "ambition": -1
           },
           "flag": "saved_recruit"
@@ -4246,7 +4266,13 @@
             "ambition": 6,
             "honor": -7
           },
-          "flag": "left_recruit"
+          "flag": "left_recruit",
+          "req": {
+            "max": {
+              "honor": 60
+            }
+          },
+          "lock": "Non riesci a usare un ragazzo ferito come scudo: ormai non sei più uno che passa oltre."
         },
         {
           "id": "c",
@@ -4408,6 +4434,12 @@
             "flag": "idris_rival"
           },
           "text": "Il nome di Idris è cerchiato a matita. Accanto, una sola parola: «da superare»."
+        },
+        {
+          "if": {
+            "flag": "informant"
+          },
+          "text": "Il generale sa già quali punti deboli hai venduto: lo capisci dal modo in cui non ti guarda."
         }
       ],
       "options": [
@@ -4519,7 +4551,13 @@
           "v": {
             "ambition": 6,
             "honor": -5
-          }
+          },
+          "req": {
+            "max": {
+              "honor": 60
+            }
+          },
+          "lock": "Non ce la fai a lasciare quella gente: ormai non sei uno che prosegue da solo."
         }
       ]
     },
@@ -4645,6 +4683,12 @@
             "flag": "idris_rival"
           },
           "text": "Su una duna, a distanza, una sagoma osserva: ti sembra di riconoscere Idris."
+        },
+        {
+          "if": {
+            "flag": "gorin_kept"
+          },
+          "text": "Le vecchie fasce di Gorin ti stringono ancora il polso: sotto il sole del tempio sembrano un'àncora."
         }
       ],
       "options": [
@@ -4693,7 +4737,7 @@
       "region": "desert",
       "at": 3,
       "title": "Lia sotto la tempesta",
-      "text": "La tempesta prende la forma di un gigante. Mentre ti prepari, una figura attraversa la sabbia con il registratore stretto al petto: Lia Marek. Ha seguito il tuo nome fin qui, a piedi e in carovana. «Non mi interessa più il ring», dice. «Mi interessa chi ti ha portato fin qui.»",
+      "text": "La tempesta si addensa all'orizzonte. Mentre ti prepari, una figura attraversa la sabbia con il registratore stretto al petto: Lia Marek. Ha seguito il tuo nome fin qui, a piedi e in carovana. «Non mi interessa più il ring», dice. «Mi interessa chi ti ha portato fin qui.»",
       "needs": {
         "flag": "lia_met"
       },
@@ -4836,7 +4880,7 @@
           "v": {
             "honor": 6,
             "ambition": -2,
-            "fame": -1
+            "fame": 2
           }
         },
         {
@@ -4882,7 +4926,7 @@
       "region": "ocean",
       "at": 0,
       "title": "Il porto dei relitti",
-      "text": "Il porto è un cimitero di navi. Mentre corri sulle assi per raggiungere lo Squalo corazzato, vedi un relitto appena affondato con tre marinai aggrappati all'albero. Un contrabbandiere, dalla barca accanto, ti grida: «Il carico è tutto mio, se lo lasci a me!»",
+      "text": "Il porto è un cimitero di navi. Prima di salire sulle assi, un vecchio marinaio ti mette in mano un frutto dalla buccia scura: «Viene dalla foresta, oltre il mare. Mangialo o buttalo.» Per curiosità, ne assaggi un morso. Poi corri verso lo Squalo corazzato e vedi un relitto appena affondato con tre marinai aggrappati all'albero. Un contrabbandiere, dalla barca accanto, ti grida: «Il carico è tutto mio, se lo lasci a me!»",
       "extra": [
         {
           "if": {
@@ -4908,7 +4952,8 @@
           },
           "v": {
             "honor": 6,
-            "ambition": -2
+            "ambition": -2,
+            "fame": 2
           }
         },
         {
@@ -4921,7 +4966,13 @@
           "v": {
             "ambition": 6,
             "honor": -6
-          }
+          },
+          "req": {
+            "max": {
+              "honor": 60
+            }
+          },
+          "lock": "Non riusciresti a voltare le spalle a tre uomini che annegano. Non più."
         },
         {
           "id": "c",
@@ -4935,6 +4986,24 @@
             "fame": 6,
             "honor": -1
           }
+        },
+        {
+          "id": "d",
+          "label": "Dividi con i marinai l'acqua che hai imparato a dividere",
+          "text": "Una borraccia passa di mano in mano finché è vuota. Uno dei marinai, a mezza voce, nomina Nuhra: la storia di una guida che segnava le vie dell'acqua è arrivata fin qui.",
+          "fx": {
+            "draw": 3,
+            "block": 3
+          },
+          "v": {
+            "honor": 5,
+            "fame": 2
+          },
+          "flag": "shared_again",
+          "req": {
+            "flag": "shared_water"
+          },
+          "lock": "Non ricordi più come si divide qualcosa che non hai mai diviso."
         }
       ]
     },
@@ -5002,6 +5071,23 @@
             "fame": 6,
             "ambition": 1
           }
+        },
+        {
+          "id": "d",
+          "label": "Rispondi alla voce di Gorin: «respiro»",
+          "text": "Dici ad alta voce una sola parola, e il canto si incrina. Per un istante senti, lontano, il rumore di una palestra che regge.",
+          "fx": {
+            "block": 9
+          },
+          "v": {
+            "honor": 4,
+            "ambition": -1
+          },
+          "flag": "gorin_voice",
+          "req": {
+            "flag": "gorin_bond"
+          },
+          "lock": "Nessuna delle voci ti trattiene: non c'è nessuno a cui rispondere."
         }
       ]
     },
@@ -5023,6 +5109,12 @@
             "flag": "idris_rival"
           },
           "text": "Idris compare dal fumo, già in posizione. «È mio», dice, e non sembra una minaccia: sembra una richiesta di riconoscimento."
+        },
+        {
+          "if": {
+            "flag": "idris_heard"
+          },
+          "text": "Le parole di Idris sul fermarsi «a quel livello» ti tornano in mente mentre il nucleo pulsa."
         }
       ],
       "options": [
@@ -5102,7 +5194,7 @@
           "v": {
             "honor": 6,
             "ambition": -2,
-            "fame": 1
+            "fame": 3
           }
         },
         {
@@ -5160,7 +5252,8 @@
           "label": "Prometti che la rotta resterà libera per tutti",
           "text": "Sael ti tende la mano. «Una promessa vale quanto chi la fa», dice. «La scriverò sulla mappa, accanto al tuo nome.»",
           "fx": {
-            "block": 9
+            "block": 12,
+            "hp": -4
           },
           "v": {
             "honor": 6,
@@ -5210,13 +5303,19 @@
       "region": "forest",
       "at": 0,
       "title": "Il frutteto del morso",
-      "text": "La foresta comincia dove finisce il mare, e il primo albero che incontri porta lo stesso frutto che assaggiasti per curiosità, mesi fa. Adesso ce ne sono centinaia, appesi come lanterne. Un eremita, Oru, ti osserva da un ramo: «Chi ne mangia due», dice, «non torna.»",
+      "text": "La foresta comincia dove finisce il mare, e il primo albero che incontri porta lo stesso frutto che assaggiasti per curiosità, al porto dei relitti. Adesso ce ne sono centinaia, appesi come lanterne. Un eremita, Oru, ti osserva da un ramo: «Chi ne mangia due», dice, «non torna.»",
       "extra": [
         {
           "if": {
             "flag": "pharaoh_pact"
           },
           "text": "Il patto con il Faraone ti pesa sulla pelle, come un secondo frutto già mangiato."
+        },
+        {
+          "if": {
+            "flag": "shared_again"
+          },
+          "text": "Sul molo, uno dei marinai che hai dissetato ti riconosce e ti porge un cesto di mele selvatiche senza chiedere niente."
         }
       ],
       "options": [
@@ -5402,7 +5501,8 @@
           "label": "Pianti un seme per chi non è mai tornato",
           "text": "Il Treant ti guarda a lungo. «Sono secoli che nessuno lo faceva», dice. Il seme affonda senza rumore.",
           "fx": {
-            "block": 9
+            "block": 12,
+            "hp": -4
           },
           "v": {
             "honor": 6,
@@ -5422,6 +5522,24 @@
             "honor": -6
           },
           "flag": "scratched_name"
+        },
+        {
+          "id": "d",
+          "label": "Cerchi il nome di Idris: se è ancora scritto, non è finita",
+          "text": "Lo trovi vicino alle radici, inciso con cura. Passi il pollice sulla corteccia finché senti il tepore di un nome ancora vivo.",
+          "fx": {
+            "draw": 3,
+            "block": 3
+          },
+          "v": {
+            "honor": 4,
+            "ambition": -1
+          },
+          "flag": "idris_name",
+          "req": {
+            "flag": "idris_ally"
+          },
+          "lock": "Nessun nome qui ti riguarda abbastanza da cercarlo."
         }
       ]
     },
@@ -5443,6 +5561,12 @@
             "flag": "burned_orchard"
           },
           "text": "Sente l'odore di bruciato su di te, e per un attimo la rabbia gli esce dagli occhi come un sollievo."
+        },
+        {
+          "if": {
+            "flag": "saw_others"
+          },
+          "text": "Nella visione che hai chiesto allo Spirito c'era anche lui, a margine: un uomo seduto su un tronco, con lo sguardo di chi cerca una risposta."
         }
       ],
       "options": [
@@ -5456,7 +5580,8 @@
           },
           "v": {
             "honor": 6,
-            "ambition": -1
+            "ambition": -1,
+            "fame": 2
           },
           "flag": "hunter_understood"
         },
@@ -5471,7 +5596,13 @@
             "ambition": 6,
             "honor": -6
           },
-          "flag": "hunter_struck"
+          "flag": "hunter_struck",
+          "req": {
+            "max": {
+              "honor": 60
+            }
+          },
+          "lock": "Hai imparato a fidarti del dubbio: non puoi più colpire per primo un uomo seduto su un tronco."
         },
         {
           "id": "c",
@@ -5486,6 +5617,24 @@
             "fame": -2
           },
           "flag": "hunter_ally"
+        },
+        {
+          "id": "d",
+          "label": "Gli parli della recluta che hai salvato: sai cosa vuol dire",
+          "text": "Gli racconti di un ragazzo inchiodato a terra e di un muro a venti metri di distanza. Lui ascolta come ascolta chi non ha mai avuto un testimone.",
+          "fx": {
+            "draw": 3,
+            "block": 3
+          },
+          "v": {
+            "honor": 5,
+            "fame": 1
+          },
+          "flag": "hunter_understood",
+          "req": {
+            "flag": "saved_recruit"
+          },
+          "lock": "Non hai nessuno da portare come esempio."
         }
       ]
     },
@@ -5507,6 +5656,24 @@
             "flag": "scratched_name"
           },
           "text": "Le radici attorno a te sono scure, e la corteccia che hai ferito non ha ancora smesso di sanguinare."
+        },
+        {
+          "if": {
+            "flag": "hunter_understood"
+          },
+          "text": "Il Cacciatore ti ha lasciato un pezzo di corteccia con un nome inciso a mano: quello di sua figlia. Lo porti con te."
+        },
+        {
+          "if": {
+            "flag": "hunter_ally"
+          },
+          "text": "Il Cacciatore cammina con te, a un passo di distanza, e porta la metà del fardello che avevate diviso."
+        },
+        {
+          "if": {
+            "flag": "hunter_struck"
+          },
+          "text": "Sul sentiero dietro di te c'è ancora il segno del colpo che hai dato per primo: la foresta non lo ha ancora richiuso."
         }
       ],
       "options": [
@@ -5540,7 +5707,8 @@
           },
           "v": {
             "honor": 6,
-            "ambition": -2
+            "ambition": -2,
+            "fame": 2
           },
           "flag": "borrowed_tree"
         },
@@ -5589,6 +5757,18 @@
             "flag": "burned_ledger"
           },
           "text": "Sa dell'elenco che hai bruciato. Non lo dice, ma muove la mano come per sfiorare qualcosa che non c'è più."
+        },
+        {
+          "if": {
+            "flag": "drained_tree"
+          },
+          "text": "Dalle mani ti sale ancora il verde dell'Albero. Dove cammini, l'erba si secca."
+        },
+        {
+          "if": {
+            "flag": "borrowed_tree"
+          },
+          "text": "Hai ancora un filo di linfa nelle vene: un prestito che prima o poi andrà restituito."
         }
       ],
       "options": [
@@ -5602,7 +5782,8 @@
           },
           "v": {
             "honor": 5,
-            "ambition": -1
+            "ambition": -1,
+            "fame": 2
           },
           "flag": "knows_truth"
         },
@@ -5647,6 +5828,12 @@
             "flag": "lia_ally"
           },
           "text": "Lia Marek ti ha raggiunto ancora una volta, con il registratore acceso e le scarpe consumate."
+        },
+        {
+          "if": {
+            "flag": "knows_truth"
+          },
+          "text": "La verità sul Registro ti pesa più del fuoco, e per la prima volta capisci perché il Golem vuole soltanto riposare."
         }
       ],
       "options": [
@@ -5655,11 +5842,13 @@
           "label": "Gli prometti che, a duello finito, lo lascerai riposare",
           "text": "Il Golem inclina il capo. Una crepa gli si illumina di rosso, quasi un sorriso. «Allora combattiamo bene.»",
           "fx": {
-            "block": 9
+            "block": 12,
+            "hp": -4
           },
           "v": {
             "honor": 6,
-            "ambition": -2
+            "ambition": -2,
+            "fame": 2
           }
         },
         {
@@ -5673,7 +5862,13 @@
             "ambition": 6,
             "honor": -6
           },
-          "flag": "forced_golem"
+          "flag": "forced_golem",
+          "req": {
+            "max": {
+              "honor": 60
+            }
+          },
+          "lock": "Dopo tutto quello che hai attraversato, non riesci più a incatenare qualcuno che chiede solo di riposare."
         },
         {
           "id": "c",
@@ -5707,6 +5902,18 @@
             "flag": "gorin_bond"
           },
           "text": "Per un istante ti sembra di sentire, lontano, il rumore di un sacco da boxe."
+        },
+        {
+          "if": {
+            "flag": "forced_golem"
+          },
+          "text": "Dalla forgia, il Golem ti guarda senza dire niente. Il Demone se ne accorge e sorride."
+        },
+        {
+          "if": {
+            "flag": "gorin_voice"
+          },
+          "text": "La parola che hai detto alla Sirena ti torna in gola: «respiro». Il Demone inclina la testa, come per ascoltarla."
         }
       ],
       "options": [
@@ -5782,6 +5989,12 @@
             "flag": "idris_rival"
           },
           "text": "È solo. Ha l'espressione di chi si è sempre preparato a questo momento."
+        },
+        {
+          "if": {
+            "flag": "idris_name"
+          },
+          "text": "Il nome di Idris, che hai cercato tra le radici, ti torna in mente: ancora vivo, ancora tuo da pronunciare."
         }
       ],
       "options": [
@@ -5869,6 +6082,30 @@
             "flag": "demon_pact"
           },
           "text": "Il vuoto lasciato dal Demone si apre come una porta che reclama di essere varcata."
+        },
+        {
+          "if": {
+            "flag": "vow_name"
+          },
+          "text": "«Sul muro di Gorin avevi detto che il tuo nome sarebbe stato più in alto di tutti», dice il Titano. «Siamo qui.»"
+        },
+        {
+          "if": {
+            "flag": "vow_loyal"
+          },
+          "text": "«Avevi promesso a un vecchio che il tuo volto non sarebbe finito su un muro», dice il Titano. «Vediamo se sai mantenere.»"
+        },
+        {
+          "if": {
+            "flag": "vow_truth"
+          },
+          "text": "«Volevi sapere cosa fosse successo a quello della foto girata», dice il Titano. «Stai per scoprire che era solo il primo.»"
+        },
+        {
+          "if": {
+            "flag": "idris_duel"
+          },
+          "text": "Sul sentiero resta il segno del duello con Idris: lui non c'è, ma non è più alle tue spalle."
         }
       ],
       "options": [
@@ -6323,7 +6560,7 @@
       "move.phoenix_a1.name": "Burning feather",
       "move.phoenix_a2.name": "Phoenix supernova",
       "choice.boxing-muro.title": "The wall of names",
-      "choice.boxing-muro.text": "Before your first training session, Gorin leads you into the locker room. Dozens of photographs hang on the wall: his pupils, one by one. Almost every face has been crossed out with red marker. One photo, at the back, has been turned to face the wall.",
+      "choice.boxing-muro.text": "Before your first training session, Gorin leads you into the locker room. Dozens of photographs hang on the wall: his pupils, one by one. Almost every face has been crossed out with red marker. One photo, at the back, has been turned to face the wall. “Before you climb into the ring,” he says without looking at you, “tell me why you're doing it. Not the right answer: the true one.”",
       "choice.boxing-muro.a.label": "You ask who the turned photo is",
       "choice.boxing-muro.a.text": "Gorin hesitates, then says a single name: “Idris”. It isn't a memory he wanted to share, but he thanks you for not looking away.",
       "choice.boxing-muro.b.label": "You promise him your face will never end up on that wall",
@@ -6348,7 +6585,7 @@
       "choice.boxing-manager.c.label": "You refuse and expose him in front of everyone",
       "choice.boxing-manager.c.text": "The hall falls silent. The manager is escorted out amid whistles and your name bounces from mouth to mouth: honest or showy, depending on who says it.",
       "choice.boxing-ginocchio.title": "The knee and the old man",
-      "choice.boxing-ginocchio.text": "Your knee sends a stab of pain, and Gorin notices before you can even try to hide it. “The heavyweight will eat you for breakfast,” he says. “I can stop you. Tonight.” Then, lower: “Idris had that same look the day a man in black came looking for him.”",
+      "choice.boxing-ginocchio.text": "In the fight with the regional champion you took a blow to the knee and pretended nothing had happened. Now a stab of pain gives you away, and Gorin notices before you can even try to hide it. “The heavyweight will eat you for breakfast,” he says. “I can stop you. Tonight.” Then, lower: “Idris had that same look the day a man in black came looking for him.”",
       "choice.boxing-ginocchio.extra0.text": "So the face turned to the wall had a name, and now it has a story too.",
       "choice.boxing-ginocchio.a.label": "You grit your teeth: that was never the point",
       "choice.boxing-ginocchio.a.text": "Gorin doesn't argue. He wraps your knee in silence, tightly, and doesn't look you in the face.",
@@ -6357,7 +6594,7 @@
       "choice.boxing-ginocchio.c.label": "You ask him to tell you everything about Idris and the man in black",
       "choice.boxing-ginocchio.c.text": "Gorin talks until the ice melts. He tells you about contracts, struck-out names, a boy who climbed and never came back down. You leave the locker room knowing what you are climbing against.",
       "choice.boxing-uomo-in-nero.title": "The man in black",
-      "choice.boxing-uomo-in-nero.text": "In the corridor of the arena, minutes before the fight with the Legend, the man in black waits leaning against the wall. His notebook is open at the page with your name already written. “Winning isn't necessary,” he says quietly. “Being remembered is. I take care of that. All it takes is a signature.”",
+      "choice.boxing-uomo-in-nero.text": "In the corridor of the arena, minutes before the fight with the Legend, the man in black waits leaning against the wall. At the gym they call him the Notary: he keeps the Registry, the list of those who will be remembered. His notebook is open at the page with your name already written. “Winning isn't necessary,” he says quietly. “Being remembered is. I take care of that. All it takes is a signature.”",
       "choice.boxing-uomo-in-nero.extra0.text": "At the far end of the corridor Gorin watches you, motionless, your wraps still in his hands.",
       "choice.boxing-uomo-in-nero.extra1.text": "Gorin isn't at the far end of the corridor: he said he wouldn't come to watch.",
       "choice.boxing-uomo-in-nero.extra2.text": "He knows about the low blow. He mentions it with a half smile, as if it were a mark of merit.",
@@ -6454,7 +6691,7 @@
       "choice.desert-rito.c.label": "You refuse the rite and fight by your own rules",
       "choice.desert-rito.c.text": "The Mummy lowers the knife. “As you wish.” For a moment you feel the eyes of the entire temple on your skin, and it isn't a pleasant feeling.",
       "choice.desert-lia.title": "Lia in the storm",
-      "choice.desert-lia.text": "The storm takes the shape of a giant. As you prepare, a figure crosses the sand with a recorder clutched to her chest: Lia Marek. She followed your name all the way here, on foot and by caravan. “I'm not interested in the ring any more,” she says. “I'm interested in who brought you here.”",
+      "choice.desert-lia.text": "The storm gathers on the horizon. As you prepare, a figure crosses the sand with a recorder clutched to her chest: Lia Marek. She followed your name all the way here, on foot and by caravan. “I'm not interested in the ring any more,” she says. “I'm interested in who brought you here.”",
       "choice.desert-lia.extra0.text": "She trusts you: you treated her like a person, not a headline.",
       "choice.desert-lia.extra1.text": "She hasn't forgotten the six instead of the three. Yet here she is, and you still don't know if to forgive you or to expose you.",
       "choice.desert-lia.a.label": "You tell her about the Notary and the Registry: let everyone know",
@@ -6484,7 +6721,7 @@
       "choice.desert-faraone.c.text": "The Pharaoh leans forward. “There it is, at last: a price.” You realise you are already thinking about how much you can take, not how much you will have to give.",
       "choice.desert-faraone.c.lock": "You don't yet hunger enough to propose a pact like that.",
       "choice.ocean-relitto.title": "The harbour of wrecks",
-      "choice.ocean-relitto.text": "The harbour is a graveyard of ships. As you run along the planks toward the Armoured Shark, you spot a freshly sunk wreck with three sailors clinging to the mast. A smuggler on the next boat shouts: “The cargo's all mine, if you leave it to me!”",
+      "choice.ocean-relitto.text": "The harbour is a graveyard of ships. Before you step onto the planks, an old sailor presses a dark-skinned fruit into your hand: “It comes from the forest, across the sea. Eat it or throw it away.” Out of curiosity, you take a bite. Then you run toward the Armoured Shark and spot a freshly sunk wreck with three sailors clinging to the mast. A smuggler on the next boat shouts: “The cargo's all mine, if you leave it to me!”",
       "choice.ocean-relitto.extra0.text": "One of the sailors wears a camp tag around his neck: he recognises you and greets you with a shout.",
       "choice.ocean-relitto.extra1.text": "One of the sailors wears a camp tag around his neck, and has your own way of avoiding eye contact.",
       "choice.ocean-relitto.a.label": "You save the sailors before thinking of the Shark",
@@ -6536,7 +6773,7 @@
       "choice.ocean-leviatano.c.label": "You take the route in silence and tell no one",
       "choice.ocean-leviatano.c.text": "There is no glory, no deceit. Sael watches you vanish at the horizon as if she'd never met you, and it feels right that way.",
       "choice.forest-frutteto.title": "The orchard of the bite",
-      "choice.forest-frutteto.text": "The forest begins where the sea ends, and the first tree you meet bears the same fruit you tasted out of curiosity months ago. Now there are hundreds, hanging like lanterns. A hermit, Oru, watches you from a branch: “Whoever eats two,” he says, “does not come back.”",
+      "choice.forest-frutteto.text": "The forest begins where the sea ends, and the first tree you meet bears the same fruit you tasted out of curiosity at the harbour of wrecks. Now there are hundreds, hanging like lanterns. A hermit, Oru, watches you from a branch: “Whoever eats two,” he says, “does not come back.”",
       "choice.forest-frutteto.extra0.text": "The pact with the Pharaoh weighs on your skin, like a second fruit already eaten.",
       "choice.forest-frutteto.a.label": "You eat another: you want to know how far it goes",
       "choice.forest-frutteto.a.text": "The taste is identical, but the body reacts before the mind: your fingers lengthen, your heartbeat quickens. Oru shakes his head, and there is pity in it.",
@@ -6735,7 +6972,88 @@
       "skillBranch.deck.name": "Deck",
       "skillBranch.slots.name": "Equipment",
       "skill.hand1.name": "Larger hand",
-      "skill.hand1.desc": "+1 maximum card in hand."
+      "skill.hand1.desc": "+1 maximum card in hand.",
+      "epilogue.throne.extra4.text": "“Higher than everyone,” you told an old man, in a locker room. Now no one is higher than you, and no one is close enough to tell you so.",
+      "epilogue.throne.extra5.text": "You promised your face would never end up on that wall. There is no wall: only the summit and you, and the promise sounds strange said aloud.",
+      "epilogue.throne.extra6.text": "You wanted to know what happened to the one in the turned photograph. Now the answer sits on your throne, and it looks a lot like you.",
+      "epilogue.break.extra5.text": "Higher than everyone, you said. You come down the mountain with no name, and discover that your name, at last, weighs less than you do.",
+      "epilogue.break.extra6.text": "You promised an old man your face would never end up on that wall. For the first time, a promise feels kept.",
+      "epilogue.break.extra7.text": "You wanted to know why Idris's photo was turned around. Now you know, and at last you have the right to turn it back.",
+      "epilogue.legend.extra5.text": "You said your name would stand higher than everyone's. It does: above the rooftops, above the harbours, above you.",
+      "epilogue.legend.extra6.text": "You promised Gorin you wouldn't end up on that wall. Your face isn't there: your name is, which is something else, and sometimes the same.",
+      "epilogue.legend.extra7.text": "You wanted the truth about the turned photograph. Now others look for it in you, and find a thousand versions.",
+      "epilogue.fighter.extra6.text": "Higher than everyone, you said. Maybe you don't need to be: you only need to keep climbing.",
+      "epilogue.fighter.extra7.text": "The promise to Gorin is still there, intact: it was never a deadline, it was a direction.",
+      "epilogue.fighter.extra8.text": "The turned photograph is still a riddle, but now you know the answers lie on the road, not on the wall.",
+      "choice.volcano-titano.extra5.text": "“On Gorin's wall you said your name would stand higher than everyone's,” the Titan says. “Here we are.”",
+      "choice.volcano-titano.extra6.text": "“You promised an old man your face would never end up on a wall,” the Titan says. “Let's see if you can keep it.”",
+      "choice.volcano-titano.extra7.text": "“You wanted to know what happened to the one in the turned photograph,” the Titan says. “You're about to learn he was only the first.”",
+      "choice.boxing-ginocchio.extra1.text": "The champion you warned has left a note at the gym: “I don't forget.”",
+      "choice.battlefield-lista.extra3.text": "The man in black smiles at you from afar: he hasn't forgotten your questions.",
+      "choice.battlefield-sigillo.extra2.text": "The general already knows which weak points you sold: you can tell by the way he doesn't look at you.",
+      "choice.desert-rito.extra2.text": "Gorin's old wraps still hug your wrist: under the temple sun they feel like an anchor.",
+      "choice.ocean-nucleo.extra2.text": "Idris's words about stopping “at that level” come back to you as the core pulses.",
+      "choice.forest-cacciatore.extra2.text": "He was in the vision you asked the Spirit for, at the edge: a man sitting on a log, with the look of someone searching for an answer.",
+      "choice.forest-albero.extra2.text": "The Hunter left you a piece of bark with a name carved by hand: his daughter's. You carry it with you.",
+      "choice.forest-albero.extra3.text": "The Hunter walks with you, a step away, carrying half the burden you shared.",
+      "choice.forest-albero.extra4.text": "On the path behind you the mark of the blow you struck first is still there: the forest hasn't closed it yet.",
+      "choice.volcano-notaio.extra4.text": "The green of the Tree still rises from your hands. Where you walk, the grass withers.",
+      "choice.volcano-notaio.extra5.text": "You still have a thread of sap in your veins: a loan that will have to be repaid sooner or later.",
+      "choice.volcano-golem.extra1.text": "The truth about the Registry weighs on you more than the fire, and for the first time you understand why the Golem only wants to rest.",
+      "choice.volcano-demone.extra1.text": "From the forge, the Golem watches you without a word. The Demon notices and smiles.",
+      "choice.volcano-titano.extra8.text": "On the path remains the mark of the duel with Idris: he isn't here, but he is no longer behind you.",
+      "choice.forest-frutteto.extra1.text": "On the quay, one of the sailors you gave water to recognises you and hands you a basket of wild apples without asking for anything.",
+      "choice.volcano-demone.extra2.text": "The word you spoke to the Siren returns to your throat: “breathing”. The Demon tilts his head, as if listening.",
+      "choice.volcano-idris.extra3.text": "Idris's name, which you searched for among the roots, comes back to you: still alive, still yours to speak.",
+      "choice.boxing-manager.a.lock": "After everything you've already chosen to be, you couldn't even shake his hand.",
+      "choice.battlefield-ferito.b.lock": "You can't use a wounded boy as cover: you're no longer someone who walks on by.",
+      "choice.desert-acqua.c.lock": "You can't leave those people behind: you're no longer someone who walks on alone.",
+      "choice.ocean-relitto.b.lock": "You couldn't turn your back on three drowning men. Not any more.",
+      "choice.forest-cacciatore.b.lock": "You've learned to trust doubt: you can no longer strike first at a man sitting on a log.",
+      "choice.volcano-golem.b.lock": "After everything you've crossed, you can no longer chain someone who only asks to rest.",
+      "choice.ocean-sirena.d.label": "Answer Gorin's voice: “I'm breathing”",
+      "choice.ocean-sirena.d.text": "You say a single word aloud, and the song cracks. For an instant you hear, far away, the sound of a gym that still stands.",
+      "choice.ocean-sirena.d.lock": "None of the voices holds you back: there is no one to answer.",
+      "choice.ocean-relitto.d.label": "Share with the sailors the water you learned to share",
+      "choice.ocean-relitto.d.text": "A flask passes from hand to hand until it is empty. One of the sailors, half under his breath, mentions Nuhra: the story of a guide who marked the paths of water has reached this far.",
+      "choice.ocean-relitto.d.lock": "You no longer remember how to share something you never shared.",
+      "choice.forest-nomi.d.label": "Look for Idris's name: if it's still written, it isn't over",
+      "choice.forest-nomi.d.text": "You find it near the roots, carved with care. You run your thumb over the bark until you feel the warmth of a name that is still alive.",
+      "choice.forest-nomi.d.lock": "No name here matters to you enough to go looking for it.",
+      "choice.forest-cacciatore.d.label": "Tell him about the recruit you saved: you know what it means",
+      "choice.forest-cacciatore.d.text": "You tell him about a boy pinned to the ground and a wall twenty metres away. He listens like someone who never had a witness.",
+      "choice.forest-cacciatore.d.lock": "You have no one to offer as an example.",
+      "epilogue.defeat-boxing.title": "The gong that doesn't ring",
+      "epilogue.defeat-boxing.text": "The arena ceiling spins, then stops. No one counts the seconds for you: in the ring they remember who climbs, not who falls. Somewhere, a notebook stays open on a page that is still blank.",
+      "epilogue.defeat-boxing.extra0.text": "Gorin gets you back on your feet without a word. Then he tightens your wraps again, as if it were a beginning.",
+      "epilogue.defeat-boxing.extra1.text": "Gorin doesn't say “I told you so”. He thinks it so loudly that you hear it anyway.",
+      "epilogue.defeat-boxing.extra2.text": "Your name is in the Registry. But even a signed name can be erased.",
+      "epilogue.defeat-battlefield.title": "Name not recorded",
+      "epilogue.defeat-battlefield.text": "The camp siren covers the sound of your body falling. The medics carry you away without leaving a name on the roll. They will remember you for a few hours: the length of a shift.",
+      "epilogue.defeat-battlefield.extra0.text": "Among those who lift you is the recruit you saved, and he doesn't let go of your hand.",
+      "epilogue.defeat-battlefield.extra1.text": "No one present knows you well enough to look for you.",
+      "epilogue.defeat-battlefield.extra2.text": "Idris looks at you from the side of the stretcher: he knows the taste of this silence.",
+      "epilogue.defeat-desert.title": "The sand has no memory",
+      "epilogue.defeat-desert.text": "The sand receives you with a gentleness you don't deserve. The sun climbs, the storm passes, and the desert, which has no memory, is already beginning to cover you.",
+      "epilogue.defeat-desert.extra0.text": "Nuhra, whom you gave water, turns back to look for you with the caravan.",
+      "epilogue.defeat-desert.extra1.text": "Gorin's wraps are still on your wrist. No one takes them off.",
+      "epilogue.defeat-ocean.title": "The song at the bottom",
+      "epilogue.defeat-ocean.text": "The waves make no sound when they take you. You sink slowly, the world turning green and then black, and the last thing you hear is a song you know.",
+      "epilogue.defeat-ocean.extra0.text": "Someone on a ship passing along the open route sees a glimmer and throws a rope.",
+      "epilogue.defeat-ocean.extra1.text": "The core keeps pulsing on the seabed, alone, like a heart that doesn't know it has lost its body.",
+      "epilogue.defeat-forest.title": "One name more",
+      "epilogue.defeat-forest.text": "The forest closes over the spot where you fell. The fruit that changed you now works for her: thin roots search for your hands, and on the bark there is room for one name more.",
+      "epilogue.defeat-forest.extra0.text": "The taste of the fruit stays in your mouth until the very end: sweet, almost kind.",
+      "epilogue.defeat-forest.extra1.text": "The Hunter lifts you onto his shoulders and carries you out of the woods: “Not here,” he says.",
+      "epilogue.defeat-volcano.title": "The ash that rises",
+      "epilogue.defeat-volcano.text": "The lava doesn't burn you: it welcomes you. The crater breathes once, slowly, and everything you were rises as ash toward a sky that was waiting for no one.",
+      "epilogue.defeat-volcano.extra0.text": "At the bottom of the fall the Demon waits for you with the bill in hand.",
+      "epilogue.defeat-volcano.extra1.text": "Idris shouts your name from the crater's rim, and for an instant the fire hesitates.",
+      "epilogue.defeat-all.title": "Defeat · shared lines",
+      "epilogue.defeat-all.text": "Lines added to every defeat according to the vow made in the first chapter.",
+      "epilogue.defeat-all.extra0.text": "Higher than everyone, you said. And yet now you lie lower than Gorin's wall.",
+      "epilogue.defeat-all.extra1.text": "You promised your face would never end up on that wall. That night, somewhere, Gorin turns one over.",
+      "epilogue.defeat-all.extra2.text": "You wanted to know what became of the one in the turned photograph. Now you know, and you can no longer tell it."
     }
   },
   "epilogues": [
@@ -6770,6 +7088,24 @@
             "flag": "gorin_bond"
           },
           "text": "Gorin ti scrive una sola riga, qualche mese dopo: «Il ginocchio?» Non sai come rispondere, e non rispondi."
+        },
+        {
+          "if": {
+            "flag": "vow_name"
+          },
+          "text": "«Più in alto di tutti», avevi detto a un vecchio, in uno spogliatoio. Adesso nessuno è più in alto di te, e nessuno è abbastanza vicino da dirtelo."
+        },
+        {
+          "if": {
+            "flag": "vow_loyal"
+          },
+          "text": "Avevi promesso che il tuo volto non sarebbe finito su quel muro. Non c'è nessun muro: ci sono solo la cima e te, e la promessa suona strana a voce alta."
+        },
+        {
+          "if": {
+            "flag": "vow_truth"
+          },
+          "text": "Volevi sapere cosa fosse successo a quello della foto girata. Ora la risposta siede sul tuo trono, e somiglia moltissimo a te."
         }
       ]
     },
@@ -6810,6 +7146,24 @@
             "flag": "golem_story"
           },
           "text": "Il Golem di lava riposa, finalmente, e la sua storia è nelle mani di chiunque voglia leggerla."
+        },
+        {
+          "if": {
+            "flag": "vow_name"
+          },
+          "text": "Più in alto di tutti, avevi detto. Scendi dalla montagna senza nome, e scopri che il tuo nome, finalmente, pesa meno di te."
+        },
+        {
+          "if": {
+            "flag": "vow_loyal"
+          },
+          "text": "Avevi promesso a un vecchio che il tuo volto non sarebbe finito su quel muro. Per la prima volta, una promessa ti sembra mantenuta."
+        },
+        {
+          "if": {
+            "flag": "vow_truth"
+          },
+          "text": "Volevi sapere perché la foto di Idris era girata. Adesso lo sai, e hai finalmente il diritto di rigirarla."
         }
       ]
     },
@@ -6850,6 +7204,175 @@
             "flag": "name_carved"
           },
           "text": "Alle radici del Treant il tuo nome ha smesso di essere l'ultimo."
+        },
+        {
+          "if": {
+            "flag": "vow_name"
+          },
+          "text": "Avevi detto che il tuo nome sarebbe stato più in alto di tutti. Lo è: sopra i tetti, sopra i porti, sopra di te."
+        },
+        {
+          "if": {
+            "flag": "vow_loyal"
+          },
+          "text": "A Gorin avevi promesso di non finire su quel muro. Il tuo volto non c'è: c'è il tuo nome, che è un'altra cosa, e a volte la stessa."
+        },
+        {
+          "if": {
+            "flag": "vow_truth"
+          },
+          "text": "Volevi la verità sulla foto girata. Ora sono gli altri a cercarla su di te, e ne trovano mille versioni."
+        }
+      ]
+    },
+    {
+      "id": "defeat-boxing",
+      "title": "Il gong che non suona",
+      "text": "Il soffitto del palazzetto gira, poi si ferma. Nessuno conta i secondi per te: sul ring si ricorda chi sale, non chi cade. Da qualche parte, un taccuino resta aperto su una pagina ancora bianca.",
+      "extra": [
+        {
+          "if": {
+            "flag": "gorin_bond"
+          },
+          "text": "Gorin ti rimette in piedi senza dire niente. Poi ti stringe di nuovo le fasce, come se fosse un inizio."
+        },
+        {
+          "if": {
+            "flag": "gorin_doubt"
+          },
+          "text": "Gorin non dice «te l'avevo detto». Lo pensa così forte che lo senti lo stesso."
+        },
+        {
+          "if": {
+            "flag": "pact"
+          },
+          "text": "Il tuo nome è nel Registro. Ma anche un nome firmato si può cancellare."
+        }
+      ]
+    },
+    {
+      "id": "defeat-battlefield",
+      "title": "Nome non registrato",
+      "text": "La sirena del campo copre il rumore del tuo corpo che cade. I medici ti portano via senza lasciare un nome sul registro. Ti ricorderanno per qualche ora: il tempo di un turno.",
+      "extra": [
+        {
+          "if": {
+            "flag": "saved_recruit"
+          },
+          "text": "Tra quelli che ti sollevano c'è la recluta che hai salvato, e non ti lascia la mano."
+        },
+        {
+          "if": {
+            "flag": "left_recruit"
+          },
+          "text": "Nessuno dei presenti ti conosce abbastanza da cercarti."
+        },
+        {
+          "if": {
+            "flag": "idris_ally"
+          },
+          "text": "Idris ti guarda dal bordo della barella: conosce il sapore di questo silenzio."
+        }
+      ]
+    },
+    {
+      "id": "defeat-desert",
+      "title": "La sabbia non ha memoria",
+      "text": "La sabbia ti accoglie con una dolcezza che non meriti. Il sole sale, la tempesta passa, e il deserto, che non ha memoria, comincia già a coprirti.",
+      "extra": [
+        {
+          "if": {
+            "flag": "shared_water"
+          },
+          "text": "Nuhra, a cui hai dato da bere, torna indietro a cercarti con la carovana."
+        },
+        {
+          "if": {
+            "flag": "gorin_kept"
+          },
+          "text": "Le fasce di Gorin sono ancora al tuo polso. Nessuno le toglie."
+        }
+      ]
+    },
+    {
+      "id": "defeat-ocean",
+      "title": "Il canto in fondo",
+      "text": "Le onde non fanno rumore quando ti prendono. Scendi piano, con il mondo che si fa verde e poi nero, e l'ultima cosa che senti è un canto che conosci.",
+      "extra": [
+        {
+          "if": {
+            "flag": "free_route"
+          },
+          "text": "Qualcuno, su una nave che passa per la rotta aperta, vede un riflesso e getta una corda."
+        },
+        {
+          "if": {
+            "flag": "took_core"
+          },
+          "text": "Il nucleo continua a pulsare sul fondo, da solo, come un cuore che non sa di essere rimasto senza corpo."
+        }
+      ]
+    },
+    {
+      "id": "defeat-forest",
+      "title": "Un nome in più",
+      "text": "La foresta si richiude sul punto in cui sei caduto. Il frutto che ti ha cambiato ora lavora per lei: radici sottili ti cercano le mani, e sulla corteccia c'è spazio per un nome in più.",
+      "extra": [
+        {
+          "if": {
+            "flag": "ate_fruit"
+          },
+          "text": "Il sapore del frutto ti resta in bocca fino all'ultimo: dolce, quasi gentile."
+        },
+        {
+          "if": {
+            "flag": "hunter_ally"
+          },
+          "text": "Il Cacciatore ti solleva sulle spalle e ti porta fuori dal bosco: «Non qui», dice."
+        }
+      ]
+    },
+    {
+      "id": "defeat-volcano",
+      "title": "La cenere che sale",
+      "text": "La lava non ti brucia: ti accoglie. Il cratere respira una volta, lento, e tutto quello che eri sale come cenere verso un cielo che non aspettava nessuno.",
+      "extra": [
+        {
+          "if": {
+            "flag": "demon_pact"
+          },
+          "text": "In fondo alla caduta il Demone ti aspetta con il conto in mano."
+        },
+        {
+          "if": {
+            "flag": "idris_united"
+          },
+          "text": "Idris urla il tuo nome dal bordo del cratere, e per un istante il fuoco esita."
+        }
+      ]
+    },
+    {
+      "id": "defeat-all",
+      "title": "Sconfitta · righe comuni",
+      "text": "Righe aggiunte a ogni sconfitta in base al voto fatto nel primo capitolo.",
+      "extra": [
+        {
+          "if": {
+            "flag": "vow_name"
+          },
+          "text": "Più in alto di tutti, avevi detto. Eppure adesso sei più in basso del muro di Gorin."
+        },
+        {
+          "if": {
+            "flag": "vow_loyal"
+          },
+          "text": "Avevi promesso che il tuo volto non sarebbe finito su quel muro. Quella sera, da qualche parte, Gorin ne gira una."
+        },
+        {
+          "if": {
+            "flag": "vow_truth"
+          },
+          "text": "Volevi sapere che fine avesse fatto quello della foto girata. Adesso lo sai, e non puoi più raccontarlo."
         }
       ]
     },
@@ -6901,6 +7424,24 @@
             }
           },
           "text": "A volte fermarsi è la cosa più ambiziosa che esista."
+        },
+        {
+          "if": {
+            "flag": "vow_name"
+          },
+          "text": "Più in alto di tutti, avevi detto. Forse non serve esserlo: serve solo continuare a salire."
+        },
+        {
+          "if": {
+            "flag": "vow_loyal"
+          },
+          "text": "La promessa a Gorin resta lì, intatta: non era una scadenza, era una direzione."
+        },
+        {
+          "if": {
+            "flag": "vow_truth"
+          },
+          "text": "La foto girata è ancora un enigma, ma ora sai che le risposte stanno sulla strada, non sul muro."
         }
       ]
     }
