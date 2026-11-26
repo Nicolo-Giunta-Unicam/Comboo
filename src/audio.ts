@@ -1,12 +1,14 @@
 // Audio procedurale (WebAudio): nessun file esterno. Musica composta a mano e suonata da strumenti sintetizzati + effetti sonori.
 //
-// MUSICA: due temi in Re minore, che si alternano secondo la situazione (setMode):
+// MUSICA: ogni situazione ha due brani, "calm" (store, storia) e "combat" (duello), e ogni arena ha i suoi (vedi TRACKS in fondo):
+//  • senza arena (menu, mappa) suona il tema originale; la Fighting Arena usa lo stesso tema di duello e ha un calm tutto suo.
+//  • i temi originali in Re minore sono questi due:
 //  • calm   (store, storia, mappa): tema d'avventura a 88 BPM. Arpa pizzicata, melodia di 8 battute che torna (con il flauto al secondo giro), pad caldo, basso e tamburo a cornice leggero.
 //  • combat (duello): marcia da battaglia a 128 BPM. Tom/taiko, rullante, basso a crome, accordi staccati, crash a ogni frase, riser prima del cambio e melodia eroica dalla terza battuta.
 // Per cambiare il carattere basta toccare le tabelle sotto (accordi *_CH, melodie *_MEL, BPM) e i volumi (ultimo argomento di ogni strumento).
 type Mode = 'calm' | 'combat';
-let ctx: AudioContext | null = null, master: GainNode, mbus: GainNode, sbus: GainNode, mvol = 1, svol = 1, musicOn = true, sfxOn = true, mode: Mode = 'calm', timer = 0, bar = 0, unlocked = false, seed = 7, seg: GainNode | null = null, nextT = 0, lastMode: Mode | null = null;
-const AC = (window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext) as typeof AudioContext | undefined;
+let ctx: AudioContext | null = null, master: GainNode, mbus: GainNode, sbus: GainNode, mvol = 1, svol = 1, musicOn = true, sfxOn = true, mode: Mode = 'calm', timer = 0, bar = 0, unlocked = false, seed = 7, seg: GainNode | null = null, nextT = 0, lastKey = '', theme = '';
+const AC = (typeof window === 'undefined' ? undefined : window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext) as typeof AudioContext | undefined;
 /** Riverbero "a sala": rumore con coda che si spegne in modo morbido. */
 function hall(c: BaseAudioContext, secs: number) { const n = Math.floor(c.sampleRate * secs), b = c.createBuffer(2, n, c.sampleRate); for (let ch = 0; ch < 2; ch++) { const a = b.getChannelData(ch); for (let i = 0; i < n; i++) a[i] = (Math.random() * 2 - 1) * (1 - i / n) ** 3.2; } return b; }
 /** Catena della musica: volume → compressore leggero (gli strati non si sommano fino a distorcere) → uscita, più un riverbero in parallelo. Usata dal gioco e dal render di prova. */
@@ -145,7 +147,128 @@ function combatBar(B: Bus, b: number, t: number): number {
   return beat * 4;
 }
 /** Programma una battuta del tema indicato a partire dal tempo t (secondi del contesto); restituisce la durata della battuta. */
-export function playBar(B: Bus, m: Mode, b: number, t: number): number { return m === 'combat' ? combatBar(B, b, t) : calmBar(B, b, t); }
+// ---- tracce a tema: ogni brano è una tabella (tempo, scala, accordi, melodia, ritmi) suonata da trackBar ----
+type Voice = 'pluck' | 'oud' | 'flute' | 'lead' | 'brass' | 'bell';
+/** Brano a tema. root = tonica del basso (MIDI), m0 = tonica all'ottava della melodia, scale = semitoni dei 7 gradi.
+ *  ch = 8 accordi "semitoni dalla tonica:qualità" (m minore, M maggiore, 7 dominante, s sus4, d diminuito).
+ *  mel = 8 battute di 8 crome: grado "1".."7" (suffisso + / - = ottava su / giù, prefisso # / b = alterazione), "." tiene la nota, "r" pausa.
+ *  Pattern ritmici: 16 caratteri (semicrome), "." niente, "x" colpo, "X" accento. bass.pat: 8 crome di semitoni dalla radice dell'accordo. */
+export interface Track {
+  bpm: number; root: number; m0: number; scale: number[]; ch: string; mel: string[]; lead: Voice; lv: number; lead2?: Voice; l2v?: number; from?: number; g?: number; /* g = guadagno generale del brano, per pareggiare i volumi */
+  arp?: { v: Voice; pat: number[]; vol: number }; pad?: { vol: number; cut: number; low?: boolean }; bass?: { pat: string; vol: number; saw?: boolean }; stab?: { pat: string; vol: number };
+  drums?: { v: number; from?: number; kick?: string; snare?: string; hat?: string; dum?: string; tek?: string; rim?: string; crash?: boolean; fill?: boolean; riser?: boolean };
+}
+const SC = { min: [0, 2, 3, 5, 7, 8, 10], dor: [0, 2, 3, 5, 7, 9, 10], hmin: [0, 2, 3, 5, 7, 8, 11], phd: [0, 1, 4, 5, 7, 8, 10], lyd: [0, 2, 4, 6, 7, 9, 11] };
+const QUAL: Record<string, number[]> = { m: [0, 3, 7], M: [0, 4, 7], '7': [0, 4, 7, 10], s: [0, 5, 7], d: [0, 3, 6] };
+/** Brass (ottoni): due denti di sega con filtro che si apre all'attacco. */
+function brass(B: Bus, m: number, t: number, d: number, v: number) {
+  const c = B.c, f0 = mtof(m), g = c.createGain(), f = c.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(600, t); f.frequency.linearRampToValueAtTime(2400, t + .09); f.frequency.exponentialRampToValueAtTime(1100, t + Math.max(.2, d));
+  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + .05); g.gain.setValueAtTime(v * .85, t + d * .75); g.gain.exponentialRampToValueAtTime(.0001, t + d + .08); f.connect(g); g.connect(B.d);
+  for (const dt of [-9, 9]) { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f0; o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + d + .15); }
+}
+/** Campana: parziali non armonici con lunga coda. */
+function bell(B: Bus, m: number, t: number, d: number, v: number) {
+  const c = B.c, f0 = mtof(m), g = c.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + .004); g.gain.exponentialRampToValueAtTime(.0001, t + d); g.connect(B.d);
+  for (const [r, a] of [[1, 1], [2.76, .35], [5.4, .15]]) { const o = c.createOscillator(), og = c.createGain(); o.type = 'sine'; o.frequency.value = f0 * r; og.gain.value = a; o.connect(og); og.connect(g); o.start(t); o.stop(t + d + .05); }
+}
+/** Suona una nota con la voce indicata; d = durata in secondi. */
+function sing(B: Bus, v: Voice, m: number, t: number, d: number, vol: number) {
+  switch (v) { case 'pluck': return pluck(B, m, t, Math.max(.35, d * 1.5), vol); case 'oud': return pluck(B, m, t, Math.max(.25, Math.min(d * 1.2, .9)), vol * 1.1); case 'flute': return flute(B, m, t, d * 1.05, vol);
+    case 'lead': return lead(B, m, t, d * .95, vol); case 'brass': return brass(B, m, t, d, vol); case 'bell': return bell(B, m, t, Math.max(.8, d * 2), vol); }
+}
+/** Legge una battuta di 8 crome: restituisce [croma d'inizio, valore, durata in crome]; "." allunga la nota precedente, "r" è una pausa. */
+function seq(bar: string, val: (tok: string) => number): [number, number, number][] {
+  const out: [number, number, number][] = []; let last: [number, number, number] | null = null;
+  bar.trim().split(/\s+/).forEach((tok, i) => { if (tok === '.') { if (last) last[2]++; } else if (tok === 'r') last = null; else { last = [i, val(tok), 1]; out.push(last); } }); return out;
+}
+const degree = (T: Track, tok: string) => { const m = /^([#b]?)([1-7])([+-]?)$/.exec(tok); if (!m) throw new Error('grado non valido: ' + tok); return T.m0 + T.scale[+m[2] - 1] + (m[1] === '#' ? 1 : m[1] === 'b' ? -1 : 0) + (m[3] === '+' ? 12 : m[3] === '-' ? -12 : 0); };
+const pat16 = (p: string, f: (step: number, a: number) => void) => { for (let i = 0; i < 16; i++) { if (p[i] === 'x') f(i, 1); else if (p[i] === 'X') f(i, 1.5); } };
+const chordAt = (T: Track, k: number): [number, number[]] => { const [o, q] = T.ch.split(' ')[k].split(':'); return [+o, QUAL[q]]; };
+function trackBar(B0: Bus, T: Track, b: number, t: number): number {
+  let B = B0; if (T.g !== undefined) { const gn = B0.c.createGain(); gn.gain.value = T.g; gn.connect(B0.d); B = { c: B0.c, d: gn }; }
+  const beat = 60 / T.bpm, q = beat / 4, e = beat / 2, k = b % 8, sec = Math.floor(b / 8) % 2, [off, iv] = chordAt(T, k), r = T.root + off, vc = [r + 12, r + 12 + iv[2], r + 24, r + 24 + iv[1]];
+  if (T.pad) pad(B, T.pad.low ? [r + 12, r + 19] : [vc[0], vc[1], vc[3]], t, beat * 4.2, T.pad.vol, T.pad.cut);
+  if (T.bass) for (const [s, o, n] of seq(T.bass.pat, x => +x)) bassNote(B, r + o, t + s * e, Math.max(.2, n * e * (T.bass.saw ? .85 : .95)), T.bass.vol, T.bass.saw);
+  if (T.arp) T.arp.pat.forEach((i, s) => { if (i >= 0) sing(B, T.arp!.v, vc[i], t + s * e + hu(), beat * 1.4, T.arp!.vol); });
+  if (T.stab) pat16(T.stab.pat, (s, a) => stab(B, vc.slice(1), t + s * q, .17, T.stab!.vol * a));
+  const D = T.drums; if (D && b >= (D.from ?? 0)) { const v = D.v, fill = !!D.fill && k % 4 === 3, cut = (s: number) => fill && s >= 12;
+    if (D.kick) pat16(D.kick, (s, a) => { if (!cut(s)) thump(B, t + s * q, v * a, 110, 45, .32); });
+    if (D.snare) pat16(D.snare, (s, a) => { if (!cut(s)) slap(B, t + s * q, v * .45 * a); });
+    if (fill) [12, 13, 14, 15].forEach((s, i) => thump(B, t + s * q, v * .55 - i * .01, 240 - i * 30, 110 - i * 10, .2)); // ogni 4 battute un rullo di tom
+    if (D.hat) pat16(D.hat, (s, a) => hat(B, t + s * q, v * .05 * a));
+    if (D.dum) pat16(D.dum, (s, a) => { if (!cut(s)) thump(B, t + s * q, v * .8 * a, 180, 85, .16); });
+    if (D.tek) pat16(D.tek, (s, a) => puff(B, t + s * q, .05, v * .3 * a, 'bandpass', 3200, 2));
+    if (D.rim) pat16(D.rim, (s, a) => puff(B, t + s * q, .03, v * .35 * a, 'bandpass', 2400, 4));
+    if (D.crash && k === 0) crash(B, t, v * .12); if (D.riser && k === 7) riser(B, t + beat * 2, beat * 2, v * .17); }
+  if (b >= (T.from ?? 0)) for (const [s, n, len] of seq(T.mel[k], x => degree(T, x))) { const at = t + s * e + hu(), d = len * e; sing(B, T.lead, n, at, d, T.lv); if (T.lead2 && sec === 1) sing(B, T.lead2, n, at, d, T.l2v ?? T.lv); }
+  return beat * 4;
+}
+/** Brani a tema per arena (id regione → calm / combat). Dove manca un brano suona il tema originale. */
+export const TRACKS: Record<string, { calm?: Track; combat?: Track }> = {
+  // Fighting Arena: nel duello resta il tema originale; in negozio e storia un dojo in Mi minore con arpa pizzicata (koto) e flauto di bambù
+  boxing: { calm: { bpm: 92, root: 40, m0: 64, scale: SC.min, ch: '0:m 0:m -4:M -2:M 0:m 3:M -2:M -5:7', lead: 'pluck', lv: .065, lead2: 'flute', l2v: .04,
+    mel: ['5 . . 3 5 . 6 5', '3 . . . 2 3 5 .', '6 . 5 . 3 . 1 .', '2 . 4 . 6 . 5 4', '5 . . 3 5 . 7 6', '5 . 3 . 5 . 7 .', '6 . 4 . 2 . 4 5', '5 . #7 . 6 . 5 .'],
+    pad: { vol: .018, cut: 800 }, bass: { pat: '0 . . . 7 . . .', vol: .1 }, drums: { v: .15, from: 2, kick: 'X.......x.......', rim: '....x.......x...' } } },
+  // Campo di battaglia: Do minore armonico, ottoni, rullante da marcia
+  battlefield: {
+    calm: { bpm: 76, root: 43, m0: 67, scale: SC.min, ch: '0:m -4:M 3:M -2:M 0:m 5:m -5:7 0:m', lead: 'brass', lv: .035,
+      mel: ['1 . . . 3 . 5 .', '6 . . . 5 . 3 .', '5 . 3 . 5 . 7 .', '6 . . . 5 . 4 .', '1+ . . . 7 . 5 .', '6 . 4 . 6 . 1+ .', '5 . #7 . 1+ . #7 .', '1+ . . . 5 . 1 .'],
+      pad: { vol: .024, cut: 1000 }, bass: { pat: '0 . . . . . 7 .', vol: .1 }, drums: { v: .14, kick: 'X.......x.......', snare: '....x.......x...' } },
+    combat: { bpm: 132, root: 36, m0: 72, scale: SC.hmin, ch: '0:m 0:m -4:M -2:M 0:m 5:m -5:7 -5:7', lead: 'brass', lv: .05, from: 2, g: .8,
+      mel: ['1 . . 1 3 . 5 .', '6 . 5 . 3 . 1 .', '3 . . 3 5 . 1+ .', '2 . . 2 4 . 6 .', '5 . 6 . 7 . 1+ .', '6 . 5 . 4 . 3 .', '2 . 4 . 7 . 5 .', '7 . . . 1+ . . .'],
+      pad: { vol: .016, cut: 700, low: true }, bass: { pat: '0 . 0 . 0 0 12 7', vol: .075, saw: true }, stab: { pat: 'X.....x...x.....', vol: .02 },
+      drums: { v: .3, kick: 'X.......x.x.....', snare: '..x.X.x...x.X.xx', hat: 'x.x.x.x.x.x.x.x.', crash: true, fill: true, riser: true } } },
+  // Deserto: scala frigia dominante, flauto ney e oud, darbuka
+  desert: {
+    calm: { bpm: 80, root: 38, m0: 74, scale: SC.phd, ch: '0:M 1:M 0:M 1:M 0:M -2:M 1:M 0:M', lead: 'flute', lv: .05,
+      mel: ['1 . . . 2 . 1 .', '3 . . . 2 . 1 .', '1 . . . 5 . . .', '4 . 3 . 2 . 1 .', '3 . . . 4 . 5 .', '6 . 5 . 4 . 3 .', '2 . . . 3 . 2 .', '1 . . . . . . .'],
+      pad: { vol: .02, cut: 700, low: true }, bass: { pat: '0 . . . . . . .', vol: .09 }, drums: { v: .13, from: 2, dum: 'X.......x.......', tek: '..x...x...x...x.' } },
+    combat: { bpm: 118, root: 40, m0: 76, scale: SC.phd, ch: '0:M 1:M 0:M 1:M 0:M -2:M 1:M 0:M', lead: 'oud', lv: .06, from: 1,
+      mel: ['1 . . 2 1 . 3 .', '4 . 3 . 2 . 1 .', '1 . . 2 1 . 5 .', '6 . 5 . 4 . 3 .', '3 . 4 . 5 . 6 .', '7 . 6 . 5 . 4 .', '4 . 3 . 2 . 3 4', '1 . . 2 1 . . .'],
+      pad: { vol: .016, cut: 700, low: true }, bass: { pat: '0 . 0 . 0 0 12 0', vol: .075, saw: true },
+      drums: { v: .26, dum: 'X.....x.X.....x.', tek: '....x..x....x.x.', hat: 'x.x.x.x.x.x.x.x.', crash: true, fill: true } } },
+  // Oceano: Re lidio luminoso; arpeggi d'arpa come onde, poi tempesta in Si dorico
+  ocean: {
+    calm: { bpm: 84, root: 38, m0: 74, scale: SC.lyd, ch: '0:M -5:M -3:m 5:M 0:M 2:M -5:M -5:M', lead: 'pluck', lv: .06, lead2: 'flute', l2v: .04,
+      mel: ['1 . 3 . 5 . 3 .', '5 . 7 . 5 . 3 .', '2 . 3 . 5 . 3 .', 'b4 . 6 . 7 . 6 .', '5 . 3 . 1 . 3 .', '2 . 4 . 6 . 4 .', '7 . 5 . 3 . 5 .', '5 . . . 7 . 1+ .'],
+      arp: { v: 'pluck', pat: [0, 1, 2, 3, 2, 1, 2, 3], vol: .026 }, pad: { vol: .02, cut: 1100 }, bass: { pat: '0 . . . 7 . . .', vol: .1 }, drums: { v: .12, from: 4, kick: 'X.......x.......', hat: '.x.x.x.x.x.x.x.x' } },
+    combat: { bpm: 140, root: 35, m0: 71, scale: SC.dor, ch: '0:m 0:m -4:M -2:M 0:m 5:m -2:M 7:7', lead: 'lead', lv: .03, from: 2, g: .8,
+      mel: ['1 . 1 3 5 . 3 1', '2 . 3 . 5 . 7 .', 'b6 . 5 . 3 . 1 .', '7 . 5 . 3 . 5 .', '5 . 5 7 1+ . 7 5', '4 . b6 . 7 . 5 4', '7 . 5 . 3 . 5 7', '#7 . 5 . #7 . 1+ .'],
+      arp: { v: 'pluck', pat: [0, 2, 1, 3, 2, 3, 1, 3], vol: .02 }, pad: { vol: .014, cut: 900, low: true }, bass: { pat: '0 0 12 0 0 0 12 7', vol: .07, saw: true },
+      drums: { v: .27, kick: 'X...x...X...x...', snare: '....X.......X...', hat: '..x...x...x...x.', crash: true, fill: true, riser: true } } },
+  // Foresta: La dorico, flauto e campane, tamburi tribali
+  forest: {
+    calm: { bpm: 72, root: 45, m0: 69, scale: SC.dor, ch: '0:m 5:M 0:m -2:M 0:m 5:M -2:M 0:m', lead: 'flute', lv: .05, g: .85,
+      mel: ['1 . . 3 5 . 3 .', '4 . . 6 5 . 4 .', '3 . 5 . 7 . 5 3', '2 . 4 . 2 . 1 .', '1+ . . 7 5 . 3 .', '4 . 6 . 1+ . 6 .', '7 . 5 . 4 . 2 .', '1 . . . . . . .'],
+      arp: { v: 'bell', pat: [-1, 2, -1, 3, -1, 2, -1, 1], vol: .035 }, pad: { vol: .022, cut: 800 }, bass: { pat: '0 . . . . . . .', vol: .09 }, drums: { v: .12, from: 4, dum: 'X.......x.......' } },
+    combat: { bpm: 124, root: 45, m0: 69, scale: SC.dor, ch: '0:m 0:m -2:M 5:M 0:m 0:m -2:M -4:M', lead: 'flute', lv: .06, from: 2, g: .65,
+      mel: ['1 . . 1 3 . 5 .', '4 . 3 . 2 . 1 .', '2 . . 2 4 . 6 .', '5 . 4 . 3 . 4 5', '1+ . . 7 5 . 3 .', '4 . 6 . 7 . 1+ .', '7 . 5 . 4 . 2 .', 'b6 . 5 . 3 . 1 .'],
+      arp: { v: 'bell', pat: [0, -1, 2, -1, 1, -1, 3, -1], vol: .03 }, pad: { vol: .016, cut: 700, low: true }, bass: { pat: '0 0 . 0 7 . 0 .', vol: .07, saw: true },
+      drums: { v: .26, kick: 'X..x..x.X..x..x.', rim: '....x...x...x...', crash: true, fill: true } } },
+  // Vulcano: Si bemolle minore, ottoni e rombi profondi
+  volcano: {
+    calm: { bpm: 70, root: 34, m0: 70, scale: SC.min, ch: '0:m -4:M 3:M -2:M 0:m -4:M -2:M 7:M', lead: 'brass', lv: .04, g: .85,
+      mel: ['1 . . . . . 3 .', '5 . . . 3 . 1 .', '3 . . . 5 . 1+ .', '2 . . . 3 . 5 .', '1+ . . . 7 . 5 .', '6 . . . 5 . 3 .', '4 . . . 3 . 2 .', '5 . . . 7 . 1+ .'],
+      pad: { vol: .028, cut: 1100 }, bass: { pat: '0 . . . . . . .', vol: .12 }, drums: { v: .17, kick: 'X.......x.......', crash: true, riser: true } },
+    combat: { bpm: 140, root: 34, m0: 70, scale: SC.min, ch: '0:m 0:m -4:M -2:M 0:m 0:m 3:M 7:M', lead: 'lead', lv: .035, from: 2, g: .55,
+      mel: ['1 . . 1 3 . 5 .', '6 . 5 . 3 . 1 .', '3 . . 3 5 . 6 .', '7 . 6 . 5 . 4 .', '1+ . . 7 5 . 3 .', '5 . 6 . 7 . 1+ .', '3 . 5 . 7 . 5 3', '2 . 5 . #7 . 5 .'],
+      pad: { vol: .018, cut: 700, low: true }, bass: { pat: '0 0 0 0 0 0 12 7', vol: .08, saw: true }, stab: { pat: 'X..x..x...x.x...', vol: .024 },
+      drums: { v: .32, kick: 'X..xX..xX..xX.x.', snare: '....X.......X...', hat: 'x.x.x.x.x.x.x.x.', crash: true, fill: true, riser: true } } },
+};
+/** Controlli di coerenza dei brani (usati dai test): 8 accordi, 8 battute da 8 crome, pattern da 16, note in un registro suonabile. */
+export function trackProblems(): string[] {
+  const bad: string[] = [];
+  for (const [id, set] of Object.entries(TRACKS)) for (const [m, T] of Object.entries(set)) { if (!T) continue; const w = `${id}.${m}`;
+    if (T.ch.split(' ').length !== 8) bad.push(`${w}: servono 8 accordi`); else for (let k = 0; k < 8; k++) { try { chordAt(T, k); } catch { bad.push(`${w}: accordo ${k + 1} non valido`); } if (!QUAL[T.ch.split(' ')[k].split(':')[1]]) bad.push(`${w}: qualità accordo ${k + 1}`); }
+    if (T.mel.length !== 8) bad.push(`${w}: servono 8 battute di melodia`);
+    T.mel.forEach((bar, k) => { if (bar.trim().split(/\s+/).length !== 8) bad.push(`${w}: battuta ${k + 1} della melodia non ha 8 crome`); else try { for (const [, n] of seq(bar, x => degree(T, x))) if (n < 48 || n > 96) bad.push(`${w}: nota ${n} fuori registro (battuta ${k + 1})`); } catch (e) { bad.push(`${w}: ${(e as Error).message}`); } });
+    if (T.bass && T.bass.pat.trim().split(/\s+/).length !== 8) bad.push(`${w}: il basso deve avere 8 crome`);
+    for (const [n, p] of Object.entries({ ...T.drums, stab: T.stab?.pat })) if (typeof p === 'string' && !/^[.xX]{16}$/.test(p)) bad.push(`${w}: pattern ${n} non è di 16 caratteri`);
+    if (T.arp && T.arp.pat.length !== 8) bad.push(`${w}: l'arpeggio deve avere 8 passi`); }
+  return bad;
+}
+/** Programma una battuta del brano (modalità + tema dell'arena) a partire dal tempo t (secondi del contesto); restituisce la durata della battuta. */
+export function playBar(B: Bus, m: Mode, b: number, t: number, th = ''): number { const T = TRACKS[th]?.[m]; return T ? trackBar(B, T, b, t) : m === 'combat' ? combatBar(B, b, t) : calmBar(B, b, t); }
 
 // ---- riproduzione in tempo reale: si programmano le battute con un po' di anticipo (regge anche i timer rallentati delle schede in background) ----
 const LOOK = 2.5;
@@ -157,10 +280,11 @@ function newSeg(old: GainNode | null, fade: number): GainNode {
 }
 function tick() {
   timer = 0; if (!musicOn || !ctx) return;
-  if (lastMode !== mode) { const first = lastMode === null; lastMode = mode; bar = 0; seg = newSeg(seg, first ? .02 : .3); nextT = ctx.currentTime + (first ? .1 : .05); if (!first && mode === 'combat') thump({ c: ctx, d: seg }, nextT, .5, 85, 30, .9); } // colpo di tamburo all'inizio del duello
-  while (nextT < ctx.currentTime + LOOK) nextT += playBar({ c: ctx, d: seg! }, mode, bar++, nextT);
+  const key = mode + ':' + theme; if (lastKey !== key) { const first = lastKey === '', toCombat = mode === 'combat' && !lastKey.startsWith('combat'); lastKey = key; bar = 0; seg = newSeg(seg, first ? .02 : .3); nextT = ctx.currentTime + (first ? .1 : .05); if (!first && toCombat) thump({ c: ctx, d: seg }, nextT, .5, 85, 30, .9); } // colpo di tamburo all'inizio del duello
+  while (nextT < ctx.currentTime + LOOK) nextT += playBar({ c: ctx, d: seg! }, mode, bar++, nextT, theme);
   timer = window.setTimeout(tick, 250);
 }
 export function unlock() { if (!ensure() || unlocked) return; unlocked = true; if (musicOn) tick(); }
-export function config(m: boolean, s: boolean, mv = 1, sv = 1) { musicOn = m; sfxOn = s; mvol = mv; svol = sv; if (ctx) { mbus.gain.setTargetAtTime(m ? .8 * mv : 0, ctx.currentTime, .04); sbus.gain.value = sv; } if (!m) { clearTimeout(timer); timer = 0; lastMode = null; } else if (unlocked && !timer) tick(); }
-export function setMode(m: Mode) { if (m === mode) return; mode = m; if (ctx && unlocked && musicOn) { clearTimeout(timer); tick(); } }
+export function config(m: boolean, s: boolean, mv = 1, sv = 1) { musicOn = m; sfxOn = s; mvol = mv; svol = sv; if (ctx) { mbus.gain.setTargetAtTime(m ? .8 * mv : 0, ctx.currentTime, .04); sbus.gain.value = sv; } if (!m) { clearTimeout(timer); timer = 0; lastKey = ''; } else if (unlocked && !timer) tick(); }
+/** Modalità (calm/combat) e arena (id regione; vuoto = menu e mappa). */
+export function setMode(m: Mode, th = '') { if (m === mode && th === theme) return; mode = m; theme = th; if (ctx && unlocked && musicOn) { clearTimeout(timer); tick(); } }

@@ -79,3 +79,15 @@ test('Metamorfosi: se la carta più costosa è difensiva finisce sulla riga dife
   const r = duel(), c = r.combat!; r.deck = ['base:jab:0', 'buy:fruit_a3', 'buy:stand_a1']; assert.equal(MOVES.stand_a1.cost, 4);
   c.hand = ['buy:fruit_a3', 'base:jab:0']; playCard(r, 'buy:fruit_a3'); assert.equal(playCard(r, 'base:jab:0'), null); assert.equal(c.field.def[0].mv, 'stand_a1'); assert.equal(c.field.off.length, 0);
 });
+
+test('Assalto autonomo: schiera solo carte che finiscono sul campo (niente duplicazione, gratis, metamorfosi...) e le schiera entrambe', () => {
+  const r = duel(), c = r.combat!; c.hand = ['buy:stand_a3']; c.draw = ['buy:fruit_a2', 'buy:fruit_a3', 'buy:footwork_a2', 'base:jab:0', 'base:guard:0'];
+  assert.equal(playCard(r, 'buy:stand_a3'), null); assert.equal(c.field.off.length, 1); assert.equal(c.field.def.length, 1);
+  assert.equal(c.mods!.dupNext, false); assert.equal(c.mods!.freeNext, false); assert.equal(c.mods!.morph ?? false, false); assert.deepEqual([...c.draw].sort(), ['buy:fruit_a2', 'buy:fruit_a3', 'buy:footwork_a2'].sort());
+  assert.equal(c.freshAll!.length, 2); // l'interfaccia anima entrambe insieme
+});
+
+test('Assalto autonomo: salta le carte la cui riga è piena e ne schiera comunque due se può', () => {
+  const r = duel(), c = r.combat!; c.hand = []; for (let i = 0; i < 6; i++) playCard(r, (c.hand.push('base:jab:' + i), 'base:jab:' + i)); assert.equal(c.field.off.length, 6); c.energy = 10; c.hand = ['buy:stand_a3'];
+  c.draw = ['base:jab:7', 'base:guard:0', 'base:guard:1']; assert.equal(playCard(r, 'buy:stand_a3'), null); assert.equal(c.field.off.length, 6); assert.equal(c.field.def.length, 2); assert.deepEqual(c.draw, ['base:jab:7']);
+});

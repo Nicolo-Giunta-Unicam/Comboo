@@ -5,7 +5,7 @@ import { defeatOutcome, movesRetainedAfterRemoval } from './policies';
 export type Phase = 'store' | 'combat' | 'over';
 export type Err = string | null;
 export interface Enemy { name: string; tier: string; hp: number; maxHp: number; block: number; gear: string[]; art?: string; id?: string; atk: number }
-export interface Combat { act?: Record<string, number>; pu?: Record<string, number>; foeDealt?: number; enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; lastBy?: Rec2<string | null>; mods?: { off: number; bypass: boolean; freeNext: boolean; dupNext: boolean; combos: number; morph?: boolean }; auto?: number; cardCost?: Record<string, number>; lastUid?: string; pick?: string[] | null; syn?: { n: number; text: string }; runs?: Rec2<number>; chains?: Rec2<number>; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
+export interface Combat { act?: Record<string, number>; pu?: Record<string, number>; foeDealt?: number; enemy: Enemy; phase: 'player' | 'resolve' | 'enemy'; mercy?: boolean; tier?: number; lastBy?: Rec2<string | null>; mods?: { off: number; bypass: boolean; freeNext: boolean; dupNext: boolean; combos: number; morph?: boolean }; auto?: number; freshAll?: number[]; cardCost?: Record<string, number>; lastUid?: string; pick?: string[] | null; syn?: { n: number; text: string }; runs?: Rec2<number>; chains?: Rec2<number>; seq: number; fresh: number; ev: Ev | null; queue: EnemyCard[]; last: EnemyCard | null; field: Side; foeField: Side; combo: string; played: Record<string, number>; prev: string | null; block: number; draw: string[]; hand: string[]; discard: string[]; energy: number; turn: number; log: string[] }
 /** Effetti di una scelta di capitolo che valgono solo per il prossimo duello. */
 export interface Boon { block?: number; energy?: number; draw?: number; foeHp?: number; hp?: number }
 export interface Run {
@@ -291,18 +291,24 @@ function directDmg(r: Run, c: Combat, n: number): string {
 function morphTarget(r: Run): Move | null {
   let best: Move | null = null; for (const u of r.deck) { const mv = MOVES[moveOf(u)]; if (!mv || mv.effect.flee) continue; if (!best || mv.cost > best.cost) best = mv; } return best;
 }
-/** Gioca n carte casuali dalla pila di pesca, gratis e con tutti i normali effetti (combo, trigger, passive). Le carte che non si possono schierare (campo pieno, fuga, scelta Stratega) tornano nel mazzo al loro posto.
- *  Restituisce quante ne sono state giocate. Massimo 3 livelli di annidamento (carte automatiche che ne giocano altre). */
+/** Una carta "si schiera" se finisce davvero sul campo (offesa o difesa): niente fuga, niente effetti istantanei che agiscono sulla prossima carta (duplicazione, gratis, metamorfosi...) e la sua riga deve avere ancora posto. */
+function deployable(c: Combat, m: Move | undefined): boolean {
+  if (!m) return false; const f = m.effect, S = f.syn; if (f.flee || (S && S.k !== 'momentum' && S.k !== 'flow' && S.k !== 'shieldAtk')) return false;
+  const off = !!f.dmg || !!f.scale?.dmg || S?.k === 'momentum' || S?.k === 'shieldAtk'; return (off ? c.field.off : c.field.def).length < CONFIG.rowSize;
+}
+/** Assalto autonomo: schiera insieme n carte casuali dalla pila di pesca, gratis e con tutti i normali effetti (combo, trigger, passive). Sceglie solo tra le carte che si schierano davvero (vedi deployable);
+ *  le altre restano nel mazzo. Se ce ne sono meno di n ne schiera meno. Restituisce quante ne ha schierate. Massimo 3 livelli di annidamento (una carta automatica che ne gioca altre). */
 function autoPlay(r: Run, c: Combat, n: number): number {
-  if ((c.auto ?? 0) >= 3) return 0; c.auto = (c.auto ?? 0) + 1; const mods = modsOf(c); let done = 0;
-  for (let tries = 0; done < n && tries < n + 8 && c.draw.length; tries++) {
-    const i = Math.floor(rand(r) * c.draw.length), uid = c.draw[i], m = MOVES[moveOf(uid)];
-    if (!m || m.effect.flee || m.effect.syn?.k === 'scout') continue;
+  if ((c.auto ?? 0) >= 3) return 0; c.auto = (c.auto ?? 0) + 1; const mods = modsOf(c), ids: number[] = []; let done = 0;
+  while (done < n && c.draw.length) {
+    const ok = c.draw.map((u, i) => i).filter(i => deployable(c, MOVES[moveOf(c.draw[i])])); if (!ok.length) break;
+    const i = ok[Math.floor(rand(r) * ok.length)], uid = c.draw[i];
     c.draw.splice(i, 1); c.hand.push(uid); mods.freeNext = true;
     const err = playCard(r, uid);
-    if (err) { mods.freeNext = false; const j = c.hand.indexOf(uid); if (j >= 0) c.hand.splice(j, 1); c.draw.splice(i, 0, uid); continue; }
-    done++; if (r.phase !== 'combat' || c.phase !== 'player') break;
+    if (err) { mods.freeNext = false; const j = c.hand.indexOf(uid); if (j >= 0) c.hand.splice(j, 1); c.draw.splice(i, 0, uid); break; }
+    done++; if (c.fresh) ids.push(c.fresh); if (r.phase !== 'combat' || c.phase !== 'player') break;
   }
+  if (ids.length > 1) c.freshAll = ids; // l'interfaccia le anima tutte insieme
   c.auto--; return done;
 }
 /** Fa scattare un trigger (rispettando "max volte per turno"); restituisce false se non è scattato. */
