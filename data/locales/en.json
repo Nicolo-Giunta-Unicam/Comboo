@@ -791,5 +791,19 @@
  "➡ Alle abilità": "➡ To the skills",
  "Premi Avanti per passare alle <b>Abilità</b>.": "Press Next to go to <b>Skills</b>.",
  "🔓 Le abilità": "🔓 Skills",
- "Qui spendi le monete in un <b>albero di abilità</b>: tocca un nodo per leggerlo e comprarlo. Ci sono tre rami: <b>Mazzo</b> (più carte nel mazzo e in mano), <b>Tattica</b> (riprendere una carta dal campo, riordinare il campo, recuperare dagli scarti) ed <b>Equipaggiamento</b> (più slot). I collegamenti mostrano da quali nodi si arriva a quale: alcune tattiche si sbloccano anche passando da un altro ramo. Se le scelte della storia sono attive servono anche un minimo di Onore, Fama e Ambizione.": "Here you spend coins on a <b>skill tree</b>: tap a node to read it and buy it. There are three branches: <b>Deck</b> (more cards in the deck and in hand), <b>Tactics</b> (take a card back from the field, reorder the field, recover from the discard pile) and <b>Equipment</b> (more slots). The links show which nodes lead to which: some tactics also unlock by going through another branch. If story choices are on, you also need a minimum of Honor, Fame and Ambition."
+ "Qui spendi le monete in un <b>albero di abilità</b>: tocca un nodo per leggerlo e comprarlo. Ci sono tre rami: <b>Mazzo</b> (più carte nel mazzo e in mano), <b>Tattica</b> (riprendere una carta dal campo, riordinare il campo, recuperare dagli scarti) ed <b>Equipaggiamento</b> (più slot). I collegamenti mostrano da quali nodi si arriva a quale: alcune tattiche si sbloccano anche passando da un altro ramo. Se le scelte della storia sono attive servono anche un minimo di Onore, Fama e Ambizione.": "Here you spend coins on a <b>skill tree</b>: tap a node to read it and buy it. There are three branches: <b>Deck</b> (more cards in the deck and in hand), <b>Tactics</b> (take a card back from the field, reorder the field, recover from the discard pile) and <b>Equipment</b> (more slots). The links show which nodes lead to which: some tactics also unlock by going through another branch. If story choices are on, you also need a minimum of Honor, Fame and Ambition.",
+ "🔮 La prossima carta giocata diventa la carta più costosa del tuo mazzo": "🔮 The next card you play becomes the most expensive card in your deck",
+ "🎲 Gioca subito {0} carte casuali dal mazzo (gratis)": "🎲 Instantly play {0} random cards from your deck (free)",
+ "💖 Se il mazzo è finito: cura completamente": "💖 If your deck is empty: heal fully",
+ "🩸 Cura {0} per ogni danno diretto inflitto": "🩸 Heal {0} for each direct damage dealt",
+ "↩️ Quando viene ripresa in mano: {0} danni diretti": "↩️ When taken back to hand: {0} direct damage",
+ "La prossima carta diventerà «{0}»": "The next card will become \"{0}\"",
+ "Nessuna carta da imitare": "No card to copy",
+ "Giocate automaticamente {0} carta dal mazzo": "Automatically played {0} card from the deck",
+ "Giocate automaticamente {0} carte dal mazzo": "Automatically played {0} cards from the deck",
+ "Nessuna carta giocabile dal mazzo": "No playable card in the deck",
+ "Il mazzo è finito: nessuna carta da giocare.": "The deck is empty: no card to play.",
+ "{0} si trasforma in {1}!": "{0} turns into {1}!",
+ "{0}: il mazzo è finito, cura completa!": "{0}: the deck is empty, full heal!",
+ "{0} danni diretti, cura {1}": "{0} direct damage, heal {1}"
 }

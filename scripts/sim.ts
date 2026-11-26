@@ -40,7 +40,9 @@ function valueOf(r: any, c: any, uid: string, skill: Skill): number {
     case 'flow': v = (S.n ?? 0) * (mods.combos + 1) * wDef + 1; break;
     case 'momentum': v = (S.n ?? 1) * (Object.values(c.played).reduce((a: number, b: any) => a + b, 0) + 1) * (1 + pct); break;
     case 'shieldAtk': v = shields(c); break;
+    case 'morph': v = 4; break; case 'autoplay': v = c.draw.length ? 6 : -1; break;
   }
+  if (f.leech) v += f.leech * 3; if (f.recallDmg) v += f.recallDmg * 0.5; if (f.emptyHeal && !c.draw.length) v += (1 - hpFrac) * 20;
   if (f.dmg || sc?.dmg) v += ((f.dmg ?? 0) + (sc?.dmg ?? 0) * sn + (lk?.dmg ?? 0) + E.dmgBonus(r) + mods.off) * (f.hits ?? 1) * (1 + pct);
   if (f.block || lk?.block || sc?.block) { const b = ((f.block ?? 0) + (lk?.block ?? 0) + (sc?.block ?? 0) * sn) * (1 + pct), dur = f.dur === 0 ? 3 : f.dur ?? 1; v += b * wDef * (off ? 0.8 : 1 + (dur - 1) * 0.3); }
   if (f.heal || sc?.heal) v += ((f.heal ?? 0) + (sc?.heal ?? 0) * sn) * wHeal * (1 + pct);
@@ -80,7 +82,7 @@ function fight(r: any, skill: Skill, duelsOut: Duel[]): 'win' | 'lose' | 'stall'
 /** Potenza statica di una carta, per scegliere quali tenere nel mazzo (un giocatore esperto lo pota). */
 function staticScore(id: string) {
   const f = MOVES[id].effect, S = f.syn, dur = f.dur === 0 ? 3 : f.dur ?? 1; let v = (f.dmg ?? 0) * (f.hits ?? 1) + (f.link?.dmg ?? 0) * 0.6 + (f.block ?? 0) * (0.6 + 0.25 * dur) + (f.link?.block ?? 0) * 0.4 + (f.heal ?? 0) * 0.8 + (f.draw ?? 0) * 3 + (f.energy ?? 0) * 3.5;
-  if (S) v += ({ adrenaline: 5, bypass: 3, freeNext: 4, dup: 6, clone: 4, scout: 2.5, flow: 5, momentum: 7, shieldAtk: 6 } as any)[S.k] ?? 3; if (f.flee) v = -5; return v;
+  if (S) v += ({ adrenaline: 5, bypass: 3, freeNext: 4, dup: 6, clone: 4, scout: 2.5, flow: 5, momentum: 7, shieldAtk: 6, morph: 5, autoplay: 7 } as any)[S.k] ?? 3; if (f.flee) v = -5; return v;
 }
 function curateDeck(r: any, skill: Skill) {
   if (skill !== 'smart') return; const own = E.ownedCards(r), n = Math.max(12, Math.min(18, 11 + Math.floor(r.arena / 3)));

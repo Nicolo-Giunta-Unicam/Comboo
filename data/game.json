@@ -1493,6 +1493,22 @@
             }
           },
           "cost": 1
+        },
+        {
+          "id": "reactor_a2",
+          "name": "Condotto d'assorbimento",
+          "cat": "firearm",
+          "effect": {
+            "block": 6,
+            "dur": 0,
+            "leech": 1,
+            "trigger": {
+              "on": "turnStart",
+              "dmg": 2
+            }
+          },
+          "cost": 3,
+          "price": 75
         }
       ],
       "island": "desert",
@@ -1745,6 +1761,18 @@
             }
           },
           "cost": 2
+        },
+        {
+          "id": "fruit_a3",
+          "name": "Metamorfosi",
+          "cat": "magic",
+          "effect": {
+            "syn": {
+              "k": "morph"
+            }
+          },
+          "cost": 2,
+          "price": 95
         }
       ],
       "kind": "arcane"
@@ -2195,6 +2223,17 @@
             }
           },
           "price": 50
+        },
+        {
+          "id": "knives_a3",
+          "name": "Lama boomerang",
+          "cat": "blade",
+          "effect": {
+            "dmg": 6,
+            "recallDmg": 6
+          },
+          "cost": 2,
+          "price": 52
         }
       ]
     },
@@ -2797,6 +2836,19 @@
             "draw": 1
           },
           "price": 135
+        },
+        {
+          "id": "stand_a3",
+          "name": "Assalto autonomo",
+          "cat": "magic",
+          "effect": {
+            "syn": {
+              "k": "autoplay",
+              "n": 2
+            }
+          },
+          "cost": 3,
+          "price": 120
         }
       ]
     },
@@ -3157,6 +3209,18 @@
             "heal": 8
           },
           "price": 200
+        },
+        {
+          "id": "phoenix_a3",
+          "name": "Ultima brace",
+          "cat": "magic",
+          "effect": {
+            "block": 5,
+            "draw": 2,
+            "emptyHeal": true
+          },
+          "cost": 3,
+          "price": 185
         }
       ]
     }
@@ -7053,7 +7117,12 @@
       "epilogue.defeat-all.text": "Lines added to every defeat according to the vow made in the first chapter.",
       "epilogue.defeat-all.extra0.text": "Higher than everyone, you said. And yet now you lie lower than Gorin's wall.",
       "epilogue.defeat-all.extra1.text": "You promised your face would never end up on that wall. That night, somewhere, Gorin turns one over.",
-      "epilogue.defeat-all.extra2.text": "You wanted to know what became of the one in the turned photograph. Now you know, and you can no longer tell it."
+      "epilogue.defeat-all.extra2.text": "You wanted to know what became of the one in the turned photograph. Now you know, and you can no longer tell it.",
+      "move.knives_a3.name": "Boomerang blade",
+      "move.reactor_a2.name": "Absorption conduit",
+      "move.fruit_a3.name": "Metamorphosis",
+      "move.stand_a3.name": "Autonomous assault",
+      "move.phoenix_a3.name": "Last ember"
     }
   },
   "epilogues": [
