@@ -13,5 +13,6 @@ sec('Equipaggiamenti', d.equipment.map(e => [`eq-${e.id}`, e.name]));
 sec('Singole carte mossa (hanno la precedenza sull\'icona dell\'equipaggiamento)', [...d.baseMoves.map(m => [`card-${m.id}`, `${m.name} (base)`]), ...d.equipment.flatMap(e => [...e.moves, ...e.advanced].map(m => [`card-${m.id}`, `${m.name} (${e.name})`]))]);
 sec('Carte nemiche', d.enemyMoves.map(m => [`enemycard-${m.id}`, m.name]));
 sec('Stili iniziali', d.styles.map(s => [`style-${s.id}`, s.name]));
+sec('Sfondi di arena (file separati nella cartella `assets/backgrounds/`, es. `assets/backgrounds/menu-ocean.jpg`; formati png, jpg, webp, gif, svg)', d.regions.flatMap(r => [[`menu-${r.id}`, `${r.name}: sfondo di store, storia, mazzo e abilità`], [`duel-${r.id}`, `${r.name}: sfondo dei duelli`]]));
 sec('Tipi di carta (ripiego generico) e mappa', [['kind-atk', 'attacco'], ['kind-def', 'difesa'], ['kind-utl', 'supporto'], ['boat', 'barca della mappa']]);
 writeFileSync('assets/KEYS.md', L.join('\n')); console.log(L.join('\n'));

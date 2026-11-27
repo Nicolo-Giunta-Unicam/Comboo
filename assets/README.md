@@ -29,3 +29,18 @@ La lista **completa e aggiornata** di tutte le chiavi è in `assets/KEYS.md` (si
 | `card-<idMossa>` (es. `card-jab`, `card-wraps_0`) | immagine di quella carta mossa | icona dell'equipaggiamento, poi `kind-*` |
 | `enemycard-<id>` (es. `enemycard-heavy`) | carte giocate dai nemici | `kind-*` |
 | `style-<id>` (`style-boxing`, `style-taekwondo`, `style-jujitsu`) | carta dello stile iniziale (slot machine) | emoji |
+
+## Sfondi per arena (menu e duelli)
+Ogni arena può avere **due immagini di sfondo**, da mettere nella cartella `assets/backgrounds/` (non direttamente in `assets/`):
+
+| File (qualsiasi estensione png, jpg, webp, gif, svg) | Dove compare |
+|---|---|
+| `menu-<arena>` (es. `menu-ocean.jpg`) | store, storia, mazzo e abilità di quell'arena |
+| `duel-<arena>` (es. `duel-ocean.jpg`) | duelli di quell'arena |
+
+`<arena>` è uno tra `boxing`, `battlefield`, `desert`, `ocean`, `forest`, `volcano` (gli id in `data/game.json`).
+- Lo sfondo sta **sotto** particelle, polvere, sfere di luce e tutti gli altri effetti.
+- **Se un file manca non cambia nulla**: per quella schermata resta lo sfondo di sempre. Menu principale, creazione del personaggio e mappa non hanno uno sfondo di arena.
+- A differenza delle altre immagini, gli sfondi **non** finiscono dentro `game.js`: restano file separati (in `dist/backgrounds/`) caricati solo quando servono, quindi possono essere più grandi. Consigliato: 1920×1080 (16:9), JPG o WEBP, meglio sotto 400 KB. L'immagine riempie lo schermo (si ritaglia ai bordi), quindi tieni il soggetto al centro.
+- Quando c'è uno sfondo, i pannelli grandi (campo di battaglia, libro della storia, store) diventano un po' trasparenti per lasciarlo intravedere, e l'immagine è scurita leggermente per tenere leggibile l'interfaccia. Si regola in `index.html` con `--bgdim` (scurimento, 0-1), `--bgpanel` (opacità del campo) e `--bgpanel2` (opacità degli altri pannelli).
+- Dopo aver aggiunto i file basta committare: la pubblicazione su GitHub Pages esegue il build che li copia. In locale: `npm run build` (o `npm run dev`).

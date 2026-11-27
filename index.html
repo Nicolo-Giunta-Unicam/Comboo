@@ -781,5 +781,14 @@ body.fs .side .vbar{width:12px}
 .defeatnote h3{margin:0 0 6px;font-size:16px;letter-spacing:.4px}
 .defeatnote .tale{font-size:13px;line-height:1.5;margin:6px 0;opacity:.92}
 .defeatnote .tale+.tale::first-letter{font-size:inherit;color:inherit;font-weight:inherit}
+/* Sfondo a immagine per arena (src/backdrop.ts): layer sotto #depth e gli effetti del menu (z-index -1). Regolabili: --bgdim = scurimento dell'immagine (0-1); --bgpanel/--bgpanel2 = opacità dei pannelli grandi quando c'è un'immagine. Senza immagine non cambia nulla. */
+:root{--bgdim:.25;--bgpanel:58%;--bgpanel2:86%}
+#bgimg{position:fixed;inset:0;z-index:-2;overflow:hidden;pointer-events:none}
+#bgimg i{position:absolute;inset:0;background:center / cover no-repeat;opacity:0;transition:opacity .7s ease}#bgimg i.on{opacity:1}
+#bgimg::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,var(--bgdim))}
+body.hasbg .field{background:radial-gradient(ellipse at 50% 50%,color-mix(in srgb,var(--fld1) var(--bgpanel),transparent) 0,color-mix(in srgb,var(--fld2) var(--bgpanel),transparent) 75%)}
+body.hasbg .sbook{background:linear-gradient(160deg,#ffffff12,#0000 42%),linear-gradient(color-mix(in srgb,var(--pn1) var(--bgpanel2),transparent),color-mix(in srgb,var(--pn2) var(--bgpanel2),transparent))}
+body.hasbg .sbox{background:linear-gradient(color-mix(in srgb,var(--pn1) var(--bgpanel2),transparent),color-mix(in srgb,var(--pn2) var(--bgpanel2),transparent))}
+body.hasbg .vsscene{background:radial-gradient(ellipse at 50% 50%,color-mix(in srgb,var(--bg1) 45%,transparent),color-mix(in srgb,var(--bg0) 72%,transparent))}
 </style></head>
 <body><div id="app"></div><script src="dist/game.js?v=20261125"></script></body></html>

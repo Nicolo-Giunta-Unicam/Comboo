@@ -382,6 +382,23 @@ Nome file = chiave (senza estensione). Generato da `npm run assets:list`: rilanc
 | `style-taekwondo` | Taekwondo |
 | `style-jujitsu` | Jujitsu |
 
+## Sfondi di arena (file separati nella cartella `assets/backgrounds/`, es. `assets/backgrounds/menu-ocean.jpg`; formati png, jpg, webp, gif, svg)
+
+| Chiave | Cosa |
+|---|---|
+| `menu-boxing` | Fighting Arena: sfondo di store, storia, mazzo e abilità |
+| `duel-boxing` | Fighting Arena: sfondo dei duelli |
+| `menu-battlefield` | Campo di battaglia: sfondo di store, storia, mazzo e abilità |
+| `duel-battlefield` | Campo di battaglia: sfondo dei duelli |
+| `menu-desert` | Deserto: sfondo di store, storia, mazzo e abilità |
+| `duel-desert` | Deserto: sfondo dei duelli |
+| `menu-ocean` | Oceano: sfondo di store, storia, mazzo e abilità |
+| `duel-ocean` | Oceano: sfondo dei duelli |
+| `menu-forest` | Foresta: sfondo di store, storia, mazzo e abilità |
+| `duel-forest` | Foresta: sfondo dei duelli |
+| `menu-volcano` | Vulcano: sfondo di store, storia, mazzo e abilità |
+| `duel-volcano` | Vulcano: sfondo dei duelli |
+
 ## Tipi di carta (ripiego generico) e mappa
 
 | Chiave | Cosa |
