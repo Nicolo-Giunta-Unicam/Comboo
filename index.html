@@ -782,7 +782,7 @@ body.fs .side .vbar{width:12px}
 .defeatnote .tale{font-size:13px;line-height:1.5;margin:6px 0;opacity:.92}
 .defeatnote .tale+.tale::first-letter{font-size:inherit;color:inherit;font-weight:inherit}
 /* Sfondo a immagine per arena (src/backdrop.ts): layer sotto #depth e gli effetti del menu (z-index -1). Regolabili: --bgdim = scurimento dell'immagine (0-1); --bgpanel/--bgpanel2 = opacità dei pannelli grandi quando c'è un'immagine. Senza immagine non cambia nulla. */
-:root{--bgdim:.25;--bgpanel:58%;--bgpanel2:86%}
+:root{--bgdim:.5;--bgpanel:58%;--bgpanel2:86%}
 #bgimg{position:fixed;inset:0;z-index:-2;overflow:hidden;pointer-events:none}
 #bgimg i{position:absolute;inset:0;background:center / cover no-repeat;opacity:0;transition:opacity .7s ease}#bgimg i.on{opacity:1}
 #bgimg::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,var(--bgdim))}
